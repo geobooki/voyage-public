@@ -13,6 +13,11 @@ export async function POST(request: Request) {
   if (!body.title?.trim()) return NextResponse.json({ error: "Trip title is required." }, { status: 400 });
   if (!supabase) return NextResponse.json({ configured: false, trip: { ...body, id: `local-${Date.now()}` } }, { status: 201 });
   const { data, error } = await supabase.from("trips").insert({ title: body.title.trim(), country: body.country ?? null, city: body.city ?? null, latitude: body.latitude == null || body.latitude === "" ? null : Number(body.latitude), longitude: body.longitude == null || body.longitude === "" ? null : Number(body.longitude), start_date: body.startDate || null, end_date: body.endDate || null, status: "planning" }).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) {
+    const message = error.message.includes("row-level security")
+      ? "Supabase RLS 정책이 INSERT를 차단했습니다. SQL Editor에서 supabase/rls.sql을 실행하세요."
+      : error.message;
+    return NextResponse.json({ error: message, code: error.code }, { status: 400 });
+  }
   return NextResponse.json({ configured: true, trip: data }, { status: 201 });
 }
