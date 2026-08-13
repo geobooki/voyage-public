@@ -1,0 +1,24 @@
+export type ChecklistItem = { id: string; name: string; category: string; checked: boolean };
+export type BudgetItem = { id: string; category: string; amount: number; currency?: string };
+export type Reservation = { id: string; title: string; type: string; date: string; time?: string; location?: string; reservationNumber?: string; cost: number; memo: string; link?: string };
+export type Place = { id: string; name: string; type: string; address: string; latitude?: number; longitude?: number; expectedCost: number; visitDate?: string; mustGo: boolean; visited: boolean; memo: string };
+export type ScheduleItem = { id: string; date: string; title: string; time: string; type: string; placeId?: string; note: string };
+export type Expense = { id: string; amount: number; currency: string; category: string; placeId?: string; payerId?: string; memo: string; date: string; time: string };
+export type Traveler = { id: string; name: string };
+export type Souvenir = { id: string; name: string; estimatedPrice: number; purchased: boolean; actualPrice: number; memo: string };
+export type ExchangePlan = { from: string; to: string; rate: number; expectedCash: number; cardEstimate: number; plannedExchange: number; actualExchange: number };
+export type WeatherDay = { date: string; temperature: number; condition: string; icon: string };
+export type TripState = {
+  packing: ChecklistItem[];
+  preparation: ChecklistItem[];
+  budget: BudgetItem[];
+  reservations: Reservation[];
+  places: Place[];
+  schedule: ScheduleItem[];
+  expenses: Expense[];
+  travelers: Traveler[];
+  souvenirs: Souvenir[];
+  exchange: ExchangePlan;
+  weather: WeatherDay[];
+  review: { rating: number; comment: string; goodThings: string; badThings: string; revisitPlaces: string };
+};

@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #2f6b5f;
+  --color-primary-hover: #24564d;
+  --color-background: #f7f8f5;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eef3ef;
+  --color-text-primary: #1f2a26;
+  --color-text-secondary: #64736d;
+  --color-text-muted: #95a39d;
+  --color-border: #e2e9e4;
+  --color-accent: #e9a55b;
+  --color-warning: #c47e3c;
+  --color-danger: #b85b52;
+  --color-success: #4e8d67;
+  --color-avatar: #e8cdbb;
+  --color-trip-tokyo: #dcebe4;
+  --color-trip-jeju: #f5e4d2;
+  --color-trip-lisbon: #e5e0ef;
+  --color-surface-sand: #f9eee0;
+  --color-surface-blue: #e5f0f4;
+  --color-surface-green: #e6f1e9;
+  --color-error-surface: #fff1ec;
+  --color-map-surface: #eaf1ed;
+  --color-map-dot: #9ab6a8;
+  --font-family-base: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --radius-card: 20px;
+  --radius-control: 12px;
+  --shadow-card: 0 8px 30px rgba(45, 71, 61, 0.06);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--color-background); color: var(--color-text-primary); font-family: var(--font-family-base); }
+button, input { font: inherit; }
+button { cursor: pointer; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
+.eyebrow { color: var(--color-primary); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.muted { color: var(--color-text-secondary); }
+.safe-bottom { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+@media (max-width: 767px) { main { padding-bottom: 96px !important; } }
