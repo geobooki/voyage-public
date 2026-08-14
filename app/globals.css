@@ -162,4 +162,13 @@ button {
   main {
     padding-bottom: 96px !important;
   }
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
