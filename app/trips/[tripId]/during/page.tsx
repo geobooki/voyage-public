@@ -5,14 +5,14 @@ import { useParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { formatTotals } from "@/lib/money";
 import { useTripMeta } from "@/lib/use-trip-meta";
-import { useTripStore } from "@/lib/trip-store";
+import { useTripData } from "@/lib/trip-context";
 
 const control = "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
 
 export default function DuringPage() {
   const { tripId } = useParams<{ tripId: string }>();
   const trip = useTripMeta(tripId);
-  const { state, addExpense, addPlace, togglePlace } = useTripStore(tripId);
+  const { state, addExpense, addPlace, togglePlace } = useTripData();
   const today = state.weather[0]?.date || new Date().toISOString().slice(0, 10);
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [placeOpen, setPlaceOpen] = useState(false);

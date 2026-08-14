@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
-import { useTripStore } from "@/lib/trip-store";
+import { useTripData } from "@/lib/trip-context";
 import { formatTotals } from "@/lib/money";
 
 const control = "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
@@ -12,7 +12,7 @@ const money = (amount: number | string) => typeof amount === "number" ? `₩${am
 
 export default function BeforePage() {
   const { tripId } = useParams<{ tripId: string }>(); const { language } = useLanguage(); const ko = language === "ko";
-  const { state, toggleChecklist, addChecklist, removeChecklist, renameChecklistCategory, removeChecklistCategory, addReservation, saveExchange } = useTripStore(tripId);
+  const { state, toggleChecklist, addChecklist, removeChecklist, renameChecklistCategory, removeChecklistCategory, addReservation, saveExchange } = useTripData();
   const [newItem, setNewItem] = useState(""); const [newCategory, setNewCategory] = useState(""); const [category, setCategory] = useState("기타"); const [showCompleted, setShowCompleted] = useState(false); const [showReservation, setShowReservation] = useState(false); const [reservation, setReservation] = useState({ title: "", type: "Stay", date: "", cost: "" }); const [exchange, setExchange] = useState(state.exchange);
   useEffect(() => setExchange(state.exchange), [state.exchange]);
   const categories = useMemo(() => [...new Set(state.packing.map((item) => item.category))], [state.packing]); const completed = state.packing.filter((item) => item.checked); const visible = state.packing.filter((item) => showCompleted || !item.checked);

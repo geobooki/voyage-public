@@ -4,14 +4,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { formatTotals, totalsByCurrency } from "@/lib/money";
-import { useTripStore } from "@/lib/trip-store";
+import { useTripData } from "@/lib/trip-context";
 
 const expenseCategories = ["Food", "Transport", "Shopping", "Activity", "Stay", "Other"];
 const control = "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
 
 export default function AfterPage() {
   const { tripId } = useParams<{ tripId: string }>();
-  const { state, saveReview, addTraveler } = useTripStore(tripId);
+  const { state, saveReview, addTraveler } = useTripData();
   const [review, setReview] = useState(state.review);
   const [travelerName, setTravelerName] = useState("");
   useEffect(() => setReview(state.review), [state.review]);

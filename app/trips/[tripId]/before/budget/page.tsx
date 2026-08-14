@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { totalsByCurrency } from "@/lib/money";
 import { useLanguage } from "@/lib/i18n";
-import { useTripStore } from "@/lib/trip-store";
+import { useTripData } from "@/lib/trip-context";
 
 const control = "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--color-primary)]";
 const defaultRates: Record<string, number> = { KRW: 1, JPY: 9.2, USD: 1350, EUR: 1500, GBP: 1750, CNY: 190, TWD: 42, THB: 39, VND: 0.054, SGD: 1050, AUD: 880, CAD: 980, HKD: 175, PHP: 24 };
@@ -16,7 +16,7 @@ type FormState = { name: string; detail: string; category: string; amount: strin
 
 export default function BudgetPage() {
   const { tripId } = useParams<{ tripId: string }>(); const { language } = useLanguage(); const ko = language === "ko";
-  const { state, addBudget, updateBudget, removeBudget, addBudgetCategory, renameBudgetCategory, removeBudgetCategory, addPaymentMethod, renamePaymentMethod, removePaymentMethod } = useTripStore(tripId);
+  const { state, addBudget, updateBudget, removeBudget, addBudgetCategory, renameBudgetCategory, removeBudgetCategory, addPaymentMethod, renamePaymentMethod, removePaymentMethod } = useTripData();
   const [item, setItem] = useState<FormState>({ name: "", detail: "", category: state.budgetCategories[0] || "기타", amount: "", currency: "KRW", paymentMethod: state.paymentMethods[0] || "" });
   const [editingId, setEditingId] = useState<string | null>(null); const [rates, setRates] = useState(defaultRates); const [rateDate, setRateDate] = useState<string | null>(null); const [rateLoading, setRateLoading] = useState(true); const [rateError, setRateError] = useState(""); const [newCategory, setNewCategory] = useState(""); const [newPayment, setNewPayment] = useState("");
   const loadRates = async () => { setRateLoading(true); setRateError(""); try { const response = await fetch("/api/exchange-rates", { cache: "no-store" }); const data = await response.json() as { rates?: Record<string, number>; date?: string; error?: string }; if (!response.ok || !data.rates) throw new Error(data.error || "환율을 불러오지 못했습니다."); setRates((current) => ({ ...current, ...data.rates })); setRateDate(data.date || null); } catch (error) { setRateError(error instanceof Error ? error.message : (ko ? "환율을 불러오지 못했습니다." : "Could not load exchange rates.")); } finally { setRateLoading(false); } };

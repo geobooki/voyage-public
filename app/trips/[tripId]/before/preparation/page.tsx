@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { useTripStore } from "@/lib/trip-store";
+import { useTripData } from "@/lib/trip-context";
 
 export default function PreparationPage() {
   const { tripId } = useParams<{ tripId: string }>();
-  const { state, toggleChecklist, addChecklist, removeChecklist } = useTripStore(tripId);
+  const { state, toggleChecklist, addChecklist, removeChecklist } = useTripData();
   const [name, setName] = useState("");
   const add = (event: FormEvent) => { event.preventDefault(); if (!name.trim()) return; addChecklist("preparation", { name: name.trim(), category: "Added by you", checked: false }); setName(""); };
   const completed = state.preparation.filter((item) => item.checked).length;

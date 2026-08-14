@@ -6,10 +6,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ tri
   const { tripId } = await params;
   if (!supabase) return NextResponse.json({ error: "Supabase가 연결되지 않았습니다." }, { status: 503 });
   const body = await request.json().catch(() => ({}));
-  if (body.permission && body.permission !== "view") return NextResponse.json({ error: "현재는 보기 전용 공유만 지원합니다." }, { status: 400 });
+  const permission = body.permission === "edit" ? "edit" : "view";
+  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : null;
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: "초대할 이메일 주소를 확인해주세요." }, { status: 400 });
 
   const token = randomBytes(24).toString("base64url");
-  const { data, error } = await supabase.from("trip_shares").insert({ trip_id: tripId, token, permission: "view" }).select("token").single();
+  const { data, error } = await supabase.from("trip_shares").insert({ trip_id: tripId, token, invite_email: email, permission }).select("token, permission, invite_email").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   const origin = new URL(request.url).origin;
   return NextResponse.json({ shareUrl: `${origin}/share/${data.token}`, token: data.token });
