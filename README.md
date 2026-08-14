@@ -43,3 +43,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 새로 추가하는 checklist, 장소, 일정, 예약, 예산, 기념품, 환전, 후기, 지출, 여행자 항목은 브라우저에서 UUID를 생성해 localStorage와 Supabase에서 같은 식별자를 사용합니다. 따라서 Supabase 연결 후에도 후속 수정·삭제와 장소-지출 연결이 유지됩니다.
 
 모바일에서는 하단 내비게이션, 데스크톱에서는 좌측 사이드 내비게이션을 제공합니다. Supabase 환경변수가 없으면 localStorage 기반 데모 모드로 동작합니다.
+## 다음 작업 목록
+
+- Google OAuth 로그인 연결 및 Supabase Provider 설정 마무리
+- 사용자별 `user_id` 기반 RLS로 여행 데이터 private 전환
