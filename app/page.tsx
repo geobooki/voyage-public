@@ -25,7 +25,7 @@ export default function Home() {
   const { user } = useAuth();
   const { language } = useLanguage();
   const ko = language === "ko";
-  const { state } = useTripStore("tokyo");
+  const { state } = useTripStore("dashboard");
   const accountHref = user ? "/account" : "/auth";
   const checked = state.packing.filter((item) => item.checked).length;
   const totalPacking = state.packing.length;
@@ -85,9 +85,9 @@ export default function Home() {
           <p className="text-sm font-semibold text-white/70">
             {ko ? "다음 여행" : "Next adventure"}
           </p>
-          <h2 className="mt-2 text-3xl font-bold">도쿄, 일본</h2>
+          <h2 className="mt-2 text-3xl font-bold">새로운 여행을 시작해요</h2>
           <p className="mt-2 text-sm text-white/80">
-            2026년 9월 10일 — 2026년 9월 15일 · 5박
+            여행을 추가하면 일정과 준비 현황이 표시됩니다.
           </p>
           <div className="mt-8 rounded-2xl bg-white/10 p-4">
             <p className="text-xs font-bold text-white/70">
@@ -104,7 +104,7 @@ export default function Home() {
             </p>
           </div>
           <Link
-            href="/trips/tokyo"
+            href="/trips/new"
             className="mt-5 inline-flex rounded-xl bg-[var(--color-surface)] px-4 py-2.5 text-sm font-bold text-[var(--color-primary)]"
           >
             여행 열기 →
@@ -137,11 +137,11 @@ export default function Home() {
                 {ko ? "다가오는 여행" : "Upcoming trip"}
               </p>
               <h2 className="text-xl font-bold">
-                {ko ? "도쿄 여행 일정" : "Your Tokyo itinerary"}
+                {ko ? "여행 일정" : "Your itinerary"}
               </h2>
             </div>
             <Link
-              href="/trips/tokyo/during/schedule"
+              href="/trips"
               className="text-sm font-bold text-[var(--color-primary)]"
             >
               전체 보기 →
@@ -187,7 +187,7 @@ export default function Home() {
               />
             </div>
             <Link
-              href="/trips/tokyo/before"
+              href="/trips"
               className="mt-4 block text-center text-sm font-bold text-[var(--color-primary)]"
             >
               체크리스트 관리 →
@@ -202,10 +202,10 @@ export default function Home() {
               <p className="text-2xl font-bold">
                 ₩{estimated.toLocaleString("ko-KR")}
               </p>
-              <p className="mt-1 text-xs muted">도쿄 예상 총액</p>
+              <p className="mt-1 text-xs muted">여행 예상 총액</p>
             </div>
             <Link
-              href="/trips/tokyo/before/budget"
+              href="/trips"
               className="grid size-14 place-items-center rounded-full border-[7px] border-[var(--color-accent)] text-xs font-bold"
             >
               예산
