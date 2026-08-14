@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useLanguage } from "@/lib/i18n";
 import { useTripStore } from "@/lib/trip-store";
+
+type DashboardTrip = { id: string; title: string; city?: string; country?: string; start_date?: string; end_date?: string; status?: string };
 
 function DashboardCard({
   section,
@@ -25,7 +28,10 @@ export default function Home() {
   const { user } = useAuth();
   const { language } = useLanguage();
   const ko = language === "ko";
-  const { state } = useTripStore("dashboard");
+  const [trips, setTrips] = useState<DashboardTrip[]>([]);
+  useEffect(() => { void fetch("/api/trips").then((response) => response.ok ? response.json() : { trips: [] }).then((result) => setTrips(Array.isArray(result.trips) ? result.trips : [])).catch(() => setTrips([])); }, []);
+  const nextTrip = [...trips].filter((trip) => trip.status !== "completed" && (!trip.start_date || trip.start_date >= new Date().toISOString().slice(0, 10))).sort((a, b) => String(a.start_date || "9999").localeCompare(String(b.start_date || "9999")))[0];
+  const { state } = useTripStore(nextTrip?.id || "dashboard");
   const accountHref = user ? "/account" : "/auth";
   const checked = state.packing.filter((item) => item.checked).length;
   const totalPacking = state.packing.length;
@@ -34,6 +40,8 @@ export default function Home() {
     : 0;
   const upcoming = state.schedule.filter((item) => !item.completed).slice(0, 3);
   const estimated = state.budget.reduce((sum, item) => sum + item.amount, 0);
+  const tripTitle = nextTrip ? `${nextTrip.city || nextTrip.country || nextTrip.title}` : "새로운 여행을 시작해요";
+  const tripDates = nextTrip?.start_date ? `${nextTrip.start_date}${nextTrip.end_date ? ` — ${nextTrip.end_date}` : ""}` : "여행을 추가하면 일정과 준비 현황이 표시됩니다.";
   return (
     <main
       data-section="home-dashboard"
@@ -85,9 +93,9 @@ export default function Home() {
           <p className="text-sm font-semibold text-white/70">
             {ko ? "다음 여행" : "Next adventure"}
           </p>
-          <h2 className="mt-2 text-3xl font-bold">새로운 여행을 시작해요</h2>
+          <h2 className="mt-2 text-3xl font-bold">{tripTitle}</h2>
           <p className="mt-2 text-sm text-white/80">
-            여행을 추가하면 일정과 준비 현황이 표시됩니다.
+            {tripDates}
           </p>
           <div className="mt-8 rounded-2xl bg-white/10 p-4">
             <p className="text-xs font-bold text-white/70">
@@ -104,7 +112,7 @@ export default function Home() {
             </p>
           </div>
           <Link
-            href="/trips/new"
+            href={nextTrip ? `/trips/${nextTrip.id}` : "/trips/new"}
             className="mt-5 inline-flex rounded-xl bg-[var(--color-surface)] px-4 py-2.5 text-sm font-bold text-[var(--color-primary)]"
           >
             여행 열기 →
@@ -114,7 +122,7 @@ export default function Home() {
           <p className="eyebrow">{ko ? "올해" : "This year"}</p>
           <p className="mt-4 text-4xl font-bold">4</p>
           <p className="mt-1 text-sm muted">
-            {ko ? "완료한 여행" : "trips completed"}
+            {ko ? `${trips.filter((trip) => trip.status === "completed").length}개의 완료한 여행` : `${trips.filter((trip) => trip.status === "completed").length} trips completed`}
           </p>
           <div className="mt-7 flex gap-1">
             {[1, 2, 3, 4, 5].map((item) => (
@@ -137,11 +145,11 @@ export default function Home() {
                 {ko ? "다가오는 여행" : "Upcoming trip"}
               </p>
               <h2 className="text-xl font-bold">
-                {ko ? "여행 일정" : "Your itinerary"}
+                {nextTrip ? (ko ? `${tripTitle} 일정` : `${tripTitle} itinerary`) : (ko ? "여행 일정" : "Your itinerary")}
               </h2>
             </div>
             <Link
-              href="/trips"
+              href={nextTrip ? `/trips/${nextTrip.id}/during/schedule` : "/trips"}
               className="text-sm font-bold text-[var(--color-primary)]"
             >
               전체 보기 →
@@ -187,7 +195,7 @@ export default function Home() {
               />
             </div>
             <Link
-              href="/trips"
+              href={nextTrip ? `/trips/${nextTrip.id}/before` : "/trips"}
               className="mt-4 block text-center text-sm font-bold text-[var(--color-primary)]"
             >
               체크리스트 관리 →
@@ -205,7 +213,7 @@ export default function Home() {
               <p className="mt-1 text-xs muted">여행 예상 총액</p>
             </div>
             <Link
-              href="/trips"
+              href={nextTrip ? `/trips/${nextTrip.id}/before/budget` : "/trips"}
               className="grid size-14 place-items-center rounded-full border-[7px] border-[var(--color-accent)] text-xs font-bold"
             >
               예산

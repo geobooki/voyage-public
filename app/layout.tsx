@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Voyage — 여행 기록",
   description: "여행 전·중·후를 한 곳에서 관리하는 여행 기록 앱",
 };
+export const viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export default function RootLayout({
   children,
