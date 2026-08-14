@@ -34,6 +34,7 @@ export function LocaleBridge() {
         node.nodeValue = translated;
       }
       document.querySelectorAll<HTMLElement>("input[placeholder], textarea[placeholder]").forEach((element) => { if (!originalPlaceholder.has(element)) originalPlaceholder.set(element, element.getAttribute("placeholder") || ""); let value = originalPlaceholder.get(element) || ""; if (language === "ko") Object.keys(ko).sort((a, b) => b.length - a.length).forEach((key) => { value = value.replaceAll(key, ko[key]); }); element.setAttribute("placeholder", value); });
+      document.querySelectorAll<HTMLInputElement>('input[type="date"]').forEach((element) => { element.lang = language === "ko" ? "ko-KR" : "en-US"; });
     };
     translate();
     const observer = new MutationObserver(translate);
