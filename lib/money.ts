@@ -9,5 +9,7 @@ export function totalsByCurrency(items: MoneyItem[]) {
 }
 
 export function formatTotals(items: MoneyItem[]) {
-  return Object.entries(totalsByCurrency(items)).map(([currency, amount]) => `${currency} ${amount.toLocaleString()}`).join(" · ");
+  return Object.entries(totalsByCurrency(items))
+    .map(([currency, amount]) => `${currency} ${amount.toLocaleString()}`)
+    .join(" · ");
 }

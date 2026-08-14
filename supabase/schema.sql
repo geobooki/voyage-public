@@ -108,9 +108,12 @@ create table if not exists schedule_items (
   type text not null default 'other',
   title text not null,
   note text,
+  completed boolean not null default false,
   sort_order integer not null default 0,
   created_at timestamptz not null default now()
 );
+
+alter table schedule_items add column if not exists completed boolean not null default false;
 
 create table if not exists reviews (
   id uuid primary key default gen_random_uuid(),
