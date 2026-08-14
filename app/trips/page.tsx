@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { TOKYO_TRIP_ID } from "@/lib/trip-id";
 import { useLanguage } from "@/lib/i18n";
 
 type TripCard = {
@@ -16,35 +15,6 @@ type TripCard = {
   color: string;
   emoji: string;
 };
-const defaults: TripCard[] = [
-  {
-    id: "tokyo",
-    title: "Tokyo, Japan",
-    startDate: "2026-09-10",
-    endDate: "2026-09-15",
-    status: "Planning",
-    color: "bg-[var(--color-trip-tokyo)]",
-    emoji: "🗼",
-  },
-  {
-    id: "jeju",
-    title: "Jeju, South Korea",
-    startDate: "2026-06-03",
-    endDate: "2026-06-06",
-    status: "Completed",
-    color: "bg-[var(--color-trip-jeju)]",
-    emoji: "🌊",
-  },
-  {
-    id: "lisbon",
-    title: "Lisbon, Portugal",
-    startDate: "2026-04-17",
-    endDate: "2026-04-22",
-    status: "Completed",
-    color: "bg-[var(--color-trip-lisbon)]",
-    emoji: "🚋",
-  },
-];
 const dates = (trip: TripCard) =>
   trip.startDate && trip.endDate
     ? `${trip.startDate} — ${trip.endDate}`
@@ -53,7 +23,7 @@ const dates = (trip: TripCard) =>
 export default function TripsPage() {
   const { t, language } = useLanguage();
   const ko = language === "ko";
-  const [trips, setTrips] = useState(defaults);
+  const [trips, setTrips] = useState<TripCard[]>([]);
   useEffect(() => {
     const load = async () => {
       try {
@@ -61,9 +31,6 @@ export default function TripsPage() {
           window.localStorage.getItem("voyage:trips") || "[]",
         );
         const localTrips = saved
-          .filter(
-            (item: TripCard) => !defaults.some((base) => base.id === item.id),
-          )
           .map((item: TripCard) => ({
             ...item,
             title: item.title || `${item.city}, ${item.country}`,
@@ -74,7 +41,7 @@ export default function TripsPage() {
         const result = response.ok ? await response.json() : null;
         const remoteTrips =
           result?.trips?.map((item: Record<string, unknown>) => ({
-            id: String(item.id) === TOKYO_TRIP_ID ? "tokyo" : String(item.id),
+            id: String(item.id),
             title: String(item.title),
             country: String(item.country ?? ""),
             city: String(item.city ?? ""),
@@ -85,13 +52,13 @@ export default function TripsPage() {
             emoji: "✦",
           })) ?? [];
         setTrips(
-          [...defaults, ...remoteTrips, ...localTrips].filter(
+          [...remoteTrips, ...localTrips].filter(
             (trip, index, list) =>
               list.findIndex((candidate) => candidate.id === trip.id) === index,
           ),
         );
       } catch {
-        /* keep demo trips */
+        setTrips([]);
       }
     };
     void load();
