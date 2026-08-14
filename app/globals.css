@@ -34,6 +34,20 @@
 body { margin: 0; background: var(--color-background); color: var(--color-text-primary); font-family: var(--font-family-base); }
 button, input { font: inherit; }
 button { cursor: pointer; }
+.date-field-trigger { display: flex; width: 100%; align-items: center; gap: 10px; border: 1px solid var(--color-border); border-radius: var(--radius-control); background: var(--color-background); padding: 12px 16px; text-align: left; color: var(--color-text-secondary); transition: border-color .2s, box-shadow .2s; }
+.date-field-trigger:hover, .date-field-trigger:focus-visible { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(47, 107, 95, .12); outline: none; }
+.date-field-filled { color: var(--color-text-primary); }
+.date-picker-popover { position: absolute; z-index: 20; top: calc(100% + 8px); width: min(300px, calc(100vw - 40px)); border: 1px solid var(--color-border); border-radius: 18px; background: var(--color-surface); padding: 16px; box-shadow: 0 18px 45px rgba(31, 42, 38, .16); }
+.date-picker-nav { display: grid; size: 32px; width: 32px; height: 32px; place-items: center; border-radius: 10px; color: var(--color-primary); font-size: 24px; }
+.date-picker-nav:hover { background: var(--color-surface-muted); }
+.date-picker-weekdays, .date-picker-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.date-picker-weekdays { margin-top: 16px; color: var(--color-text-muted); font-size: 11px; font-weight: 800; }
+.date-picker-days { margin-top: 8px; }
+.date-picker-day { aspect-ratio: 1; border-radius: 10px; color: var(--color-text-primary); font-size: 13px; }
+.date-picker-day:hover { background: var(--color-surface-muted); color: var(--color-primary); }
+.date-picker-sunday { color: var(--color-danger); }
+.date-picker-selected { background: var(--color-primary); color: white !important; font-weight: 800; }
+.date-picker-today { width: 100%; margin-top: 14px; border-top: 1px solid var(--color-border); padding-top: 12px; color: var(--color-primary); font-size: 12px; font-weight: 800; }
 .card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
 .eyebrow { color: var(--color-primary); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 .muted { color: var(--color-text-secondary); }
