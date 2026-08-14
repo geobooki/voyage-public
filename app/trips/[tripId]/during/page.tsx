@@ -7,7 +7,8 @@ import { formatTotals } from "@/lib/money";
 import { useTripMeta } from "@/lib/use-trip-meta";
 import { useTripData } from "@/lib/trip-context";
 
-const control = "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
+const control =
+  "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
 
 export default function DuringPage() {
   const { tripId } = useParams<{ tripId: string }>();
@@ -17,13 +18,545 @@ export default function DuringPage() {
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [placeOpen, setPlaceOpen] = useState(false);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
-  const [expense, setExpense] = useState({ amount: "", currency: "JPY", category: "Food", date: today, time: "12:00", placeId: "", payerId: state.travelers[0]?.id ?? "", memo: "" });
-  const [place, setPlace] = useState({ name: "", type: "Sightseeing", address: "", latitude: "", longitude: "", expectedCost: "", visitDate: today, memo: "", mustGo: false });
-  const todaySchedule = state.schedule.filter((item) => !item.date || item.date === today).sort((a, b) => a.time.localeCompare(b.time));
+  const [expense, setExpense] = useState({
+    amount: "",
+    currency: "JPY",
+    category: "Food",
+    date: today,
+    time: "12:00",
+    placeId: "",
+    payerId: state.travelers[0]?.id ?? "",
+    memo: "",
+  });
+  const [place, setPlace] = useState({
+    name: "",
+    type: "Sightseeing",
+    address: "",
+    latitude: "",
+    longitude: "",
+    expectedCost: "",
+    visitDate: today,
+    memo: "",
+    mustGo: false,
+  });
+  const todaySchedule = state.schedule
+    .filter((item) => !item.date || item.date === today)
+    .sort((a, b) => a.time.localeCompare(b.time));
   const todayExpenses = state.expenses.filter((item) => item.date === today);
-  const selectedPlace = state.places.find((item) => item.id === selectedPlaceId);
-  const selectedExpenses = selectedPlace ? state.expenses.filter((item) => item.placeId === selectedPlace.id) : [];
-  const saveExpense = (event: FormEvent) => { event.preventDefault(); if (!expense.amount) return; addExpense({ ...expense, amount: Number(expense.amount) }); setExpense({ ...expense, amount: "" }); setExpenseOpen(false); };
-  const savePlace = (event: FormEvent) => { event.preventDefault(); if (!place.name.trim()) return; addPlace({ ...place, name: place.name.trim(), latitude: place.latitude ? Number(place.latitude) : undefined, longitude: place.longitude ? Number(place.longitude) : undefined, expectedCost: Number(place.expectedCost) || 0, visited: false }); setPlace({ ...place, name: "", address: "", latitude: "", longitude: "", expectedCost: "", memo: "", mustGo: false }); setPlaceOpen(false); };
-  return <main className="min-h-screen px-5 py-8 pb-16 sm:px-10 lg:px-20 lg:py-12"><div className="mx-auto max-w-6xl"><Link href={`/trips/${tripId}`} className="text-sm font-bold text-[var(--color-primary)]">← Trip overview</Link><div className="mt-10 flex flex-wrap items-end justify-between gap-5"><div><p className="eyebrow mb-3">During the trip</p><h1 className="text-4xl font-bold">Today in {trip.city || trip.title}</h1><p className="mt-2 muted">{today} · {state.weather[0]?.icon || "☀"} {state.weather[0]?.temperature || 28}°C</p></div><div className="flex gap-2"><button onClick={() => setPlaceOpen((value) => !value)} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm font-bold">+ Place</button><button onClick={() => setExpenseOpen((value) => !value)} className="rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white">+ Add expense</button></div></div>{expenseOpen && <form onSubmit={saveExpense} className="card mt-6 grid gap-3 p-5 sm:grid-cols-4 lg:grid-cols-8"><input required type="number" value={expense.amount} onChange={(event) => setExpense({ ...expense, amount: event.target.value })} placeholder="Amount" className={control}/><select value={expense.currency} onChange={(event) => setExpense({ ...expense, currency: event.target.value })} className={control}><option>JPY</option><option>KRW</option><option>USD</option></select><input required type="date" value={expense.date} onChange={(event) => setExpense({ ...expense, date: event.target.value })} className={control}/><input required type="time" value={expense.time} onChange={(event) => setExpense({ ...expense, time: event.target.value })} className={control}/><select value={expense.category} onChange={(event) => setExpense({ ...expense, category: event.target.value })} className={control}><option>Food</option><option>Transport</option><option>Shopping</option><option>Activity</option><option>Stay</option><option>Other</option></select><select value={expense.placeId} onChange={(event) => setExpense({ ...expense, placeId: event.target.value })} className={control}><option value="">No place</option>{state.places.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><select value={expense.payerId} onChange={(event) => setExpense({ ...expense, payerId: event.target.value })} className={control}>{state.travelers.map((item) => <option key={item.id} value={item.id}>{item.name} paid</option>)}</select><input value={expense.memo} onChange={(event) => setExpense({ ...expense, memo: event.target.value })} placeholder="Memo" className={control}/><button className="rounded-xl bg-[var(--color-primary)] px-3 py-2.5 text-sm font-bold text-white lg:col-span-8">Save expense</button></form>}{placeOpen && <form onSubmit={savePlace} className="card mt-4 grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4"><input required value={place.name} onChange={(event) => setPlace({ ...place, name: event.target.value })} placeholder="Place name" className={control}/><select value={place.type} onChange={(event) => setPlace({ ...place, type: event.target.value })} className={control}><option>Sightseeing</option><option>Restaurant</option><option>Cafe</option><option>Shopping</option><option>Activity</option><option>Other</option></select><input value={place.address} onChange={(event) => setPlace({ ...place, address: event.target.value })} placeholder="Address" className={control}/><input type="date" value={place.visitDate} onChange={(event) => setPlace({ ...place, visitDate: event.target.value })} className={control}/><input type="number" value={place.expectedCost} onChange={(event) => setPlace({ ...place, expectedCost: event.target.value })} placeholder="Expected cost" className={control}/><input type="number" step="any" value={place.latitude} onChange={(event) => setPlace({ ...place, latitude: event.target.value })} placeholder="Latitude" className={control}/><input type="number" step="any" value={place.longitude} onChange={(event) => setPlace({ ...place, longitude: event.target.value })} placeholder="Longitude" className={control}/><input value={place.memo} onChange={(event) => setPlace({ ...place, memo: event.target.value })} placeholder="Memo" className={control}/><label className="flex items-center gap-2 text-xs font-bold"><input type="checkbox" checked={place.mustGo} onChange={(event) => setPlace({ ...place, mustGo: event.target.checked })} className="accent-[var(--color-primary)]"/> Must Go</label><button className="rounded-xl bg-[var(--color-primary)] px-3 py-2.5 text-sm font-bold text-white">Save place</button></form>}<div className="mt-9 grid gap-5 lg:grid-cols-3"><section className="card p-6 lg:col-span-2"><div className="flex justify-between"><div><p className="eyebrow mb-2">Today</p><h2 className="text-xl font-bold">Today’s plan</h2></div><Link href={`/trips/${tripId}/during/schedule`} className="text-sm font-bold text-[var(--color-primary)]">Edit board →</Link></div>{todaySchedule.map((item) => <div className="flex items-center gap-4 border-t border-[var(--color-border)] py-5" key={item.id}><span className="w-12 text-xs font-bold muted">{item.time}</span><div className="flex-1"><p className="font-bold">{item.title}</p><p className="mt-1 text-xs muted">{item.type}{item.note ? ` · ${item.note}` : ""}</p></div></div>)}{!todaySchedule.length && <p className="mt-6 text-sm muted">No plans for today yet.</p>}</section><section className="card p-6"><p className="eyebrow mb-2">Expense</p><p className="text-2xl font-bold">{formatTotals(todayExpenses) || "—"}</p><p className="mt-1 text-sm muted">{todayExpenses.length} expenses today · by currency</p><div className="mt-7 space-y-3">{todayExpenses.map((item) => <div key={item.id} className="rounded-2xl bg-[var(--color-background)] p-4"><div className="flex justify-between"><p className="text-sm font-bold">{state.places.find((placeItem) => placeItem.id === item.placeId)?.name || "Unlinked expense"}</p><p className="text-sm font-bold text-[var(--color-primary)]">{item.currency} {item.amount.toLocaleString()}</p></div><p className="mt-1 text-xs muted">{item.time} · {item.category}{item.memo ? ` · ${item.memo}` : ""}</p></div>)}</div><Link href={`/trips/${tripId}/after`} className="mt-6 block text-sm font-bold text-[var(--color-primary)]">View trip stats →</Link></section></div><section className="card mt-5 p-6"><div className="flex items-center justify-between"><div><p className="eyebrow mb-2">Map & places</p><h2 className="text-xl font-bold">Your places</h2></div><Link href={`/trips/${tripId}/during/map`} className="text-sm font-bold text-[var(--color-primary)]">Open map →</Link></div><div className="mt-5 grid gap-3 sm:grid-cols-3">{state.places.map((item) => <button onClick={() => setSelectedPlaceId(item.id)} className="rounded-2xl bg-[var(--color-background)] p-4 text-left hover:bg-[var(--color-surface-muted)]" key={item.id}><div className="flex items-start justify-between gap-2"><p className="text-sm font-bold">{item.name}</p><span onClick={(event) => { event.stopPropagation(); togglePlace(item.id, "mustGo"); }} role="button" aria-label={`Toggle Must Go for ${item.name}`} className={item.mustGo ? "text-[var(--color-accent)]" : "text-[var(--color-text-muted)]"}>★</span></div><p className="mt-1 text-xs muted">{item.type} · {item.address || "No address"}</p><p className="mt-2 text-xs muted">{item.visitDate || "No visit date"} · Expected {item.expectedCost ? `¥${item.expectedCost.toLocaleString()}` : "—"}</p><p className={`mt-4 text-xs font-bold ${item.visited ? "text-[var(--color-success)]" : "text-[var(--color-primary)]"}`}>{item.visited ? "✓ Visited" : "Open place details →"}</p></button>)}</div></section>{selectedPlace && <div className="fixed inset-0 z-20 flex items-end justify-center bg-[var(--color-text-primary)]/25 p-4 sm:items-center"><section className="card w-full max-w-lg p-7"><div className="flex items-start justify-between gap-4"><div><p className="eyebrow mb-2">Place detail</p><h2 className="text-2xl font-bold">{selectedPlace.name}</h2><p className="mt-1 text-sm muted">{selectedPlace.type} · {selectedPlace.address || "No address"}</p></div><button onClick={() => setSelectedPlaceId(null)} className="text-xl muted" aria-label="Close place detail">×</button></div><div className="mt-6 grid grid-cols-2 gap-3"><div className="rounded-2xl bg-[var(--color-background)] p-4"><p className="text-xs muted">Connected spend</p><p className="mt-2 text-xl font-bold">{formatTotals(selectedExpenses) || "—"}</p></div><div className="rounded-2xl bg-[var(--color-background)] p-4"><p className="text-xs muted">Expenses</p><p className="mt-2 text-xl font-bold">{selectedExpenses.length}</p></div></div><p className="mt-6 text-sm leading-6 muted">{selectedPlace.memo || "No memo yet."}</p><p className="mt-2 text-sm muted">Visit date: {selectedPlace.visitDate || "Not set"} · Expected cost: {selectedPlace.expectedCost ? `¥${selectedPlace.expectedCost.toLocaleString()}` : "Not set"}</p><div className="mt-6 flex gap-2"><button onClick={() => togglePlace(selectedPlace.id, "mustGo")} className="flex-1 rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm font-bold">{selectedPlace.mustGo ? "★ Must Go" : "☆ Add Must Go"}</button><button onClick={() => togglePlace(selectedPlace.id, "visited")} className="flex-1 rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white">{selectedPlace.visited ? "✓ Visited" : "Mark visited"}</button></div><div className="mt-6 border-t border-[var(--color-border)] pt-5"><p className="eyebrow mb-2">Connected expenses</p>{selectedExpenses.length ? selectedExpenses.map((item) => <div className="flex justify-between py-2 text-sm" key={item.id}><span className="muted">{item.time} · {item.category} · {item.memo || "Expense"}</span><span className="font-bold">{item.currency} {item.amount.toLocaleString()}</span></div>) : <p className="text-sm muted">No expenses linked to this place yet.</p>}</div><div className="mt-6 border-t border-[var(--color-border)] pt-5"><p className="eyebrow mb-2">Nearby restaurants</p>{state.places.filter((item) => item.id !== selectedPlace.id && ["Restaurant", "Cafe"].includes(item.type)).length ? <div className="space-y-2">{state.places.filter((item) => item.id !== selectedPlace.id && ["Restaurant", "Cafe"].includes(item.type)).map((restaurant) => <div key={restaurant.id} className="flex items-center justify-between rounded-xl bg-[var(--color-background)] px-4 py-3 text-sm"><span className="font-semibold">{restaurant.name}</span><span className="text-xs muted">{restaurant.type}</span></div>)}</div> : <p className="text-sm muted">Add restaurant or cafe places to see them here.</p>}</div></section></div>}</div></main>;
+  const selectedPlace = state.places.find(
+    (item) => item.id === selectedPlaceId,
+  );
+  const selectedExpenses = selectedPlace
+    ? state.expenses.filter((item) => item.placeId === selectedPlace.id)
+    : [];
+  const saveExpense = (event: FormEvent) => {
+    event.preventDefault();
+    if (!expense.amount) return;
+    addExpense({ ...expense, amount: Number(expense.amount) });
+    setExpense({ ...expense, amount: "" });
+    setExpenseOpen(false);
+  };
+  const savePlace = (event: FormEvent) => {
+    event.preventDefault();
+    if (!place.name.trim()) return;
+    addPlace({
+      ...place,
+      name: place.name.trim(),
+      latitude: place.latitude ? Number(place.latitude) : undefined,
+      longitude: place.longitude ? Number(place.longitude) : undefined,
+      expectedCost: Number(place.expectedCost) || 0,
+      visited: false,
+    });
+    setPlace({
+      ...place,
+      name: "",
+      address: "",
+      latitude: "",
+      longitude: "",
+      expectedCost: "",
+      memo: "",
+      mustGo: false,
+    });
+    setPlaceOpen(false);
+  };
+  return (
+    <main className="min-h-screen px-5 py-8 pb-16 sm:px-10 lg:px-20 lg:py-12">
+      <div className="mx-auto max-w-6xl">
+        <Link
+          href={`/trips/${tripId}`}
+          className="text-sm font-bold text-[var(--color-primary)]"
+        >
+          ← Trip overview
+        </Link>
+        <div className="mt-10 flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="eyebrow mb-3">During the trip</p>
+            <h1 className="text-4xl font-bold">
+              Today in {trip.city || trip.title}
+            </h1>
+            <p className="mt-2 muted">
+              {today} · {state.weather[0]?.icon || "☀"}{" "}
+              {state.weather[0]?.temperature || 28}°C
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPlaceOpen((value) => !value)}
+              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm font-bold"
+            >
+              + Place
+            </button>
+            <button
+              onClick={() => setExpenseOpen((value) => !value)}
+              className="rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white"
+            >
+              + Add expense
+            </button>
+          </div>
+        </div>
+        {expenseOpen && (
+          <form
+            onSubmit={saveExpense}
+            className="card mt-6 grid gap-3 p-5 sm:grid-cols-4 lg:grid-cols-8"
+          >
+            <input
+              required
+              type="number"
+              value={expense.amount}
+              onChange={(event) =>
+                setExpense({ ...expense, amount: event.target.value })
+              }
+              placeholder="Amount"
+              className={control}
+            />
+            <select
+              value={expense.currency}
+              onChange={(event) =>
+                setExpense({ ...expense, currency: event.target.value })
+              }
+              className={control}
+            >
+              <option>JPY</option>
+              <option>KRW</option>
+              <option>USD</option>
+            </select>
+            <input
+              required
+              type="date"
+              value={expense.date}
+              onChange={(event) =>
+                setExpense({ ...expense, date: event.target.value })
+              }
+              className={control}
+            />
+            <input
+              required
+              type="time"
+              value={expense.time}
+              onChange={(event) =>
+                setExpense({ ...expense, time: event.target.value })
+              }
+              className={control}
+            />
+            <select
+              value={expense.category}
+              onChange={(event) =>
+                setExpense({ ...expense, category: event.target.value })
+              }
+              className={control}
+            >
+              <option>Food</option>
+              <option>Transport</option>
+              <option>Shopping</option>
+              <option>Activity</option>
+              <option>Stay</option>
+              <option>Other</option>
+            </select>
+            <select
+              value={expense.placeId}
+              onChange={(event) =>
+                setExpense({ ...expense, placeId: event.target.value })
+              }
+              className={control}
+            >
+              <option value="">No place</option>
+              {state.places.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={expense.payerId}
+              onChange={(event) =>
+                setExpense({ ...expense, payerId: event.target.value })
+              }
+              className={control}
+            >
+              {state.travelers.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name} paid
+                </option>
+              ))}
+            </select>
+            <input
+              value={expense.memo}
+              onChange={(event) =>
+                setExpense({ ...expense, memo: event.target.value })
+              }
+              placeholder="Memo"
+              className={control}
+            />
+            <button className="rounded-xl bg-[var(--color-primary)] px-3 py-2.5 text-sm font-bold text-white lg:col-span-8">
+              Save expense
+            </button>
+          </form>
+        )}
+        {placeOpen && (
+          <form
+            onSubmit={savePlace}
+            className="card mt-4 grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4"
+          >
+            <input
+              required
+              value={place.name}
+              onChange={(event) =>
+                setPlace({ ...place, name: event.target.value })
+              }
+              placeholder="Place name"
+              className={control}
+            />
+            <select
+              value={place.type}
+              onChange={(event) =>
+                setPlace({ ...place, type: event.target.value })
+              }
+              className={control}
+            >
+              <option>Sightseeing</option>
+              <option>Restaurant</option>
+              <option>Cafe</option>
+              <option>Shopping</option>
+              <option>Activity</option>
+              <option>Other</option>
+            </select>
+            <input
+              value={place.address}
+              onChange={(event) =>
+                setPlace({ ...place, address: event.target.value })
+              }
+              placeholder="Address"
+              className={control}
+            />
+            <input
+              type="date"
+              value={place.visitDate}
+              onChange={(event) =>
+                setPlace({ ...place, visitDate: event.target.value })
+              }
+              className={control}
+            />
+            <input
+              type="number"
+              value={place.expectedCost}
+              onChange={(event) =>
+                setPlace({ ...place, expectedCost: event.target.value })
+              }
+              placeholder="Expected cost"
+              className={control}
+            />
+            <input
+              type="number"
+              step="any"
+              value={place.latitude}
+              onChange={(event) =>
+                setPlace({ ...place, latitude: event.target.value })
+              }
+              placeholder="Latitude"
+              className={control}
+            />
+            <input
+              type="number"
+              step="any"
+              value={place.longitude}
+              onChange={(event) =>
+                setPlace({ ...place, longitude: event.target.value })
+              }
+              placeholder="Longitude"
+              className={control}
+            />
+            <input
+              value={place.memo}
+              onChange={(event) =>
+                setPlace({ ...place, memo: event.target.value })
+              }
+              placeholder="Memo"
+              className={control}
+            />
+            <label className="flex items-center gap-2 text-xs font-bold">
+              <input
+                type="checkbox"
+                checked={place.mustGo}
+                onChange={(event) =>
+                  setPlace({ ...place, mustGo: event.target.checked })
+                }
+                className="accent-[var(--color-primary)]"
+              />{" "}
+              Must Go
+            </label>
+            <button className="rounded-xl bg-[var(--color-primary)] px-3 py-2.5 text-sm font-bold text-white">
+              Save place
+            </button>
+          </form>
+        )}
+        <div className="mt-9 grid gap-5 lg:grid-cols-3">
+          <section className="card p-6 lg:col-span-2">
+            <div className="flex justify-between">
+              <div>
+                <p className="eyebrow mb-2">Today</p>
+                <h2 className="text-xl font-bold">Today’s plan</h2>
+              </div>
+              <Link
+                href={`/trips/${tripId}/during/schedule`}
+                className="text-sm font-bold text-[var(--color-primary)]"
+              >
+                Edit board →
+              </Link>
+            </div>
+            {todaySchedule.map((item) => (
+              <div
+                className="flex items-center gap-4 border-t border-[var(--color-border)] py-5"
+                key={item.id}
+              >
+                <span className="w-12 text-xs font-bold muted">
+                  {item.time}
+                </span>
+                <div className="flex-1">
+                  <p className="font-bold">{item.title}</p>
+                  <p className="mt-1 text-xs muted">
+                    {item.type}
+                    {item.note ? ` · ${item.note}` : ""}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {!todaySchedule.length && (
+              <p className="mt-6 text-sm muted">No plans for today yet.</p>
+            )}
+          </section>
+          <section className="card p-6">
+            <p className="eyebrow mb-2">Expense</p>
+            <p className="text-2xl font-bold">
+              {formatTotals(todayExpenses) || "—"}
+            </p>
+            <p className="mt-1 text-sm muted">
+              {todayExpenses.length} expenses today · by currency
+            </p>
+            <div className="mt-7 space-y-3">
+              {todayExpenses.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-2xl bg-[var(--color-background)] p-4"
+                >
+                  <div className="flex justify-between">
+                    <p className="text-sm font-bold">
+                      {state.places.find(
+                        (placeItem) => placeItem.id === item.placeId,
+                      )?.name || "Unlinked expense"}
+                    </p>
+                    <p className="text-sm font-bold text-[var(--color-primary)]">
+                      {item.currency} {item.amount.toLocaleString()}
+                    </p>
+                  </div>
+                  <p className="mt-1 text-xs muted">
+                    {item.time} · {item.category}
+                    {item.memo ? ` · ${item.memo}` : ""}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <Link
+              href={`/trips/${tripId}/after`}
+              className="mt-6 block text-sm font-bold text-[var(--color-primary)]"
+            >
+              View trip stats →
+            </Link>
+          </section>
+        </div>
+        <section className="card mt-5 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="eyebrow mb-2">Map & places</p>
+              <h2 className="text-xl font-bold">Your places</h2>
+            </div>
+            <Link
+              href={`/trips/${tripId}/during/map`}
+              className="text-sm font-bold text-[var(--color-primary)]"
+            >
+              Open map →
+            </Link>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {state.places.map((item) => (
+              <button
+                onClick={() => setSelectedPlaceId(item.id)}
+                className="rounded-2xl bg-[var(--color-background)] p-4 text-left hover:bg-[var(--color-surface-muted)]"
+                key={item.id}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-bold">{item.name}</p>
+                  <span
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      togglePlace(item.id, "mustGo");
+                    }}
+                    role="button"
+                    aria-label={`Toggle Must Go for ${item.name}`}
+                    className={
+                      item.mustGo
+                        ? "text-[var(--color-accent)]"
+                        : "text-[var(--color-text-muted)]"
+                    }
+                  >
+                    ★
+                  </span>
+                </div>
+                <p className="mt-1 text-xs muted">
+                  {item.type} · {item.address || "No address"}
+                </p>
+                <p className="mt-2 text-xs muted">
+                  {item.visitDate || "No visit date"} · Expected{" "}
+                  {item.expectedCost
+                    ? `¥${item.expectedCost.toLocaleString()}`
+                    : "—"}
+                </p>
+                <p
+                  className={`mt-4 text-xs font-bold ${item.visited ? "text-[var(--color-success)]" : "text-[var(--color-primary)]"}`}
+                >
+                  {item.visited ? "✓ Visited" : "Open place details →"}
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
+        {selectedPlace && (
+          <div className="fixed inset-0 z-20 flex items-end justify-center bg-[var(--color-text-primary)]/25 p-4 sm:items-center">
+            <section className="card w-full max-w-lg p-7">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="eyebrow mb-2">Place detail</p>
+                  <h2 className="text-2xl font-bold">{selectedPlace.name}</h2>
+                  <p className="mt-1 text-sm muted">
+                    {selectedPlace.type} ·{" "}
+                    {selectedPlace.address || "No address"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedPlaceId(null)}
+                  className="text-xl muted"
+                  aria-label="Close place detail"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-[var(--color-background)] p-4">
+                  <p className="text-xs muted">Connected spend</p>
+                  <p className="mt-2 text-xl font-bold">
+                    {formatTotals(selectedExpenses) || "—"}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-[var(--color-background)] p-4">
+                  <p className="text-xs muted">Expenses</p>
+                  <p className="mt-2 text-xl font-bold">
+                    {selectedExpenses.length}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-6 text-sm leading-6 muted">
+                {selectedPlace.memo || "No memo yet."}
+              </p>
+              <p className="mt-2 text-sm muted">
+                Visit date: {selectedPlace.visitDate || "Not set"} · Expected
+                cost:{" "}
+                {selectedPlace.expectedCost
+                  ? `¥${selectedPlace.expectedCost.toLocaleString()}`
+                  : "Not set"}
+              </p>
+              <div className="mt-6 flex gap-2">
+                <button
+                  onClick={() => togglePlace(selectedPlace.id, "mustGo")}
+                  className="flex-1 rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm font-bold"
+                >
+                  {selectedPlace.mustGo ? "★ Must Go" : "☆ Add Must Go"}
+                </button>
+                <button
+                  onClick={() => togglePlace(selectedPlace.id, "visited")}
+                  className="flex-1 rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white"
+                >
+                  {selectedPlace.visited ? "✓ Visited" : "Mark visited"}
+                </button>
+              </div>
+              <div className="mt-6 border-t border-[var(--color-border)] pt-5">
+                <p className="eyebrow mb-2">Connected expenses</p>
+                {selectedExpenses.length ? (
+                  selectedExpenses.map((item) => (
+                    <div
+                      className="flex justify-between py-2 text-sm"
+                      key={item.id}
+                    >
+                      <span className="muted">
+                        {item.time} · {item.category} · {item.memo || "Expense"}
+                      </span>
+                      <span className="font-bold">
+                        {item.currency} {item.amount.toLocaleString()}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm muted">
+                    No expenses linked to this place yet.
+                  </p>
+                )}
+              </div>
+              <div className="mt-6 border-t border-[var(--color-border)] pt-5">
+                <p className="eyebrow mb-2">Nearby restaurants</p>
+                {state.places.filter(
+                  (item) =>
+                    item.id !== selectedPlace.id &&
+                    ["Restaurant", "Cafe"].includes(item.type),
+                ).length ? (
+                  <div className="space-y-2">
+                    {state.places
+                      .filter(
+                        (item) =>
+                          item.id !== selectedPlace.id &&
+                          ["Restaurant", "Cafe"].includes(item.type),
+                      )
+                      .map((restaurant) => (
+                        <div
+                          key={restaurant.id}
+                          className="flex items-center justify-between rounded-xl bg-[var(--color-background)] px-4 py-3 text-sm"
+                        >
+                          <span className="font-semibold">
+                            {restaurant.name}
+                          </span>
+                          <span className="text-xs muted">
+                            {restaurant.type}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-sm muted">
+                    Add restaurant or cafe places to see them here.
+                  </p>
+                )}
+              </div>
+            </section>
+          </div>
+        )}
+      </div>
+    </main>
+  );
 }

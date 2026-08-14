@@ -9,5 +9,107 @@ export default function MemoriesPage() {
   const { state } = useTripData();
   const completedPlans = state.schedule.filter((item) => item.completed);
   const visitedPlaces = state.places.filter((place) => place.visited);
-  return <main data-section="memories-board" className="min-h-screen px-5 py-8 pb-16 sm:px-10 lg:px-20 lg:py-12"><div className="mx-auto max-w-5xl"><Link href={`/trips/${tripId}/during`} className="text-sm font-bold text-[var(--color-primary)]">← 여행 중</Link><p className="eyebrow mt-10 mb-3">추억</p><h1 className="text-4xl font-bold">완성한 순간을 모아봤어요.</h1><p className="mt-2 muted">일정에서 완료한 항목과 방문 완료한 장소가 이곳에 자동으로 연결됩니다.</p><section data-section="completed-schedule-memories" className="card mt-9 p-6 sm:p-8"><div className="flex items-center justify-between"><div><p className="eyebrow mb-2">완료한 일정</p><h2 className="text-2xl font-bold">오늘의 기록</h2></div><span className="text-sm font-bold text-[var(--color-primary)]">{completedPlans.length}개</span></div><div className="mt-6 grid gap-3 sm:grid-cols-2">{completedPlans.length ? completedPlans.map((item) => <article className="rounded-2xl bg-[var(--color-background)] p-5" key={item.id}><p className="text-xs font-bold text-[var(--color-primary)]">{item.date} · {item.time || "시간 미정"}</p><h3 className="mt-2 text-lg font-bold">{item.title}</h3><p className="mt-2 text-sm muted">{item.type}{item.note ? ` · ${item.note}` : ""}</p><span className="mt-4 inline-block rounded-full bg-[var(--color-surface-muted)] px-3 py-1 text-xs font-bold text-[var(--color-success)]">✓ 완료</span></article>) : <p className="text-sm muted">일정에서 완료 체크를 하면 추억으로 남아요.</p>}</div></section><section data-section="visited-place-memories" className="card mt-5 p-6 sm:p-8"><div className="flex items-center justify-between"><div><p className="eyebrow mb-2">방문한 장소</p><h2 className="text-2xl font-bold">직접 만난 곳들</h2></div><span className="text-sm font-bold text-[var(--color-primary)]">{visitedPlaces.length}곳</span></div><div className="mt-6 grid gap-3 sm:grid-cols-3">{visitedPlaces.length ? visitedPlaces.map((place) => <article className="rounded-2xl bg-[var(--color-background)] p-5" key={place.id}><p className="text-2xl">📍</p><h3 className="mt-3 font-bold">{place.name}</h3><p className="mt-1 text-xs muted">{place.type} · {place.address || "주소 미정"}</p>{place.memo && <p className="mt-3 text-sm muted">{place.memo}</p>}</article>) : <p className="text-sm muted">장소 상세에서 방문 완료를 체크하면 이곳에 남아요.</p>}</div></section><Link href={`/trips/${tripId}/during/schedule`} className="mt-6 inline-block text-sm font-bold text-[var(--color-primary)]">일정으로 돌아가기 →</Link></div></main>;
+  return (
+    <main
+      data-section="memories-board"
+      className="min-h-screen px-5 py-8 pb-16 sm:px-10 lg:px-20 lg:py-12"
+    >
+      <div className="mx-auto max-w-5xl">
+        <Link
+          href={`/trips/${tripId}/during`}
+          className="text-sm font-bold text-[var(--color-primary)]"
+        >
+          ← 여행 중
+        </Link>
+        <p className="eyebrow mt-10 mb-3">추억</p>
+        <h1 className="text-4xl font-bold">완성한 순간을 모아봤어요.</h1>
+        <p className="mt-2 muted">
+          일정에서 완료한 항목과 방문 완료한 장소가 이곳에 자동으로 연결됩니다.
+        </p>
+        <section
+          data-section="completed-schedule-memories"
+          className="card mt-9 p-6 sm:p-8"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="eyebrow mb-2">완료한 일정</p>
+              <h2 className="text-2xl font-bold">오늘의 기록</h2>
+            </div>
+            <span className="text-sm font-bold text-[var(--color-primary)]">
+              {completedPlans.length}개
+            </span>
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {completedPlans.length ? (
+              completedPlans.map((item) => (
+                <article
+                  className="rounded-2xl bg-[var(--color-background)] p-5"
+                  key={item.id}
+                >
+                  <p className="text-xs font-bold text-[var(--color-primary)]">
+                    {item.date} · {item.time || "시간 미정"}
+                  </p>
+                  <h3 className="mt-2 text-lg font-bold">{item.title}</h3>
+                  <p className="mt-2 text-sm muted">
+                    {item.type}
+                    {item.note ? ` · ${item.note}` : ""}
+                  </p>
+                  <span className="mt-4 inline-block rounded-full bg-[var(--color-surface-muted)] px-3 py-1 text-xs font-bold text-[var(--color-success)]">
+                    ✓ 완료
+                  </span>
+                </article>
+              ))
+            ) : (
+              <p className="text-sm muted">
+                일정에서 완료 체크를 하면 추억으로 남아요.
+              </p>
+            )}
+          </div>
+        </section>
+        <section
+          data-section="visited-place-memories"
+          className="card mt-5 p-6 sm:p-8"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="eyebrow mb-2">방문한 장소</p>
+              <h2 className="text-2xl font-bold">직접 만난 곳들</h2>
+            </div>
+            <span className="text-sm font-bold text-[var(--color-primary)]">
+              {visitedPlaces.length}곳
+            </span>
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {visitedPlaces.length ? (
+              visitedPlaces.map((place) => (
+                <article
+                  className="rounded-2xl bg-[var(--color-background)] p-5"
+                  key={place.id}
+                >
+                  <p className="text-2xl">📍</p>
+                  <h3 className="mt-3 font-bold">{place.name}</h3>
+                  <p className="mt-1 text-xs muted">
+                    {place.type} · {place.address || "주소 미정"}
+                  </p>
+                  {place.memo && (
+                    <p className="mt-3 text-sm muted">{place.memo}</p>
+                  )}
+                </article>
+              ))
+            ) : (
+              <p className="text-sm muted">
+                장소 상세에서 방문 완료를 체크하면 이곳에 남아요.
+              </p>
+            )}
+          </div>
+        </section>
+        <Link
+          href={`/trips/${tripId}/during/schedule`}
+          className="mt-6 inline-block text-sm font-bold text-[var(--color-primary)]"
+        >
+          일정으로 돌아가기 →
+        </Link>
+      </div>
+    </main>
+  );
 }
