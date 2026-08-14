@@ -78,6 +78,9 @@ create table if not exists budget_items (
   category text not null default 'Other',
   estimated_amount numeric(12, 2) not null default 0 check (estimated_amount >= 0),
   currency text not null default 'KRW',
+  name text,
+  detail text,
+  payment_method text,
   created_at timestamptz not null default now()
 );
 
