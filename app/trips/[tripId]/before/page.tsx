@@ -65,8 +65,10 @@ export default function BeforePage() {
   const categories = state.packingCategories;
   useEffect(() => {
     if (!category && categories[0]) setCategory(categories[0].name);
-    if (!selectedCategoryId && categories[0])
+    if (!selectedCategoryId && categories[0]) {
       setSelectedCategoryId(categories[0].id);
+      setCategoryDraft({ name: categories[0].name, color: categories[0].color });
+    }
   }, [categories, category, selectedCategoryId]);
   const completed = state.packing.filter((item) => item.checked);
   const exchangeUnit = exchange.to === "JPY" || exchange.to === "VND" ? 100 : 1;
@@ -288,6 +290,9 @@ export default function BeforePage() {
                 </button>
                 <label className="ml-auto text-xs font-bold muted">
                   {ko ? "정렬" : "Sort"}
+                  <label className="mt-5 block text-xs font-bold muted">
+                    {ko ? "편집할 카테고리 선택" : "Choose a category to edit"}
+                  </label>
                   <select
                     value={sortMode}
                     onChange={(event) => setSortMode(event.target.value)}
@@ -338,7 +343,7 @@ export default function BeforePage() {
                           color: next.color,
                         });
                     }}
-                    className={`mt-5 w-full ${control}`}
+                    className={`mt-2 w-full ${control}`}
                   >
                     {categories.map((item) => (
                       <option key={item.id} value={item.id}>
@@ -346,6 +351,11 @@ export default function BeforePage() {
                       </option>
                     ))}
                   </select>
+                  <p className="mt-2 text-xs muted">
+                    {ko
+                      ? "위에서 카테고리를 고른 뒤 이름이나 색상을 변경하세요."
+                      : "Choose a category above, then change its name or color."}
+                  </p>
                   <input
                     value={categoryDraft.name}
                     onChange={(event) =>
