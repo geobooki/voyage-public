@@ -11,6 +11,7 @@ import type {
   ScheduleItem,
   Souvenir,
   TripState,
+  ChecklistCategory,
 } from "@/types/trip";
 
 const id = () =>
@@ -30,6 +31,12 @@ const sync = (
   }).catch(() => undefined);
 };
 const initial: TripState = {
+  packingCategories: [
+    { id: "cat-basics", name: "Basics", color: "#FEF3C7" },
+    { id: "cat-clothing", name: "Clothing", color: "#DBEAFE" },
+    { id: "cat-tech", name: "Tech", color: "#E0E7FF" },
+    { id: "cat-toiletries", name: "Toiletries", color: "#FCE7F3" },
+  ],
   packing: ["Passport", "Charger", "Comfortable shoes", "Toiletries"].map(
     (name, i) => ({
       id: `pack-${i}`,
@@ -244,6 +251,7 @@ const initial: TripState = {
 };
 
 const blankState = (): TripState => ({
+  packingCategories: [{ id: "cat-general", name: "기타", color: "#FEF3C7" }],
   packing: [],
   preparation: [],
   budget: [],
@@ -354,6 +362,13 @@ export function useTripStore(tripId = "tokyo") {
                   checked: Boolean(item.checked),
                 }))
             : current.packing,
+          packingCategories: data.categories?.length
+            ? data.categories.map((item: Record<string, unknown>) => ({
+                id: String(item.id),
+                name: String(item.name),
+                color: String(item.color ?? "#FEF3C7"),
+              }))
+            : current.packingCategories,
           preparation: data.checklist?.filter(
             (item: Record<string, unknown>) => item.kind === "preparation",
           ).length
@@ -461,7 +476,9 @@ export function useTripStore(tripId = "tokyo") {
                 plannedExchange: Number(data.exchange.planned_exchange ?? 0),
                 actualExchange: Number(data.exchange.actual_exchange ?? 0),
               }
-            : current.exchange,
+            : data.trip?.destination_currency
+              ? { ...current.exchange, to: String(data.trip.destination_currency) }
+              : current.exchange,
         }));
       })
       .catch(() => undefined)
@@ -536,6 +553,35 @@ export function useTripStore(tripId = "tokyo") {
         item.category === category ? { ...item, category: "기타" } : item,
       ),
     }));
+  const addPackingCategory = (category: Omit<ChecklistCategory, "id">) => {
+    const next = { ...category, id: id() };
+    update((s) => ({ ...s, packingCategories: [...s.packingCategories, next] }));
+    sync(tripId, "checklist-categories", { ...next, kind: "packing" });
+  };
+  const updatePackingCategory = (categoryId: string, changes: Omit<ChecklistCategory, "id">) => {
+    update((s) => {
+      const previous = s.packingCategories.find((item) => item.id === categoryId);
+      if (!previous) return s;
+      return {
+        ...s,
+        packingCategories: s.packingCategories.map((item) => item.id === categoryId ? { ...changes, id: categoryId } : item),
+        packing: s.packing.map((item) => item.category === previous.name ? { ...item, category: changes.name } : item),
+      };
+    });
+    sync(tripId, "checklist-categories", { ...changes, id: categoryId, kind: "packing" }, "PATCH");
+  };
+  const removePackingCategory = (categoryId: string) => {
+    update((s) => {
+      const category = s.packingCategories.find((item) => item.id === categoryId);
+      if (!category) return s;
+      return {
+        ...s,
+        packingCategories: s.packingCategories.filter((item) => item.id !== categoryId),
+        packing: s.packing.map((item) => item.category === category.name ? { ...item, category: "기타" } : item),
+      };
+    });
+    void fetch(`/api/trips/${tripId}/checklist-categories?id=${encodeURIComponent(categoryId)}`, { method: "DELETE" }).catch(() => undefined);
+  };
   const addPlace = (place: Omit<Place, "id">) => {
     const next = { ...place, id: id() };
     update((s) => ({ ...s, places: [...s.places, next] }));
@@ -725,6 +771,9 @@ export function useTripStore(tripId = "tokyo") {
     updateChecklistCategory,
     renameChecklistCategory,
     removeChecklistCategory,
+    addPackingCategory,
+    updatePackingCategory,
+    removePackingCategory,
     addPlace,
     addSchedule,
     updateSchedule,

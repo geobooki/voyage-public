@@ -1,4 +1,5 @@
 export type ChecklistItem = { id: string; name: string; category: string; checked: boolean };
+export type ChecklistCategory = { id: string; name: string; color: string };
 export type BudgetItem = { id: string; name?: string; detail?: string; category: string; amount: number; currency?: string; paymentMethod?: string };
 export type Reservation = { id: string; title: string; type: string; date: string; time?: string; location?: string; reservationNumber?: string; cost: number; memo: string; link?: string };
 export type Place = { id: string; name: string; type: string; address: string; latitude?: number; longitude?: number; expectedCost: number; visitDate?: string; mustGo: boolean; visited: boolean; memo: string };
@@ -10,6 +11,7 @@ export type ExchangePlan = { from: string; to: string; rate: number; expectedCas
 export type WeatherDay = { date: string; temperature: number; condition: string; icon: string };
 export type TripState = {
   packing: ChecklistItem[];
+  packingCategories: ChecklistCategory[];
   preparation: ChecklistItem[];
   budget: BudgetItem[];
   budgetCategories: string[];

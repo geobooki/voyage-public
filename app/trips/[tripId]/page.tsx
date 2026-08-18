@@ -160,6 +160,7 @@ export default function TripPage() {
             <p className="mt-2 muted">{trip.dates}</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link href={`/trips/${tripId}/edit`} className="rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-bold">{ko ? "여행 수정" : "Edit trip"}</Link>
             {trip.status !== "completed" && (
               <button
                 onClick={completeTrip}

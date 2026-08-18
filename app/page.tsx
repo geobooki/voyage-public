@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { useLanguage } from "@/lib/i18n";
 import { useTripStore } from "@/lib/trip-store";
 
-type DashboardTrip = { id: string; title: string; city?: string; country?: string; start_date?: string; end_date?: string; status?: string };
+type DashboardTrip = { id: string; slug?: string; title: string; city?: string; country?: string; start_date?: string; end_date?: string; status?: string };
 
 function DashboardCard({
   section,
@@ -112,7 +112,7 @@ export default function Home() {
             </p>
           </div>
           <Link
-            href={nextTrip ? `/trips/${nextTrip.id}` : "/trips/new"}
+            href={nextTrip ? `/trips/${nextTrip.slug || nextTrip.id}` : "/trips/new"}
             className="mt-5 inline-flex rounded-xl bg-[var(--color-surface)] px-4 py-2.5 text-sm font-bold text-[var(--color-primary)]"
           >
             여행 열기 →
@@ -149,7 +149,7 @@ export default function Home() {
               </h2>
             </div>
             <Link
-              href={nextTrip ? `/trips/${nextTrip.id}/during/schedule` : "/trips"}
+              href={nextTrip ? `/trips/${nextTrip.slug || nextTrip.id}/during/schedule` : "/trips"}
               className="text-sm font-bold text-[var(--color-primary)]"
             >
               전체 보기 →

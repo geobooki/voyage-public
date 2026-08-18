@@ -6,7 +6,6 @@ import { useLanguage } from "@/lib/i18n";
 const items = [
   { href: "/", label: "Overview", icon: "⌂" },
   { href: "/trips", label: "Trips", icon: "✦" },
-  { href: "/map", label: "World map", icon: "◎" },
 ];
 
 export function AppNav() {
@@ -14,7 +13,6 @@ export function AppNav() {
   const labels = {
     "/": t("overview"),
     "/trips": t("trips"),
-    "/map": t("worldMap"),
   };
   return (
     <nav

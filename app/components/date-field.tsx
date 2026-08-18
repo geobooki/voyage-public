@@ -37,7 +37,11 @@ export function DateField({
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, []);
+  useEffect(() => {
+    if (value) setMonth(parse(value));
+  }, [value]);
   const selected = value ? parse(value) : null;
+  const todayIso = toIso(new Date());
   const days = useMemo(() => {
     const first = new Date(month.getFullYear(), month.getMonth(), 1);
     const count = new Date(
@@ -128,7 +132,7 @@ export function DateField({
                     onChange(toIso(day));
                     setOpen(false);
                   }}
-                  className={`date-picker-day ${selected && toIso(selected) === toIso(day) ? "date-picker-selected" : ""} ${day.getDay() === 0 ? "date-picker-sunday" : ""}`}
+                  className={`date-picker-day ${toIso(day) === todayIso ? "date-picker-today-highlight" : ""} ${selected && toIso(selected) === toIso(day) ? "date-picker-selected" : ""} ${day.getDay() === 0 ? "date-picker-sunday" : ""}`}
                 >
                   {day.getDate()}
                 </button>
