@@ -21,3 +21,6 @@ begin
   if not exists (select 1 from pg_policies where policyname = 'voyage anon update categories') then create policy "voyage anon update categories" on public.checklist_categories for update to anon using (true) with check (true); end if;
   if not exists (select 1 from pg_policies where policyname = 'voyage anon delete categories') then create policy "voyage anon delete categories" on public.checklist_categories for delete to anon using (true); end if;
 end $$;
+
+-- Supabase API가 새 컬럼을 즉시 인식하도록 스키마 캐시를 갱신합니다.
+notify pgrst, 'reload schema';

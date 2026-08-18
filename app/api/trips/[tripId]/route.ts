@@ -45,7 +45,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ tr
   if (!supabase) return NextResponse.json({ configured: false, status: body.status });
   const tripId = await resolveTripIdForRequest(rawTripId, supabase);
   const { data, error } = await supabase.from("trips").update(updates).eq("id", tripId).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) {
+    const missingCurrencyColumn = error.message.includes("destination_currency") && error.message.includes("schema cache");
+    return NextResponse.json({ error: missingCurrencyColumn ? "Supabase에 destination_currency 컬럼이 없습니다. supabase/trip-fixes.sql을 실행한 뒤 다시 시도하세요." : error.message }, { status: 400 });
+  }
   return NextResponse.json(data);
 }
 
