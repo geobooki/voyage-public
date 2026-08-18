@@ -1,8 +1,10 @@
 create table if not exists trips (
   id uuid primary key default gen_random_uuid(),
   title text not null,
+  slug text unique,
   country text,
   city text,
+  destination_currency text not null default 'JPY',
   latitude double precision,
   longitude double precision,
   start_date date,
@@ -15,6 +17,9 @@ create table if not exists trips (
 
 alter table trips add column if not exists latitude double precision;
 alter table trips add column if not exists longitude double precision;
+alter table trips add column if not exists slug text;
+alter table trips add column if not exists destination_currency text not null default 'JPY';
+create unique index if not exists trips_slug_idx on trips(slug) where slug is not null;
 
 create table if not exists places (
   id uuid primary key default gen_random_uuid(),
@@ -70,6 +75,16 @@ create table if not exists checklist_items (
   name text not null,
   checked boolean not null default false,
   created_at timestamptz not null default now()
+);
+
+create table if not exists checklist_categories (
+  id uuid primary key default gen_random_uuid(),
+  trip_id uuid not null references trips(id) on delete cascade,
+  kind text not null default 'packing' check (kind in ('packing', 'preparation')),
+  name text not null,
+  color text not null default '#FDE68A',
+  created_at timestamptz not null default now(),
+  unique (trip_id, kind, name)
 );
 
 create table if not exists budget_items (
@@ -167,6 +182,7 @@ create index if not exists expenses_place_id_idx on expenses(place_id);
 create index if not exists expenses_payer_id_idx on expenses(payer_id);
 create index if not exists travelers_trip_id_idx on travelers(trip_id);
 create index if not exists checklist_items_trip_id_idx on checklist_items(trip_id);
+create index if not exists checklist_categories_trip_id_idx on checklist_categories(trip_id);
 create index if not exists budget_items_trip_id_idx on budget_items(trip_id);
 create index if not exists reservations_trip_id_idx on reservations(trip_id);
 create index if not exists schedule_items_trip_id_idx on schedule_items(trip_id);

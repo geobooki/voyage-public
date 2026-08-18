@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { resolveTripId } from "@/lib/trip-id";
+import { resolveTripIdForRequest } from "@/lib/trip-id";
 
 const tableByResource: Record<string, string> = {
   checklist: "checklist_items",
@@ -11,6 +11,7 @@ const tableByResource: Record<string, string> = {
   budget: "budget_items",
   review: "reviews",
   exchange: "exchange_plans",
+  "checklist-categories": "checklist_categories",
 };
 
 const uuid = (value: unknown) => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -18,6 +19,7 @@ const uuid = (value: unknown) => typeof value === "string" && /^[0-9a-f]{8}-[0-9
 function toRow(resource: string, tripId: string, body: Record<string, unknown>) {
   const base = { trip_id: tripId, ...(uuid(body.id) ? { id: body.id } : {}) };
   if (resource === "checklist") return { ...base, kind: body.kind ?? "packing", category: body.category ?? "General", name: body.name, checked: Boolean(body.checked) };
+  if (resource === "checklist-categories") return { ...base, kind: body.kind ?? "packing", name: body.name, color: body.color ?? "#FDE68A" };
   if (resource === "places") return { ...base, name: body.name, type: body.type ?? "other", address: body.address ?? null, latitude: body.latitude ?? null, longitude: body.longitude ?? null, expected_cost: Number(body.expectedCost ?? 0), visit_date: body.visitDate || null, must_go: Boolean(body.mustGo), visited: Boolean(body.visited), memo: body.memo ?? null };
   if (resource === "schedule") return { ...base, place_id: body.placeId ?? null, date: body.date ?? "2026-09-10", time: body.time ?? null, type: body.type ?? "other", title: body.title, note: body.note ?? null, completed: Boolean(body.completed), sort_order: Number(body.order ?? 0) };
   if (resource === "souvenirs") return { ...base, name: body.name, estimated_price: Number(body.estimatedPrice ?? 0), purchased: Boolean(body.purchased), actual_price: Number(body.actualPrice ?? 0), memo: body.memo ?? null };
@@ -29,10 +31,10 @@ function toRow(resource: string, tripId: string, body: Record<string, unknown>) 
 
 export async function POST(request: Request, { params }: { params: Promise<{ tripId: string; resource: string }> }) {
   const { tripId: rawTripId, resource } = await params;
-  const tripId = resolveTripId(rawTripId);
   const table = tableByResource[resource];
   if (!table) return NextResponse.json({ error: "Unsupported resource." }, { status: 404 });
   if (!supabase) return NextResponse.json({ configured: false }, { status: 503 });
+  const tripId = await resolveTripIdForRequest(rawTripId, supabase);
   const row = toRow(resource, tripId, await request.json());
   const client = supabase.from(table) as any;
   const query = resource === "review" || resource === "exchange" ? client.upsert(row, { onConflict: "trip_id" }) : client.insert(row);
@@ -43,10 +45,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ tri
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ tripId: string; resource: string }> }) {
   const { tripId: rawTripId, resource } = await params;
-  const tripId = resolveTripId(rawTripId);
   const table = tableByResource[resource];
   if (!table) return NextResponse.json({ error: "Unsupported resource." }, { status: 404 });
   if (!supabase) return NextResponse.json({ configured: false }, { status: 503 });
+  const tripId = await resolveTripIdForRequest(rawTripId, supabase);
   const body = await request.json();
   const row = toRow(resource, tripId, body);
   delete (row as Record<string, unknown>).trip_id;
@@ -59,10 +61,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ tr
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ tripId: string; resource: string }> }) {
   const { tripId: rawTripId, resource } = await params;
-  const tripId = resolveTripId(rawTripId);
   const table = tableByResource[resource];
   if (!table) return NextResponse.json({ error: "Unsupported resource." }, { status: 404 });
   if (!supabase) return NextResponse.json({ configured: false }, { status: 503 });
+  const tripId = await resolveTripIdForRequest(rawTripId, supabase);
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Resource id is required." }, { status: 400 });
   const client = supabase.from(table) as any;

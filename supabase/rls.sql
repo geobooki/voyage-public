@@ -10,7 +10,7 @@ declare
   policy_name text;
 begin
   foreach table_name in array array[
-    'trips', 'places', 'expenses', 'travelers', 'checklist_items',
+    'trips', 'places', 'expenses', 'travelers', 'checklist_items', 'checklist_categories',
     'budget_items', 'reservations', 'schedule_items', 'reviews',
     'souvenirs', 'exchange_plans', 'weather_days'
   ] loop

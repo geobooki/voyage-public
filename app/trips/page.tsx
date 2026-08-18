@@ -6,6 +6,7 @@ import { useLanguage } from "@/lib/i18n";
 
 type TripCard = {
   id: string;
+  slug?: string;
   title: string;
   country?: string;
   city?: string;
@@ -42,6 +43,7 @@ export default function TripsPage() {
         const remoteTrips =
           result?.trips?.map((item: Record<string, unknown>) => ({
             id: String(item.id),
+            slug: item.slug ? String(item.slug) : undefined,
             title: String(item.title),
             country: String(item.country ?? ""),
             city: String(item.city ?? ""),
@@ -93,7 +95,7 @@ export default function TripsPage() {
           {trips.map((trip) => (
             <Link
               key={trip.id}
-              href={`/trips/${trip.id}`}
+              href={`/trips/${trip.slug || trip.id}`}
               className="card overflow-hidden transition-transform hover:-translate-y-1"
             >
               <div
