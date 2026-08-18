@@ -149,6 +149,10 @@ button {
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
 }
+[data-section="next-adventure"] {
+  background: var(--color-primary) !important;
+  color: white;
+}
 .eyebrow {
   color: var(--color-primary);
   font-size: 11px;
