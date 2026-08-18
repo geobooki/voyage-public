@@ -81,6 +81,16 @@ export default function BeforePage() {
         ? a.category.localeCompare(b.category) || a.name.localeCompare(b.name)
         : a.name.localeCompare(b.name),
     );
+  const boards = (items: typeof state.packing) => {
+    const knownBoards = categories.map((categoryItem) => ({
+        category: categoryItem,
+        items: ordered(items).filter((item) => item.category === categoryItem.name),
+      }))
+      .filter((board) => board.items.length > 0);
+    const knownNames = new Set(categories.map((item) => item.name));
+    const unknownNames = [...new Set(items.map((item) => item.category).filter((name) => !knownNames.has(name)))];
+    return [...knownBoards, ...unknownNames.map((name, index) => ({ category: { id: `legacy-${index}-${name}`, name, color: "#FEF3C7" }, items: ordered(items).filter((item) => item.category === name) }))];
+  };
   const submitItem = (event: FormEvent) => {
     event.preventDefault();
     if (!newItem.trim()) return;
@@ -147,48 +157,29 @@ export default function BeforePage() {
                   {ko ? "필요한 것을 챙겨요" : "Take what you need"}
                 </h2>
               </div>
-              <span className="rounded-full bg-[var(--color-surface-muted)] px-3 py-1 text-xs font-bold text-[var(--color-primary)]">
-                {state.packing.filter((item) => item.checked).length} /{" "}
-                {state.packing.length} {ko ? "완료" : "complete"}
-              </span>
+              <div className="flex items-center gap-2">
+                <select value={sortMode} onChange={(event) => setSortMode(event.target.value)} className="rounded-lg border border-[var(--color-border)] bg-transparent px-2 py-1 text-xs font-bold">
+                  <option value="category">{ko ? "카테고리순" : "Category"}</option>
+                  <option value="name">{ko ? "이름순" : "Name"}</option>
+                </select>
+                <span className="rounded-full bg-[var(--color-surface-muted)] px-3 py-1 text-xs font-bold text-[var(--color-primary)]">
+                  {state.packing.filter((item) => item.checked).length} / {state.packing.length} {ko ? "완료" : "complete"}
+                </span>
+              </div>
             </div>
-            <div className="mt-6 space-y-2">
-              {ordered(incomplete).map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-[var(--color-background)]"
-                >
-                  <input
-                    type="checkbox"
-                    checked={item.checked}
-                    onChange={() => toggleChecklist("packing", item.id)}
-                    className="size-4 accent-[var(--color-primary)]"
-                  />
-                  <span
-                    className={`flex-1 text-sm font-semibold ${item.checked ? "text-[var(--color-text-muted)] line-through" : ""}`}
-                  >
-                    {item.name}
-                  </span>
-                  <span
-                    className="rounded-md px-2 py-1 text-xs font-bold"
-                    style={{
-                      backgroundColor:
-                        categories.find((entry) => entry.name === item.category)
-                          ?.color ?? "#FEF3C7",
-                    }}
-                  >
-                    {item.category}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => removeChecklist("packing", item.id)}
-                    className="grid size-7 place-items-center rounded-full text-sm font-bold text-[var(--color-danger)] hover:bg-[var(--color-error-surface)]"
-                    aria-label={
-                      ko ? `${item.name} 삭제` : `Delete ${item.name}`
-                    }
-                  >
-                    ×
-                  </button>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {boards(incomplete).map((board) => (
+                <div key={board.category.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-3">
+                  <div className="mb-2 rounded-xl px-3 py-2 text-xs font-bold" style={{ backgroundColor: board.category.color }}>{board.category.name}</div>
+                  <div className="space-y-1">
+                    {board.items.map((item) => (
+                      <div key={item.id} className="flex items-center gap-2 rounded-xl bg-[var(--color-surface)] px-2 py-2">
+                        <input type="checkbox" checked={item.checked} onChange={() => toggleChecklist("packing", item.id)} className="size-4 accent-[var(--color-primary)]" />
+                        <span className="flex-1 text-sm font-semibold">{item.name}</span>
+                        <button type="button" onClick={() => removeChecklist("packing", item.id)} className="text-sm font-bold text-[var(--color-danger)]" aria-label={ko ? `${item.name} 삭제` : `Delete ${item.name}`}>×</button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
@@ -212,29 +203,14 @@ export default function BeforePage() {
                 <p className="mb-2 text-xs font-bold muted">
                   {ko ? "완료된 준비물" : "Completed items"}
                 </p>
-                {ordered(completed).map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-3 rounded-xl px-3 py-3"
-                  >
-                    <input
-                      type="checkbox"
-                      checked
-                      onChange={() => toggleChecklist("packing", item.id)}
-                      className="size-4 accent-[var(--color-primary)]"
-                    />
-                    <span className="flex-1 text-sm font-semibold line-through text-[var(--color-text-muted)]">
-                      {item.name}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeChecklist("packing", item.id)}
-                      className="text-sm font-bold text-[var(--color-danger)]"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {boards(completed).map((board) => (
+                    <div key={board.category.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-3">
+                      <div className="mb-2 rounded-xl px-3 py-2 text-xs font-bold" style={{ backgroundColor: board.category.color }}>{board.category.name}</div>
+                      <div className="space-y-1">{board.items.map((item) => <div key={item.id} className="flex items-center gap-2 rounded-xl bg-[var(--color-surface)] px-2 py-2"><input type="checkbox" checked onChange={() => toggleChecklist("packing", item.id)} className="size-4 accent-[var(--color-primary)]"/><span className="flex-1 text-sm font-semibold line-through text-[var(--color-text-muted)]">{item.name}</span><button type="button" onClick={() => removeChecklist("packing", item.id)} className="text-sm font-bold text-[var(--color-danger)]">×</button></div>)}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             <form
@@ -266,9 +242,10 @@ export default function BeforePage() {
               </div>
             </form>
             <div className="mt-5 border-t border-[var(--color-border)] pt-5">
-              <p className="text-xs font-bold muted">
-                {ko ? "카테고리 관리" : "Category management"}
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold muted">{ko ? "카테고리 관리" : "Category management"}</p>
+                <button type="button" onClick={() => setCategoryManagerOpen(true)} className="rounded-lg border border-[var(--color-border)] px-2.5 py-1 text-[11px] font-bold">{ko ? "관리" : "Manage"}</button>
+              </div>
               <form onSubmit={addNewCategory} className="mt-3 flex gap-2">
                 <input
                   value={newCategory}
@@ -281,29 +258,6 @@ export default function BeforePage() {
                 </button>
               </form>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCategoryManagerOpen(true)}
-                  className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-xs font-bold"
-                >
-                  {ko ? "카테고리 관리" : "Manage categories"}
-                </button>
-                <label className="ml-auto text-xs font-bold muted">
-                  {ko ? "정렬" : "Sort"}
-                  <label className="mt-5 block text-xs font-bold muted">
-                    {ko ? "편집할 카테고리 선택" : "Choose a category to edit"}
-                  </label>
-                  <select
-                    value={sortMode}
-                    onChange={(event) => setSortMode(event.target.value)}
-                    className="ml-2 rounded-lg border border-[var(--color-border)] bg-transparent px-2 py-1"
-                  >
-                    <option value="category">
-                      {ko ? "카테고리순" : "Category"}
-                    </option>
-                    <option value="name">{ko ? "이름순" : "Name"}</option>
-                  </select>
-                </label>
                 {categories.map((item) => (
                   <span
                     className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold"
@@ -330,32 +284,9 @@ export default function BeforePage() {
                       ×
                     </button>
                   </div>
-                  <select
-                    value={selectedCategoryId}
-                    onChange={(event) => {
-                      const next = categories.find(
-                        (item) => item.id === event.target.value,
-                      );
-                      setSelectedCategoryId(event.target.value);
-                      if (next)
-                        setCategoryDraft({
-                          name: next.name,
-                          color: next.color,
-                        });
-                    }}
-                    className={`mt-2 w-full ${control}`}
-                  >
-                    {categories.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-2 text-xs muted">
-                    {ko
-                      ? "위에서 카테고리를 고른 뒤 이름이나 색상을 변경하세요."
-                      : "Choose a category above, then change its name or color."}
-                  </p>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    {categories.map((item) => <button type="button" key={item.id} onClick={() => { setSelectedCategoryId(item.id); setCategoryDraft({ name: item.name, color: item.color }); }} className={`rounded-xl border px-3 py-2 text-left text-sm font-bold ${selectedCategoryId === item.id ? "border-[var(--color-primary)]" : "border-[var(--color-border)]"}`} style={{ backgroundColor: item.color }}>{item.name}</button>)}
+                  </div>
                   <input
                     value={categoryDraft.name}
                     onChange={(event) =>
