@@ -8,7 +8,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tri
   const { tripId: rawTripId } = await params;
   if (!supabase) return NextResponse.json({ configured: false, message: "Supabase environment variables are not configured." }, { status: 503 });
   const tripId = await resolveTripIdForRequest(rawTripId, supabase);
-  const [trip, places, expenses, travelers, schedule, souvenirs, exchange, weather, checklist, categories, budget, reservations, review] = await Promise.all([
+  const [trip, places, expenses, travelers, schedule, souvenirs, exchange, weather, checklist, categories, budget, reservations, review, dashboard] = await Promise.all([
     supabase.from("trips").select("*").eq("id", tripId).single(),
     supabase.from("places").select("*").eq("trip_id", tripId).order("created_at"),
     supabase.from("expenses").select("*").eq("trip_id", tripId).order("spent_at", { ascending: false }),
@@ -22,10 +22,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tri
     supabase.from("budget_items").select("*").eq("trip_id", tripId).order("created_at"),
     supabase.from("reservations").select("*").eq("trip_id", tripId).order("date"),
     supabase.from("reviews").select("*").eq("trip_id", tripId).maybeSingle(),
+    supabase.from("dashboard_items").select("*").eq("trip_id", tripId).order("created_at"),
   ]);
   const error = trip.error || places.error || expenses.error || travelers.error || schedule.error || souvenirs.error || exchange.error || weather.error || checklist.error || categories.error || budget.error || reservations.error || review.error;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ trip: trip.data, places: places.data, expenses: expenses.data, travelers: travelers.data, schedule: schedule.data, souvenirs: souvenirs.data, exchange: exchange.data, weather: weather.data, checklist: checklist.data, categories: categories.data, budget: budget.data, reservations: reservations.data, review: review.data });
+  return NextResponse.json({ trip: trip.data, places: places.data, expenses: expenses.data, travelers: travelers.data, schedule: schedule.data, souvenirs: souvenirs.data, exchange: exchange.data, weather: weather.data, checklist: checklist.data, categories: categories.data, budget: budget.data, reservations: reservations.data, review: review.data, dashboard: dashboard.error ? [] : dashboard.data });
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ tripId: string }> }) {
