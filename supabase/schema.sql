@@ -176,6 +176,16 @@ create table if not exists weather_days (
   unique (trip_id, date)
 );
 
+create table if not exists dashboard_items (
+  id uuid primary key default gen_random_uuid(),
+  trip_id uuid not null references trips(id) on delete cascade,
+  kind text not null check (kind in ('do', 'eat', 'souvenir', 'tip')),
+  title text not null,
+  detail text,
+  url text,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists places_trip_id_idx on places(trip_id);
 create index if not exists expenses_trip_id_idx on expenses(trip_id);
 create index if not exists expenses_place_id_idx on expenses(place_id);
@@ -188,3 +198,4 @@ create index if not exists reservations_trip_id_idx on reservations(trip_id);
 create index if not exists schedule_items_trip_id_idx on schedule_items(trip_id);
 create index if not exists souvenirs_trip_id_idx on souvenirs(trip_id);
 create index if not exists weather_days_trip_id_idx on weather_days(trip_id);
+create index if not exists dashboard_items_trip_id_idx on dashboard_items(trip_id);

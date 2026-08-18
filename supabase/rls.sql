@@ -12,7 +12,7 @@ begin
   foreach table_name in array array[
     'trips', 'places', 'expenses', 'travelers', 'checklist_items', 'checklist_categories',
     'budget_items', 'reservations', 'schedule_items', 'reviews',
-    'souvenirs', 'exchange_plans', 'weather_days'
+    'souvenirs', 'exchange_plans', 'weather_days', 'dashboard_items'
   ] loop
     -- RLS가 이미 켜져 있으면 그대로 두고, 꺼져 있을 때만 활성화합니다.
     if not exists (

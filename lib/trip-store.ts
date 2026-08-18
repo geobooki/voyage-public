@@ -12,6 +12,7 @@ import type {
   Souvenir,
   TripState,
   ChecklistCategory,
+  DashboardItem,
 } from "@/types/trip";
 
 const id = () =>
@@ -31,6 +32,7 @@ const sync = (
   }).catch(() => undefined);
 };
 const initial: TripState = {
+  dashboardItems: [],
   packingCategories: [
     { id: "cat-basics", name: "Basics", color: "#FEF3C7" },
     { id: "cat-clothing", name: "Clothing", color: "#DBEAFE" },
@@ -251,6 +253,7 @@ const initial: TripState = {
 };
 
 const blankState = (): TripState => ({
+  dashboardItems: [],
   packingCategories: [{ id: "cat-general", name: "기타", color: "#FEF3C7" }],
   packing: [],
   preparation: [],
@@ -479,6 +482,13 @@ export function useTripStore(tripId = "tokyo") {
             : data.trip?.destination_currency
               ? { ...current.exchange, to: String(data.trip.destination_currency) }
               : current.exchange,
+          dashboardItems: data.dashboard?.map((item: Record<string, unknown>) => ({
+            id: String(item.id),
+            kind: String(item.kind) as DashboardItem["kind"],
+            title: String(item.title),
+            detail: item.detail ? String(item.detail) : undefined,
+            url: item.url ? String(item.url) : undefined,
+          })) ?? current.dashboardItems,
         }));
       })
       .catch(() => undefined)
@@ -763,6 +773,15 @@ export function useTripStore(tripId = "tokyo") {
     update((s) => ({ ...s, review }));
     sync(tripId, "review", review);
   };
+  const addDashboardItem = (item: Omit<DashboardItem, "id">) => {
+    const next = { ...item, id: id() };
+    update((s) => ({ ...s, dashboardItems: [...s.dashboardItems, next] }));
+    sync(tripId, "dashboard", next);
+  };
+  const removeDashboardItem = (itemId: string) => {
+    update((s) => ({ ...s, dashboardItems: s.dashboardItems.filter((item) => item.id !== itemId) }));
+    void fetch(`/api/trips/${tripId}/dashboard?id=${encodeURIComponent(itemId)}`, { method: "DELETE" }).catch(() => undefined);
+  };
   return {
     state,
     toggleChecklist,
@@ -798,5 +817,7 @@ export function useTripStore(tripId = "tokyo") {
     removeSouvenir,
     saveExchange,
     saveReview,
+    addDashboardItem,
+    removeDashboardItem,
   };
 }
