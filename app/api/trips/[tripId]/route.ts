@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { resolveTripIdForRequest } from "@/lib/trip-id";
 
+const slugify = (value: string) => value.trim().toLowerCase().replace(/[^a-z0-9가-힣]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || `trip-${Date.now()}`;
+
 export async function GET(_request: Request, { params }: { params: Promise<{ tripId: string }> }) {
   const { tripId: rawTripId } = await params;
   if (!supabase) return NextResponse.json({ configured: false, message: "Supabase environment variables are not configured." }, { status: 503 });
@@ -30,7 +32,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ tr
   const { tripId: rawTripId } = await params;
   const body = await request.json();
   const updates = {
-    ...(body.title?.trim() ? { title: body.title.trim() } : {}),
+    ...(body.title?.trim() ? { title: body.title.trim(), slug: slugify(body.title) } : {}),
     ...(body.country !== undefined ? { country: body.country || null } : {}),
     ...(body.city !== undefined ? { city: body.city || null } : {}),
     ...(body.startDate !== undefined ? { start_date: body.startDate || null } : {}),
