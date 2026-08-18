@@ -23,13 +23,6 @@ export default function TripPage() {
     status: "planning",
   });
   const [savingStatus, setSavingStatus] = useState(false);
-  const [sharing, setSharing] = useState(false);
-  const [shareUrl, setShareUrl] = useState("");
-  const [shareMessage, setShareMessage] = useState("");
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [invitePermission, setInvitePermission] = useState<"view" | "edit">(
-    "view",
-  );
   useEffect(() => {
     const load = async () => {
       try {
@@ -80,40 +73,6 @@ export default function TripPage() {
       });
     } finally {
       setSavingStatus(false);
-    }
-  };
-  const createShareLink = async () => {
-    setSharing(true);
-    setShareMessage("");
-    try {
-      const response = await fetch(`/api/trips/${tripId}/shares`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: inviteEmail,
-          permission: invitePermission,
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok)
-        throw new Error(result.error || "공유 링크를 만들지 못했습니다.");
-      setShareUrl(result.shareUrl);
-      await navigator.clipboard?.writeText(result.shareUrl);
-      setShareMessage(
-        inviteEmail
-          ? `${inviteEmail} 초대 링크를 만들었어요.`
-          : "링크를 복사했어요.",
-      );
-      if (inviteEmail)
-        window.location.href = `mailto:${inviteEmail}?subject=${encodeURIComponent(`${trip.title} 여행 초대`)}&body=${encodeURIComponent(`${trip.title} 여행에 초대합니다. ${result.shareUrl}`)}`;
-    } catch (caught) {
-      setShareMessage(
-        caught instanceof Error
-          ? caught.message
-          : "공유 링크를 만들지 못했습니다.",
-      );
-    } finally {
-      setSharing(false);
     }
   };
   const packed = state.packing.length
@@ -210,68 +169,8 @@ export default function TripPage() {
                 {savingStatus ? "저장 중…" : "여행 완료 처리"}
               </button>
             )}
-            <button
-              onClick={() =>
-                setShareMessage((current) =>
-                  current ? "" : "초대할 이메일과 권한을 선택하세요.",
-                )
-              }
-              className="rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-bold text-[var(--color-primary)]"
-            >
-              여행 공유
-            </button>
           </div>
         </div>
-        {shareMessage !== "" && (
-          <div data-section="trip-sharing-controls" className="card mt-4 p-4">
-            <p className="text-sm font-bold">이메일로 여행 초대</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
-              <input
-                type="email"
-                value={inviteEmail}
-                onChange={(event) => setInviteEmail(event.target.value)}
-                placeholder="초대할 이메일 주소 (선택)"
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm"
-              />
-              <select
-                value={invitePermission}
-                onChange={(event) =>
-                  setInvitePermission(event.target.value as "view" | "edit")
-                }
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm"
-              >
-                <option value="view">보기 전용</option>
-                <option value="edit">공동 편집</option>
-              </select>
-              <button
-                onClick={createShareLink}
-                disabled={sharing}
-                className="rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-bold text-white"
-              >
-                {sharing ? "생성 중…" : "초대 링크 만들기"}
-              </button>
-            </div>
-            {shareUrl && (
-              <div className="mt-3 flex gap-2">
-                <input
-                  readOnly
-                  value={shareUrl}
-                  className="min-w-0 flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-xs"
-                />
-                <button
-                  onClick={() => void navigator.clipboard?.writeText(shareUrl)}
-                  className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-xs font-bold"
-                >
-                  복사
-                </button>
-              </div>
-            )}
-            <p className="mt-2 text-xs muted">
-              공동 편집 링크에서는 공유 일정의 완료 상태를 함께 업데이트할 수
-              있습니다.
-            </p>
-          </div>
-        )}
         <div
           data-section="trip-phases"
           className="mt-10 grid gap-5 md:grid-cols-3"
