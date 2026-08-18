@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 import { DateField } from "@/app/components/date-field";
+import { readPackingDefaults } from "@/lib/packing-defaults";
 
 const control =
   "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3 outline-none focus:border-[var(--color-primary)]";
@@ -17,6 +18,7 @@ export default function NewTripPage() {
     country: "",
     city: "",
     destinationCurrency: "JPY",
+    tripType: "international" as "domestic" | "international",
     startDate: "",
     endDate: "",
   });
@@ -51,6 +53,16 @@ export default function NewTripPage() {
           trip,
         ]),
       );
+      const defaults = readPackingDefaults()[form.tripType];
+      const tripId = result.trip?.id || trip.id;
+      const category = "기본 준비물";
+      if (tripId) {
+        window.localStorage.setItem(`voyage:trip:${tripId}`, JSON.stringify({ packingCategories: [{ id: `default-${form.tripType}`, name: category, color: "#FEF3C7" }], packing: defaults.map((name, index) => ({ id: `default-${index}`, name, category, checked: false })) }));
+        if (result.configured) {
+          await fetch(`/api/trips/${tripId}/checklist-categories`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: category, color: "#FEF3C7", kind: "packing" }) });
+          await Promise.all(defaults.map((name) => fetch(`/api/trips/${tripId}/checklist`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, category, kind: "packing", checked: false }) })));
+        }
+      }
       router.push("/trips");
     } catch (caught) {
       setError(
@@ -88,6 +100,7 @@ export default function NewTripPage() {
                 className={control}
               />
             </label>
+            <fieldset><legend className="mb-2 block text-sm font-bold">여행 유형</legend><div className="grid grid-cols-2 gap-3"><label className={`rounded-xl border px-4 py-3 text-sm font-bold ${form.tripType === "domestic" ? "border-[var(--color-primary)] bg-[var(--color-surface-muted)]" : "border-[var(--color-border)]"}`}><input type="radio" name="tripType" value="domestic" checked={form.tripType === "domestic"} onChange={() => setForm({ ...form, tripType: "domestic" })} className="mr-2"/>국내</label><label className={`rounded-xl border px-4 py-3 text-sm font-bold ${form.tripType === "international" ? "border-[var(--color-primary)] bg-[var(--color-surface-muted)]" : "border-[var(--color-border)]"}`}><input type="radio" name="tripType" value="international" checked={form.tripType === "international"} onChange={() => setForm({ ...form, tripType: "international" })} className="mr-2"/>국외</label></div><p className="mt-1 text-xs muted">기본 준비물 목록을 자동으로 추가합니다.</p></fieldset>
             <div className="grid gap-5 sm:grid-cols-2">
               <label>
                 <span className="mb-2 block text-sm font-bold">
