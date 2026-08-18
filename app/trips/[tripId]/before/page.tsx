@@ -34,7 +34,10 @@ export default function BeforePage() {
   const [sortMode, setSortMode] = useState("category");
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [categoryDraft, setCategoryDraft] = useState({ name: "", color: "#FEF3C7" });
+  const [categoryDraft, setCategoryDraft] = useState({
+    name: "",
+    color: "#FEF3C7",
+  });
   const [showReservation, setShowReservation] = useState(false);
   const [reservation, setReservation] = useState({
     title: "",
@@ -45,23 +48,40 @@ export default function BeforePage() {
   const [exchange, setExchange] = useState(state.exchange);
   useEffect(() => setExchange(state.exchange), [state.exchange]);
   useEffect(() => {
-    fetch("/api/exchange-rates").then((response) => response.ok ? response.json() : null).then((result) => {
-      const rate = result?.rates?.[state.exchange.to];
-      if (typeof rate === "number" && rate > 0) setExchange((current) => ({ ...current, rate }));
-    }).catch(() => undefined);
+    fetch("/api/exchange-rates")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((result) => {
+        const rate = result?.rates?.[state.exchange.to];
+        if (typeof rate === "number" && rate > 0)
+          setExchange((current) => ({ ...current, rate }));
+      })
+      .catch(() => undefined);
   }, [state.exchange.to]);
   const categories = state.packingCategories;
   useEffect(() => {
     if (!category && categories[0]) setCategory(categories[0].name);
-    if (!selectedCategoryId && categories[0]) setSelectedCategoryId(categories[0].id);
+    if (!selectedCategoryId && categories[0])
+      setSelectedCategoryId(categories[0].id);
   }, [categories, category, selectedCategoryId]);
   const completed = state.packing.filter((item) => item.checked);
+  const exchangeUnit = exchange.to === "JPY" || exchange.to === "VND" ? 100 : 1;
+  const exchangeUnitLabel = exchangeUnit === 100 ? `100 ${exchange.to}` : exchange.to;
+  const displayedRate = Math.trunc(exchange.rate * exchangeUnit);
   const incomplete = state.packing.filter((item) => !item.checked);
-  const ordered = (items: typeof state.packing) => [...items].sort((a, b) => sortMode === "category" ? a.category.localeCompare(b.category) || a.name.localeCompare(b.name) : a.name.localeCompare(b.name));
+  const ordered = (items: typeof state.packing) =>
+    [...items].sort((a, b) =>
+      sortMode === "category"
+        ? a.category.localeCompare(b.category) || a.name.localeCompare(b.name)
+        : a.name.localeCompare(b.name),
+    );
   const submitItem = (event: FormEvent) => {
     event.preventDefault();
     if (!newItem.trim()) return;
-    addChecklist("packing", { name: newItem.trim(), category: category || categories[0]?.name || "기타", checked: false });
+    addChecklist("packing", {
+      name: newItem.trim(),
+      category: category || categories[0]?.name || "기타",
+      checked: false,
+    });
     setNewItem("");
   };
   const addNewCategory = (event: FormEvent) => {
@@ -142,7 +162,16 @@ export default function BeforePage() {
                   >
                     {item.name}
                   </span>
-                  <span className="rounded-md px-2 py-1 text-xs font-bold" style={{ backgroundColor: categories.find((entry) => entry.name === item.category)?.color ?? "#FEF3C7" }}>{item.category}</span>
+                  <span
+                    className="rounded-md px-2 py-1 text-xs font-bold"
+                    style={{
+                      backgroundColor:
+                        categories.find((entry) => entry.name === item.category)
+                          ?.color ?? "#FEF3C7",
+                    }}
+                  >
+                    {item.category}
+                  </span>
                   <button
                     type="button"
                     onClick={() => removeChecklist("packing", item.id)}
@@ -171,7 +200,36 @@ export default function BeforePage() {
                     : `Show ${completed.length} completed`}
               </button>
             )}
-            {showCompleted && completed.length > 0 && <div className="mt-5 border-t border-[var(--color-border)] pt-4"><p className="mb-2 text-xs font-bold muted">{ko ? "완료된 준비물" : "Completed items"}</p>{ordered(completed).map((item) => <div key={item.id} className="flex items-center gap-3 rounded-xl px-3 py-3"><input type="checkbox" checked onChange={() => toggleChecklist("packing", item.id)} className="size-4 accent-[var(--color-primary)]"/><span className="flex-1 text-sm font-semibold line-through text-[var(--color-text-muted)]">{item.name}</span><button type="button" onClick={() => removeChecklist("packing", item.id)} className="text-sm font-bold text-[var(--color-danger)]">×</button></div>)}</div>}
+            {showCompleted && completed.length > 0 && (
+              <div className="mt-5 border-t border-[var(--color-border)] pt-4">
+                <p className="mb-2 text-xs font-bold muted">
+                  {ko ? "완료된 준비물" : "Completed items"}
+                </p>
+                {ordered(completed).map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-xl px-3 py-3"
+                  >
+                    <input
+                      type="checkbox"
+                      checked
+                      onChange={() => toggleChecklist("packing", item.id)}
+                      className="size-4 accent-[var(--color-primary)]"
+                    />
+                    <span className="flex-1 text-sm font-semibold line-through text-[var(--color-text-muted)]">
+                      {item.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeChecklist("packing", item.id)}
+                      className="text-sm font-bold text-[var(--color-danger)]"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <form
               onSubmit={submitItem}
               className="mt-5 grid gap-2 border-t border-[var(--color-border)] pt-5 sm:grid-cols-[1fr_auto]"
@@ -186,11 +244,18 @@ export default function BeforePage() {
                 {ko ? "추가" : "Add"}
               </button>
               <div className="relative sm:col-span-2">
-                <select value={category} onChange={(event) => setCategory(event.target.value)} className={`w-full appearance-none pr-10 ${control}`}>
-                {categories.map((item) => (
-                  <option key={item.id}>{item.name}</option>
-                ))}
-                </select><span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm muted">⌄</span>
+                <select
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                  className={`w-full appearance-none pr-10 ${control}`}
+                >
+                  {categories.map((item) => (
+                    <option key={item.id}>{item.name}</option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm muted">
+                  ⌄
+                </span>
               </div>
             </form>
             <div className="mt-5 border-t border-[var(--color-border)] pt-5">
@@ -209,19 +274,135 @@ export default function BeforePage() {
                 </button>
               </form>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button type="button" onClick={() => setCategoryManagerOpen(true)} className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-xs font-bold">{ko ? "카테고리 관리" : "Manage categories"}</button>
-                <label className="ml-auto text-xs font-bold muted">{ko ? "정렬" : "Sort"}<select value={sortMode} onChange={(event) => setSortMode(event.target.value)} className="ml-2 rounded-lg border border-[var(--color-border)] bg-transparent px-2 py-1"><option value="category">{ko ? "카테고리순" : "Category"}</option><option value="name">{ko ? "이름순" : "Name"}</option></select></label>
+                <button
+                  type="button"
+                  onClick={() => setCategoryManagerOpen(true)}
+                  className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-xs font-bold"
+                >
+                  {ko ? "카테고리 관리" : "Manage categories"}
+                </button>
+                <label className="ml-auto text-xs font-bold muted">
+                  {ko ? "정렬" : "Sort"}
+                  <select
+                    value={sortMode}
+                    onChange={(event) => setSortMode(event.target.value)}
+                    className="ml-2 rounded-lg border border-[var(--color-border)] bg-transparent px-2 py-1"
+                  >
+                    <option value="category">
+                      {ko ? "카테고리순" : "Category"}
+                    </option>
+                    <option value="name">{ko ? "이름순" : "Name"}</option>
+                  </select>
+                </label>
                 {categories.map((item) => (
                   <span
                     className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold"
-                    style={{ backgroundColor: item.color }} key={item.id}
+                    style={{ backgroundColor: item.color }}
+                    key={item.id}
                   >
                     {item.name}
                   </span>
                 ))}
               </div>
             </div>
-            {categoryManagerOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 px-5"><div className="card w-full max-w-md p-6"><div className="flex items-center justify-between"><h3 className="text-lg font-bold">{ko ? "카테고리 관리" : "Manage categories"}</h3><button type="button" onClick={() => setCategoryManagerOpen(false)} className="text-xl">×</button></div><select value={selectedCategoryId} onChange={(event) => { const next = categories.find((item) => item.id === event.target.value); setSelectedCategoryId(event.target.value); if (next) setCategoryDraft({ name: next.name, color: next.color }); }} className={`mt-5 w-full ${control}`}>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><input value={categoryDraft.name} onChange={(event) => setCategoryDraft({ ...categoryDraft, name: event.target.value })} className={`mt-3 w-full ${control}`} placeholder={ko ? "카테고리 이름" : "Category name"}/><div className="mt-3 flex flex-wrap gap-2">{["#FEF3C7", "#DBEAFE", "#E0E7FF", "#FCE7F3", "#DCFCE7", "#FECACA"].map((color) => <button type="button" key={color} onClick={() => setCategoryDraft({ ...categoryDraft, color })} className={`size-8 rounded-full border-2 ${categoryDraft.color === color ? "border-black" : "border-white"}`} style={{ backgroundColor: color }} aria-label={color}/>)}</div><div className="mt-5 flex gap-2"><button type="button" onClick={() => { if (selectedCategoryId && categoryDraft.name.trim()) updatePackingCategory(selectedCategoryId, { name: categoryDraft.name.trim(), color: categoryDraft.color }); setCategoryManagerOpen(false); }} className="flex-1 rounded-xl bg-[var(--color-primary)] py-2.5 text-sm font-bold text-white">{ko ? "저장" : "Save"}</button><button type="button" onClick={() => { if (selectedCategoryId) removePackingCategory(selectedCategoryId); setCategoryManagerOpen(false); }} className="rounded-xl border border-[var(--color-danger)] px-4 py-2.5 text-sm font-bold text-[var(--color-danger)]">{ko ? "삭제" : "Delete"}</button></div></div></div>}
+            {categoryManagerOpen && (
+              <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 px-5">
+                <div className="card w-full max-w-md p-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold">
+                      {ko ? "카테고리 관리" : "Manage categories"}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setCategoryManagerOpen(false)}
+                      className="text-xl"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <select
+                    value={selectedCategoryId}
+                    onChange={(event) => {
+                      const next = categories.find(
+                        (item) => item.id === event.target.value,
+                      );
+                      setSelectedCategoryId(event.target.value);
+                      if (next)
+                        setCategoryDraft({
+                          name: next.name,
+                          color: next.color,
+                        });
+                    }}
+                    className={`mt-5 w-full ${control}`}
+                  >
+                    {categories.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={categoryDraft.name}
+                    onChange={(event) =>
+                      setCategoryDraft({
+                        ...categoryDraft,
+                        name: event.target.value,
+                      })
+                    }
+                    className={`mt-3 w-full ${control}`}
+                    placeholder={ko ? "카테고리 이름" : "Category name"}
+                  />
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {[
+                      "#FEF3C7",
+                      "#DBEAFE",
+                      "#E0E7FF",
+                      "#FCE7F3",
+                      "#DCFCE7",
+                      "#FECACA",
+                    ].map((color) => (
+                      <button
+                        type="button"
+                        key={color}
+                        onClick={() =>
+                          setCategoryDraft({ ...categoryDraft, color })
+                        }
+                        className={`size-8 rounded-full border-2 ${categoryDraft.color === color ? "border-black" : "border-white"}`}
+                        style={{ backgroundColor: color }}
+                        aria-label={color}
+                      />
+                    ))}
+                  </div>
+                  <div className="mt-5 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (selectedCategoryId && categoryDraft.name.trim())
+                          updatePackingCategory(selectedCategoryId, {
+                            name: categoryDraft.name.trim(),
+                            color: categoryDraft.color,
+                          });
+                        setCategoryManagerOpen(false);
+                      }}
+                      className="flex-1 rounded-xl bg-[var(--color-primary)] py-2.5 text-sm font-bold text-white"
+                    >
+                      {ko ? "저장" : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (selectedCategoryId)
+                          removePackingCategory(selectedCategoryId);
+                        setCategoryManagerOpen(false);
+                      }}
+                      className="rounded-xl border border-[var(--color-danger)] px-4 py-2.5 text-sm font-bold text-[var(--color-danger)]"
+                    >
+                      {ko ? "삭제" : "Delete"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
           <div className="space-y-5">
             <section className="card p-6">
@@ -336,7 +517,7 @@ export default function BeforePage() {
             </section>
           </div>
         </div>
-        <section className="card mt-5 p-6 sm:p-7">
+        <section className="card mt-5 p-6 sm:p-7" id="currency-plan">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="eyebrow mb-2">
@@ -383,19 +564,17 @@ export default function BeforePage() {
                 }
                 className={`mt-2 w-full ${control}`}
               >
-                <option>JPY</option>
-                <option>EUR</option>
-                <option>USD</option>
+                {['JPY', 'VND', 'EUR', 'USD', 'THB', 'TWD', 'CNY', 'GBP', 'AUD', 'CAD', 'SGD', 'HKD'].map((currency) => <option key={currency}>{currency}</option>)}
               </select>
             </label>
             <label className="text-xs font-bold">
-              {ko ? "환율" : "Rate"}
+              {ko ? `환율 (${exchangeUnitLabel} 기준)` : `Rate (per ${exchangeUnitLabel})`}
               <input
                 type="number"
-                step="0.0001"
-                value={exchange.rate}
+                step="1"
+                value={displayedRate}
                 onChange={(event) =>
-                  setExchange({ ...exchange, rate: Number(event.target.value) })
+                  setExchange({ ...exchange, rate: Number(event.target.value) / exchangeUnit })
                 }
                 className={`mt-2 w-full ${control}`}
               />
