@@ -46,16 +46,21 @@ export default function BeforePage() {
     cost: "",
   });
   const [exchange, setExchange] = useState(state.exchange);
+  const [rateLoading, setRateLoading] = useState(true);
+  const [rateDate, setRateDate] = useState<string | null>(null);
   useEffect(() => setExchange(state.exchange), [state.exchange]);
   useEffect(() => {
+    setRateLoading(true);
     fetch("/api/exchange-rates")
       .then((response) => (response.ok ? response.json() : null))
       .then((result) => {
         const rate = result?.rates?.[state.exchange.to];
+        setRateDate(result?.date || null);
         if (typeof rate === "number" && rate > 0)
           setExchange((current) => ({ ...current, rate }));
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => setRateLoading(false));
   }, [state.exchange.to]);
   const categories = state.packingCategories;
   useEffect(() => {
@@ -527,7 +532,7 @@ export default function BeforePage() {
                 {ko ? "환전 계획 세우기" : "Plan your exchange"}
               </h2>
               <p className="mt-1 text-sm muted">
-                {ko ? "수동 환율 ·" : "Manual rate ·"} {exchange.from} →{" "}
+                {ko ? "최신 자동 환율 ·" : "Latest automatic rate ·"} {exchange.from} →{" "}
                 {exchange.to}
               </p>
             </div>
@@ -569,15 +574,10 @@ export default function BeforePage() {
             </label>
             <label className="text-xs font-bold">
               {ko ? `환율 (${exchangeUnitLabel} 기준)` : `Rate (per ${exchangeUnitLabel})`}
-              <input
-                type="number"
-                step="1"
-                value={displayedRate}
-                onChange={(event) =>
-                  setExchange({ ...exchange, rate: Number(event.target.value) / exchangeUnit })
-                }
-                className={`mt-2 w-full ${control}`}
-              />
+              <div className={`mt-2 flex min-h-11 items-center justify-between ${control} ${rateLoading ? "opacity-60" : ""}`}>
+                <span>{rateLoading ? (ko ? "불러오는 중…" : "Loading…") : displayedRate.toLocaleString("ko-KR")}</span>
+                <span className="text-[11px] font-normal muted">{rateDate ? `${ko ? "기준일" : "As of"} ${rateDate}` : ko ? "자동" : "Automatic"}</span>
+              </div>
             </label>
             <label className="text-xs font-bold">
               {ko ? "예상 현금" : "Expected cash"}
