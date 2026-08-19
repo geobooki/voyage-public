@@ -135,7 +135,8 @@ export default function TripPage() {
         },
       ];
   const today = new Date().toISOString().slice(0, 10);
-  const phaseKey = trip.status === "completed"
+  const isCompleted = trip.status.toLowerCase() === "completed";
+  const phaseKey = isCompleted
     ? "after"
     : trip.startDate && trip.startDate <= today && (!trip.endDate || trip.endDate >= today)
       ? "during"
@@ -167,7 +168,7 @@ export default function TripPage() {
         >
           <div className="min-w-0 flex-1">
             <p className="eyebrow mb-3">
-              {trip.status === "completed"
+              {isCompleted
                 ? ko
                   ? "여행 기록"
                   : "Travel archive"
@@ -179,7 +180,7 @@ export default function TripPage() {
               <h1 className="text-4xl font-bold">{trip.title}</h1>
               <span className="flex flex-col items-center gap-1">
                 <Link href={`/trips/${tripId}/edit`} aria-label={ko ? "여행 수정" : "Edit trip"} className="grid size-8 place-items-center rounded-full border border-[var(--color-border)] text-sm">✎</Link>
-                {trip.status !== "completed" && <button onClick={completeTrip} disabled={savingStatus} className="rounded-md border border-[var(--color-border)] px-2 py-0.5 text-[10px] font-bold disabled:opacity-60">{savingStatus ? "…" : ko ? "완료" : "Done"}</button>}
+                {!isCompleted && <button onClick={completeTrip} disabled={savingStatus} className="rounded-md border border-[var(--color-border)] px-2 py-0.5 text-[10px] font-bold disabled:opacity-60">{savingStatus ? "…" : ko ? "완료" : "Done"}</button>}
               </span>
             </div>
             <p className="mt-2 muted">{trip.dates}</p>
