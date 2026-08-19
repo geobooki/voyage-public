@@ -12,6 +12,11 @@ const control =
 const money = (amount: number | string) =>
   typeof amount === "number" ? `₩${amount.toLocaleString("ko-KR")}` : amount;
 
+function MoneyInput({ value, onChange, className }: { value: number; onChange: (value: number) => void; className: string }) {
+  const display = value === 0 ? "" : value.toLocaleString("ko-KR");
+  return <input type="text" inputMode="decimal" value={display} placeholder="0" onFocus={(event) => event.currentTarget.select()} onChange={(event) => onChange(Number(event.target.value.replace(/,/g, "")) || 0)} className={className} />;
+}
+
 export default function BeforePage() {
   const { tripId } = useParams<{ tripId: string }>();
   const { language } = useLanguage();
@@ -73,7 +78,7 @@ export default function BeforePage() {
   const completed = state.packing.filter((item) => item.checked);
   const exchangeUnit = exchange.to === "JPY" || exchange.to === "VND" ? 100 : 1;
   const exchangeUnitLabel = exchangeUnit === 100 ? `100 ${exchange.to}` : exchange.to;
-  const displayedRate = Math.trunc(exchange.rate * exchangeUnit);
+  const displayedRate = (exchange.rate * exchangeUnit).toFixed(2);
   const incomplete = state.packing.filter((item) => !item.checked);
   const ordered = (items: typeof state.packing) =>
     [...items].sort((a, b) =>
@@ -516,49 +521,31 @@ export default function BeforePage() {
             <label className="text-xs font-bold">
               {ko ? `환율 (${exchangeUnitLabel} 기준)` : `Rate (per ${exchangeUnitLabel})`}
               <div className={`mt-2 flex min-h-11 items-center justify-between ${control} ${rateLoading ? "opacity-60" : ""}`}>
-                <span>{rateLoading ? (ko ? "불러오는 중…" : "Loading…") : displayedRate.toLocaleString("ko-KR")}</span>
+                <span>{rateLoading ? (ko ? "불러오는 중…" : "Loading…") : Number(displayedRate).toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 <span className="text-[11px] font-normal muted">{rateDate ? `${ko ? "기준일" : "As of"} ${rateDate}` : ko ? "자동" : "Automatic"}</span>
               </div>
             </label>
             <label className="text-xs font-bold">
               {ko ? "예상 현금" : "Expected cash"}
-              <input
-                type="number"
+              <MoneyInput
                 value={exchange.expectedCash}
-                onChange={(event) =>
-                  setExchange({
-                    ...exchange,
-                    expectedCash: Number(event.target.value),
-                  })
-                }
+                onChange={(value) => setExchange({ ...exchange, expectedCash: value })}
                 className={`mt-2 w-full ${control}`}
               />
             </label>
             <label className="text-xs font-bold">
               {ko ? "카드 예상액" : "Card estimate"}
-              <input
-                type="number"
+              <MoneyInput
                 value={exchange.cardEstimate}
-                onChange={(event) =>
-                  setExchange({
-                    ...exchange,
-                    cardEstimate: Number(event.target.value),
-                  })
-                }
+                onChange={(value) => setExchange({ ...exchange, cardEstimate: value })}
                 className={`mt-2 w-full ${control}`}
               />
             </label>
             <label className="text-xs font-bold">
               {ko ? "실제 환전액" : "Actual exchanged"}
-              <input
-                type="number"
+              <MoneyInput
                 value={exchange.actualExchange}
-                onChange={(event) =>
-                  setExchange({
-                    ...exchange,
-                    actualExchange: Number(event.target.value),
-                  })
-                }
+                onChange={(value) => setExchange({ ...exchange, actualExchange: value })}
                 className={`mt-2 w-full ${control}`}
               />
             </label>

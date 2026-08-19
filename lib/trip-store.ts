@@ -422,8 +422,11 @@ export function useTripStore(tripId = "tokyo") {
               title: String(item.title),
               type: String(item.type),
               date: String(item.date ?? ""),
+              endDate: item.end_date ? String(item.end_date) : undefined,
               time: item.time ? String(item.time) : undefined,
               location: item.location ? String(item.location) : undefined,
+              airline: item.airline ? String(item.airline) : undefined,
+              terminal: item.terminal ? String(item.terminal) : undefined,
               reservationNumber: item.reservation_number
                 ? String(item.reservation_number)
                 : undefined,

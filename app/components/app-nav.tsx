@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n";
+import { isCurrentOrSoonTrip } from "@/lib/trip-selection";
+import { useEffect, useState } from "react";
 
 const items = [
   { href: "/", label: "Overview", icon: "⌂" },
@@ -12,6 +14,16 @@ const items = [
 
 export function AppNav() {
   const { t } = useLanguage();
+  const [hasNowTrip, setHasNowTrip] = useState(false);
+  useEffect(() => {
+    void fetch("/api/trips")
+      .then((response) => (response.ok ? response.json() : { trips: [] }))
+      .then((result) => setHasNowTrip(Array.isArray(result.trips) && result.trips.some(isCurrentOrSoonTrip)))
+      .catch(() => setHasNowTrip(false));
+  }, []);
+  const navigationItems = hasNowTrip
+    ? [{ href: "/now", label: t("overview"), icon: "◉" }, ...items]
+    : items;
   const labels = {
     "/": t("overview"),
     "/trips": t("trips"),
@@ -22,7 +34,7 @@ export function AppNav() {
       className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 px-4 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur md:inset-y-0 md:right-auto md:w-24 md:border-r md:border-t-0 md:px-2 md:py-6"
     >
       <div className="mx-auto flex max-w-md justify-around gap-2 md:flex md:h-full md:flex-col md:justify-start">
-        {items.map((item) => (
+        {navigationItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
@@ -31,7 +43,7 @@ export function AppNav() {
             <span className="text-xl text-[var(--color-primary)]">
               {item.icon}
             </span>
-            {labels[item.href as keyof typeof labels]}
+            {item.href === "/now" ? (t("language") === "한국어" ? "지금 여행" : "Now") : labels[item.href as keyof typeof labels]}
           </Link>
         ))}
         <Link

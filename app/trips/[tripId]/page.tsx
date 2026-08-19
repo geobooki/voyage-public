@@ -7,7 +7,7 @@ import { formatTotals } from "@/lib/money";
 import { useTripData } from "@/lib/trip-context";
 import { useLanguage } from "@/lib/i18n";
 
-type TripMeta = { title: string; dates: string; status: string };
+type TripMeta = { title: string; dates: string; startDate: string; endDate: string; status: string };
 
 export default function TripPage() {
   const { tripId } = useParams<{ tripId: string }>();
@@ -21,7 +21,10 @@ export default function TripPage() {
         ? "Sep 10 — Sep 15, 2026 · 5 nights"
         : "Dates to be planned",
     status: "planning",
+    startDate: "",
+    endDate: "",
   });
+  const [showOtherPhases, setShowOtherPhases] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
   useEffect(() => {
     const load = async () => {
@@ -33,6 +36,8 @@ export default function TripPage() {
           setTrip({
             title: local.title || `${local.city}, ${local.country}`,
             dates: `${local.startDate} — ${local.endDate}`,
+            startDate: local.startDate || "",
+            endDate: local.endDate || "",
             status: String(local.status || "planning").toLowerCase(),
           });
         const response = await fetch(`/api/trips/${tripId}`);
@@ -42,6 +47,8 @@ export default function TripPage() {
             setTrip({
               title: String(result.trip.title),
               dates: `${String(result.trip.start_date ?? "Dates to be planned")} — ${String(result.trip.end_date ?? "")}`,
+              startDate: String(result.trip.start_date ?? ""),
+              endDate: String(result.trip.end_date ?? ""),
               status: String(result.trip.status ?? "planning"),
             });
         }
@@ -130,6 +137,20 @@ export default function TripPage() {
           emoji: "♡",
         },
       ];
+  const today = new Date().toISOString().slice(0, 10);
+  const phaseKey = trip.status === "completed"
+    ? "after"
+    : trip.startDate && trip.startDate <= today && (!trip.endDate || trip.endDate >= today)
+      ? "during"
+      : trip.endDate && trip.endDate < today
+        ? "after"
+        : "before";
+  const visibleSections = showOtherPhases
+    ? sections
+    : sections.filter((section) => section.key === phaseKey);
+  const flights = state.reservations.filter((item) => item.type.toLowerCase().includes("flight"));
+  const stays = state.reservations.filter((item) => ["stay", "hotel", "accommodation"].some((type) => item.type.toLowerCase().includes(type)));
+  const dateLabel = (value?: string) => value ? new Date(`${value}T00:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" }) : "—";
   return (
     <main
       data-section="trip-overview"
@@ -146,7 +167,7 @@ export default function TripPage() {
           data-section="trip-heading"
           className="mt-8 flex flex-wrap items-end justify-between gap-5"
         >
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="eyebrow mb-3">
               {trip.status === "completed"
                 ? ko
@@ -156,27 +177,39 @@ export default function TripPage() {
                   ? "다음 여행"
                   : "Your next adventure"}
             </p>
-            <h1 className="text-4xl font-bold">{trip.title}</h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-4xl font-bold">{trip.title}</h1>
+              <Link href={`/trips/${tripId}/edit`} aria-label={ko ? "여행 수정" : "Edit trip"} className="grid size-8 place-items-center rounded-full border border-[var(--color-border)] text-sm">✎</Link>
+            </div>
             <p className="mt-2 muted">{trip.dates}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href={`/trips/${tripId}/edit`} className="rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-bold">{ko ? "여행 수정" : "Edit trip"}</Link>
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {trip.status !== "completed" && (
               <button
                 onClick={completeTrip}
                 disabled={savingStatus}
-                className="rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60"
+                className="rounded-lg border border-[var(--color-border)] px-2.5 py-1.5 text-xs font-bold disabled:opacity-60"
               >
-                {savingStatus ? "저장 중…" : "여행 완료 처리"}
+                {savingStatus ? "저장 중…" : ko ? "완료" : "Done"}
               </button>
             )}
           </div>
         </div>
+        <section data-section="trip-reservation-summary" className="mt-7 grid gap-4 md:grid-cols-2">
+          <article className="card p-5">
+            <p className="eyebrow mb-2">{ko ? "항공편" : "Flight"}</p>
+            {flights.length ? flights.map((item) => <div key={item.id}><h2 className="font-bold">{item.airline || item.title}</h2><p className="mt-2 text-sm muted">{dateLabel(item.date)}{item.time ? ` · ${item.time}` : ""}{item.terminal ? ` · ${item.terminal}` : ""}</p><p className="mt-1 text-xs muted">{item.location || (ko ? "터미널 미정" : "Terminal pending")}</p></div>) : <p className="text-sm muted">{ko ? "항공편 예약을 추가하면 표시돼요." : "Add a flight reservation to see it here."}</p>}
+          </article>
+          <article className="card p-5">
+            <p className="eyebrow mb-2">{ko ? "숙박" : "Stay"}</p>
+            {stays.length ? stays.map((item) => <div key={item.id}><h2 className="font-bold">{item.title}</h2><p className="mt-2 text-sm muted">{dateLabel(item.date)} — {dateLabel(item.endDate || trip.endDate)}{item.reservationNumber ? ` · ${ko ? "예약번호" : "No."} ${item.reservationNumber}` : ""}</p><p className="mt-1 text-xs muted">{item.location || (ko ? "주소 미정" : "Address pending")}</p></div>) : <p className="text-sm muted">{ko ? "숙박 예약을 추가하면 표시돼요." : "Add a stay reservation to see it here."}</p>}
+          </article>
+        </section>
         <div
           data-section="trip-phases"
           className="mt-10 grid gap-5 md:grid-cols-3"
         >
-          {sections.map((item) => (
+          {visibleSections.map((item) => (
             <Link
               key={item.key}
               href={`/trips/${tripId}/${item.key}`}
@@ -194,6 +227,9 @@ export default function TripPage() {
             </Link>
           ))}
         </div>
+        <button type="button" onClick={() => setShowOtherPhases((value) => !value)} className="mt-4 text-sm font-bold text-[var(--color-primary)]">
+          {showOtherPhases ? (ko ? "다른 단계 접기" : "Hide other phases") : (ko ? "다른 단계 보기" : "Show other phases")}
+        </button>
         <section data-section="trip-snapshot" className="card mt-7 p-7">
           <div className="flex items-center justify-between">
             <div>
