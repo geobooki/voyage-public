@@ -7,6 +7,7 @@ import { useTripData } from "@/lib/trip-context";
 import { MoneyField } from "@/app/components/money-field";
 import { DateField } from "@/app/components/date-field";
 import { useLanguage } from "@/lib/i18n";
+import { ReservationDocuments } from "@/app/components/reservation-documents";
 
 const control =
   "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
@@ -229,6 +230,7 @@ export default function ReservationsPage() {
                   {item.memo}
                 </p>
               )}
+              <ReservationDocuments tripId={tripId} reservationId={item.id} />
             </article>
           ))}
         </div>
