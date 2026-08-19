@@ -2,4 +2,8 @@
 alter table if exists reservations add column if not exists end_date date;
 alter table if exists reservations add column if not exists airline text;
 alter table if exists reservations add column if not exists terminal text;
+alter table if exists reservations add column if not exists departure_location text;
+alter table if exists reservations add column if not exists arrival_location text;
+alter table if exists reservations add column if not exists departure_time time;
+alter table if exists reservations add column if not exists arrival_time time;
 notify pgrst, 'reload schema';
