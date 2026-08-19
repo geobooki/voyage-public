@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 import { useTripData } from "@/lib/trip-context";
 import { formatTotals } from "@/lib/money";
+import { MoneyField } from "@/app/components/money-field";
 
 const control =
   "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
@@ -435,15 +436,9 @@ export default function BeforePage() {
                       <option>Tour</option>
                       <option>Transport</option>
                     </select>
-                    <input
-                      type="number"
+                    <MoneyField
                       value={reservation.cost}
-                      onChange={(event) =>
-                        setReservation({
-                          ...reservation,
-                          cost: event.target.value,
-                        })
-                      }
+                      onChange={(value) => setReservation({ ...reservation, cost: value })}
                       placeholder={ko ? "비용 (원)" : "Cost (KRW)"}
                       className={control}
                     />
