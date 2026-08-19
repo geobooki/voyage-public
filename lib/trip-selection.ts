@@ -9,7 +9,7 @@ export type SelectableTrip = {
 const today = () => new Date().toISOString().slice(0, 10);
 
 export function isCurrentOrSoonTrip(trip: SelectableTrip, now = today()) {
-  if (trip.status === "completed") return false;
+  if (String(trip.status || "").toLowerCase() === "completed") return false;
   if (!trip.start_date) return false;
   const start = trip.start_date;
   const end = trip.end_date || start;
