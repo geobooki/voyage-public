@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import { formatTotals } from "@/lib/money";
 import { useTripMeta } from "@/lib/use-trip-meta";
 import { useTripData } from "@/lib/trip-context";
+import { MoneyField } from "@/app/components/money-field";
 
 const control =
   "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
@@ -119,13 +120,10 @@ export default function DuringPage() {
             onSubmit={saveExpense}
             className="card mt-6 grid gap-3 p-5 sm:grid-cols-4 lg:grid-cols-8"
           >
-            <input
+            <MoneyField
               required
-              type="number"
               value={expense.amount}
-              onChange={(event) =>
-                setExpense({ ...expense, amount: event.target.value })
-              }
+              onChange={(value) => setExpense({ ...expense, amount: value })}
               placeholder="Amount"
               className={control}
             />
@@ -256,12 +254,9 @@ export default function DuringPage() {
               }
               className={control}
             />
-            <input
-              type="number"
+            <MoneyField
               value={place.expectedCost}
-              onChange={(event) =>
-                setPlace({ ...place, expectedCost: event.target.value })
-              }
+              onChange={(value) => setPlace({ ...place, expectedCost: value })}
               placeholder="Expected cost"
               className={control}
             />

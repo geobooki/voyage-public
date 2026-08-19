@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
+import { MoneyField } from "@/app/components/money-field";
 
 const control =
   "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
@@ -54,21 +55,15 @@ export default function SouvenirsPage() {
             placeholder="Souvenir name"
             className={control}
           />
-          <input
-            type="number"
-            value={form.estimatedPrice}
-            onChange={(event) =>
-              setForm({ ...form, estimatedPrice: event.target.value })
-            }
+          <MoneyField
+              value={form.estimatedPrice}
+            onChange={(value) => setForm({ ...form, estimatedPrice: value })}
             placeholder="Estimated price"
             className={control}
           />
-          <input
-            type="number"
-            value={form.actualPrice}
-            onChange={(event) =>
-              setForm({ ...form, actualPrice: event.target.value })
-            }
+          <MoneyField
+              value={form.actualPrice}
+            onChange={(value) => setForm({ ...form, actualPrice: value })}
             placeholder="Actual price (optional)"
             className={control}
           />

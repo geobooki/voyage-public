@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { totalsByCurrency } from "@/lib/money";
 import { useLanguage } from "@/lib/i18n";
 import { useTripData } from "@/lib/trip-context";
+import { MoneyField } from "@/app/components/money-field";
 
 const control =
   "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--color-primary)]";
@@ -325,14 +326,11 @@ export default function BudgetPage() {
                 <option key={method}>{method}</option>
               ))}
             </select>
-            <input
+            <MoneyField
               required
-              type="number"
               min="0"
               value={item.amount}
-              onChange={(event) =>
-                setItem({ ...item, amount: event.target.value })
-              }
+              onChange={(value) => setItem({ ...item, amount: value })}
               placeholder={ko ? "금액" : "Amount"}
               className={control}
             />
