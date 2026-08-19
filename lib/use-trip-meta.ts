@@ -8,6 +8,7 @@ export type TripMeta = {
   country: string;
   startDate: string;
   endDate: string;
+  destinationCurrency: string;
 };
 const fallback: TripMeta = {
   title: "Your journey",
@@ -15,6 +16,7 @@ const fallback: TripMeta = {
   country: "",
   startDate: "",
   endDate: "",
+  destinationCurrency: "JPY",
 };
 
 export function useTripMeta(tripId: string) {
@@ -33,6 +35,7 @@ export function useTripMeta(tripId: string) {
             country: String(local.country || ""),
             startDate: String(local.startDate || ""),
             endDate: String(local.endDate || ""),
+            destinationCurrency: String(local.destinationCurrency || "JPY"),
           });
         const response = await fetch(`/api/trips/${tripId}`);
         if (!active || !response.ok) return;
@@ -44,6 +47,7 @@ export function useTripMeta(tripId: string) {
             country: String(result.trip.country || ""),
             startDate: String(result.trip.start_date || ""),
             endDate: String(result.trip.end_date || ""),
+            destinationCurrency: String(result.trip.destination_currency || "JPY"),
           });
       } catch {
         /* keep the current blank/local state */
