@@ -87,6 +87,7 @@ function TripPageContent() {
       )
     : 0;
   const total = formatTotals(state.expenses);
+  const plannedTotal = formatTotals(state.budget);
   const sections = ko
     ? [
         {
@@ -146,6 +147,36 @@ function TripPageContent() {
   const visibleSections = showOtherPhases
     ? sections
     : sections.filter((section) => section.key === phaseKey);
+  const beforeCards = [
+    {
+      key: "packing",
+      href: `/trips/${tripId}/before/packing`,
+      label: ko ? "준비물" : "Packing list",
+      title: ko ? "준비물을 꼼꼼히 챙겨요" : "Pack with confidence",
+      text: ko
+        ? `${state.packing.filter((item) => item.checked).length} / ${state.packing.length}개 완료`
+        : `${state.packing.filter((item) => item.checked).length} / ${state.packing.length} complete`,
+      emoji: "✓",
+    },
+    {
+      key: "budget",
+      href: `/trips/${tripId}/before/budget`,
+      label: ko ? "예산" : "Budget",
+      title: ko ? "환전과 예산을 정리해요" : "Plan your travel money",
+      text: plannedTotal || (ko ? "아직 예산이 없어요" : "No budget items yet"),
+      emoji: "₩",
+    },
+    {
+      key: "reservations",
+      href: `/trips/${tripId}/before/reservations`,
+      label: ko ? "예약" : "Reservations",
+      title: ko ? "예약 정보를 모아둬요" : "Keep bookings together",
+      text: ko
+        ? `${state.reservations.length}건 저장됨`
+        : `${state.reservations.length} saved`,
+      emoji: "▣",
+    },
+  ];
   const flights = state.reservations.filter((item) => item.type.toLowerCase().includes("flight"));
   const stays = state.reservations.filter((item) => ["stay", "hotel", "accommodation"].some((type) => item.type.toLowerCase().includes(type)));
   const dateLabel = (value?: string) => value ? new Date(`${value}T00:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" }) : "—";
@@ -196,31 +227,44 @@ function TripPageContent() {
             {stays.length ? stays.map((item) => <div key={item.id}><h2 className="font-bold">{item.title}</h2><p className="mt-2 text-sm muted">{nightsBetween(item.date, item.endDate || trip.endDate)}{ko ? "박" : " nights"} · {dateLabel(item.date)} — {dateLabel(item.endDate || trip.endDate)}{item.reservationNumber ? ` · ${ko ? "예약번호" : "No."} ${item.reservationNumber}` : ""}</p><p className="mt-1 text-xs muted">{item.location || (ko ? "주소 미정" : "Address pending")}</p></div>) : <p className="text-sm muted">{ko ? "숙박 예약을 추가하면 표시돼요." : "Add a stay reservation to see it here."}</p>}
           </article>
         </section>
-        <div
-          data-section="trip-phases"
-          className="mt-10 grid gap-5 md:grid-cols-3"
-        >
-          {visibleSections.map((item) => (
-            <Link
-              key={item.key}
-              href={`/trips/${tripId}/${item.key}`}
-              className="card p-7 hover:-translate-y-1"
-            >
-              <span className="grid size-12 place-items-center rounded-2xl bg-[var(--color-surface-muted)] text-xl text-[var(--color-primary)]">
-                {item.emoji}
-              </span>
-              <p className="eyebrow mt-8">{item.label}</p>
-              <h2 className="mt-2 text-2xl font-bold">{item.title}</h2>
-              <p className="mt-2 text-sm muted">{item.text}</p>
-              <span className="mt-8 block text-sm font-bold text-[var(--color-primary)]">
-                {ko ? "열기 →" : "Open section →"}
-              </span>
-            </Link>
-          ))}
-        </div>
-        <button type="button" onClick={() => setShowOtherPhases((value) => !value)} className="mt-4 text-sm font-bold text-[var(--color-primary)]">
-          {showOtherPhases ? (ko ? "다른 단계 접기" : "Hide other phases") : (ko ? "다른 단계 보기" : "Show other phases")}
-        </button>
+        {phaseKey === "before" ? (
+          <section data-section="before-focus" className="mt-10 grid gap-5 md:grid-cols-2">
+            {beforeCards.map((item, index) => (
+              <Link
+                key={item.key}
+                href={item.href}
+                className={`card p-8 transition hover:-translate-y-1 ${index === 0 ? "bg-[var(--color-primary)] text-white md:col-span-2" : ""}`}
+              >
+                <span className={`grid size-14 place-items-center rounded-2xl text-2xl ${index === 0 ? "bg-white/15 text-white" : "bg-[var(--color-surface-muted)] text-[var(--color-primary)]"}`}>
+                  {item.emoji}
+                </span>
+                <p className={`eyebrow mt-8 ${index === 0 ? "text-white/70" : ""}`}>{item.label}</p>
+                <h2 className="mt-2 text-3xl font-bold">{item.title}</h2>
+                <p className={`mt-3 text-base ${index === 0 ? "text-white/80" : "muted"}`}>{item.text}</p>
+                <span className={`mt-8 block text-sm font-bold ${index === 0 ? "text-white" : "text-[var(--color-primary)]"}`}>
+                  {ko ? "관리하러 가기 →" : "Open →"}
+                </span>
+              </Link>
+            ))}
+          </section>
+        ) : (
+          <>
+            <div data-section="trip-phases" className="mt-10 grid gap-5 md:grid-cols-3">
+              {visibleSections.map((item) => (
+                <Link key={item.key} href={`/trips/${tripId}/${item.key}`} className="card p-7 hover:-translate-y-1">
+                  <span className="grid size-12 place-items-center rounded-2xl bg-[var(--color-surface-muted)] text-xl text-[var(--color-primary)]">{item.emoji}</span>
+                  <p className="eyebrow mt-8">{item.label}</p>
+                  <h2 className="mt-2 text-2xl font-bold">{item.title}</h2>
+                  <p className="mt-2 text-sm muted">{item.text}</p>
+                  <span className="mt-8 block text-sm font-bold text-[var(--color-primary)]">{ko ? "열기 →" : "Open section →"}</span>
+                </Link>
+              ))}
+            </div>
+            <button type="button" onClick={() => setShowOtherPhases((value) => !value)} className="mt-4 text-sm font-bold text-[var(--color-primary)]">
+              {showOtherPhases ? (ko ? "다른 단계 접기" : "Hide other phases") : (ko ? "다른 단계 보기" : "Show other phases")}
+            </button>
+          </>
+        )}
         <section data-section="trip-snapshot" className="card mt-7 p-7">
           <div className="flex items-center justify-between">
             <div>
