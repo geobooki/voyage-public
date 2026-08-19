@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatTotals } from "@/lib/money";
-import { useTripData } from "@/lib/trip-context";
+import { TripDataProvider, useTripData } from "@/lib/trip-context";
 import { useLanguage } from "@/lib/i18n";
 
 type TripMeta = { title: string; dates: string; startDate: string; endDate: string; status: string };
 
-export default function TripPage() {
+function TripPageContent() {
   const { tripId } = useParams<{ tripId: string }>();
   const { language } = useLanguage();
   const ko = language === "ko";
@@ -260,4 +260,9 @@ export default function TripPage() {
       </div>
     </main>
   );
+}
+
+export default function TripPage() {
+  const { tripId } = useParams<{ tripId: string }>();
+  return <TripDataProvider tripId={tripId}><TripPageContent /></TripDataProvider>;
 }
