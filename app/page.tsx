@@ -47,6 +47,7 @@ export default function Home() {
   const { language } = useLanguage();
   const ko = language === "ko";
   const [trips, setTrips] = useState<DashboardTrip[]>([]);
+  const [rates, setRates] = useState<Record<string, number>>({ KRW: 1 });
   useEffect(() => {
     void fetch("/api/trips")
       .then((response) => (response.ok ? response.json() : { trips: [] }))
@@ -54,6 +55,12 @@ export default function Home() {
         setTrips(Array.isArray(result.trips) ? result.trips : []),
       )
       .catch(() => setTrips([]));
+  }, []);
+  useEffect(() => {
+    void fetch("/api/exchange-rates")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((result) => { if (result?.rates) setRates(result.rates); })
+      .catch(() => undefined);
   }, []);
   const nextTrip = selectCurrentOrSoonTrip(trips);
   const tripStore = useTripStore(nextTrip?.id || "dashboard");
@@ -64,7 +71,7 @@ export default function Home() {
   const readiness = totalPacking
     ? Math.round((checked / totalPacking) * 100)
     : 0;
-  const estimated = state.budget.reduce((sum, item) => sum + item.amount, 0);
+  const estimated = state.budget.reduce((sum, item) => sum + item.amount * (rates[item.currency || "KRW"] || 0), 0);
   const tripTitle = nextTrip?.title || "새로운 여행을 시작해요";
   const tripDates = nextTrip?.start_date
     ? `${nextTrip.start_date}${nextTrip.end_date ? ` — ${nextTrip.end_date}` : ""}`
@@ -296,7 +303,7 @@ function DashboardContent({
       </section>
       <DashboardPanel className="mt-7 p-6 sm:p-8">
         <div className="flex items-start justify-between gap-4"><div><p className="eyebrow mb-2">{ko ? "여행 한눈에 보기" : "Trip at a glance"}</p><h2 className="text-xl font-bold">{ko ? "항공·숙박 정보" : "Flights and stays"}</h2></div><span className="text-xs muted">{nextTrip ? tripDates : ""}</span></div>
-        <div className="mt-5 grid gap-4 md:grid-cols-2"><div className="rounded-2xl bg-[var(--color-background)] p-4"><p className="text-xs font-bold muted">{ko ? "항공편" : "Flights"}</p>{flights.length ? flights.map((item) => <div key={item.id} className="mt-3"><p className="font-bold">{item.title}</p><p className="text-xs muted">{item.date || "날짜 미정"}{item.time ? ` · ${item.time}` : ""}{item.location ? ` · ${item.location}` : ""}</p></div>) : <p className="mt-3 text-sm muted">{ko ? "항공편을 예약에 추가하면 여기에 보여요." : "Add a flight reservation to show it here."}</p>}</div><div className="rounded-2xl bg-[var(--color-background)] p-4"><p className="text-xs font-bold muted">{ko ? "숙박" : "Stays"}</p>{stays.length ? stays.map((item) => <div key={item.id} className="mt-3"><p className="font-bold">{item.title}</p><p className="text-xs muted">{item.date || "날짜 미정"}{item.location ? ` · ${item.location}` : ""}</p></div>) : <p className="mt-3 text-sm muted">{ko ? "숙박 예약을 추가하면 여기에 보여요." : "Add a stay reservation to show it here."}</p>}</div></div>
+        <div className="mt-5 grid gap-4 md:grid-cols-2"><div className="rounded-2xl bg-[var(--color-background)] p-4"><p className="text-xs font-bold muted">{ko ? "항공편" : "Flights"}</p>{flights.length ? flights.map((item) => <div key={item.id} className="mt-3"><p className="font-bold">{item.airline || item.title}</p><p className="text-xs muted">{item.date || "날짜 미정"}{item.time ? ` · ${item.time}` : ""}{item.terminal ? ` · ${item.terminal}` : ""}</p><p className="mt-1 text-xs muted">{item.location || (ko ? "터미널 미정" : "Terminal pending")}</p></div>) : <p className="mt-3 text-sm muted">{ko ? "항공편을 예약에 추가하면 여기에 보여요." : "Add a flight reservation to show it here."}</p>}</div><div className="rounded-2xl bg-[var(--color-background)] p-4"><p className="text-xs font-bold muted">{ko ? "숙박" : "Stays"}</p>{stays.length ? stays.map((item) => <div key={item.id} className="mt-3"><p className="font-bold">{item.title}</p><p className="text-xs muted">{item.date || "날짜 미정"} — {item.endDate || nextTrip?.end_date || "날짜 미정"}{item.reservationNumber ? ` · ${item.reservationNumber}` : ""}</p><p className="mt-1 text-xs muted">{item.location || (ko ? "주소 미정" : "Address pending")}</p></div>) : <p className="mt-3 text-sm muted">{ko ? "숙박 예약을 추가하면 여기에 보여요." : "Add a stay reservation to show it here."}</p>}</div></div>
       </DashboardPanel>
       <DashboardPanel className="mt-7 p-6 sm:p-8"><div className="flex items-start justify-between"><div><p className="eyebrow mb-2">{ko ? "여행 아이디어" : "Trip ideas"}</p><h2 className="text-xl font-bold">{ko ? "하고 싶은 것 · 먹고 싶은 것 · 기념품" : "Things to do, eat, and bring home"}</h2></div></div><div className="mt-5 grid gap-4 md:grid-cols-3">{(["do", "eat", "souvenir"] as const).map((kind) => <div key={kind} className="rounded-2xl bg-[var(--color-background)] p-4"><p className="text-xs font-bold muted">{kind === "do" ? (ko ? "하고 싶은 것" : "Things to do") : kind === "eat" ? (ko ? "먹고 싶은 것" : "Places to eat") : (ko ? "추천 기념품" : "Souvenirs")}</p>{wishes(kind).map((item) => <div key={item.id} className="mt-3 flex items-start gap-2"><div className="flex-1"><p className="text-sm font-bold">{item.title}</p>{item.detail && <p className="mt-1 text-xs muted">{item.detail}</p>}</div><button type="button" onClick={() => removeDashboardItem(item.id)} className="text-xs text-[var(--color-danger)]">×</button></div>)}{!wishes(kind).length && <p className="mt-3 text-xs muted">{ko ? "아직 추가된 항목이 없어요." : "Nothing added yet."}</p>}</div>)}</div><form onSubmit={saveDashboardItem} className="mt-5 grid gap-2 border-t border-[var(--color-border)] pt-5 md:grid-cols-[auto_1fr_1fr_auto]"><select value={draft.kind} onChange={(event) => setDraft({ ...draft, kind: event.target.value as DashboardItem["kind"] })} className={control}><option value="do">{ko ? "하고 싶은 것" : "To do"}</option><option value="eat">{ko ? "먹고 싶은 것" : "To eat"}</option><option value="souvenir">{ko ? "추천 기념품" : "Souvenir"}</option><option value="tip">{ko ? "여행 링크" : "Travel link"}</option></select><input required value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} placeholder={ko ? "이름 또는 제목" : "Name or title"} className={control}/><input value={draft.detail} onChange={(event) => setDraft({ ...draft, detail: event.target.value })} placeholder={ko ? "메모 (선택)" : "Note (optional)"} className={control}/><button className="rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white">{ko ? "추가" : "Add"}</button>{draft.kind === "tip" && <input type="url" value={draft.url} onChange={(event) => setDraft({ ...draft, url: event.target.value })} placeholder="https://..." className={"md:col-span-3 " + control}/>}</form></DashboardPanel>
       <DashboardPanel className="mt-7 p-6 sm:p-8">
