@@ -398,6 +398,7 @@ export function useTripStore(tripId = "tokyo") {
               memo: String(item.memo ?? ""),
               date: String(item.spent_at ?? "").slice(0, 10),
               time: String(item.spent_at ?? "").slice(11, 16),
+              krwAmount: item.krw_amount == null ? undefined : Number(item.krw_amount),
             })) ?? current.expenses,
           travelers:
             data.travelers?.map((item: Record<string, unknown>) => ({

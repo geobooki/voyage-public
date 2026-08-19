@@ -53,6 +53,8 @@ create table if not exists expenses (
   created_at timestamptz not null default now()
 );
 
+alter table expenses add column if not exists krw_amount numeric(12, 2);
+
 create table if not exists travelers (
   id uuid primary key default gen_random_uuid(),
   trip_id uuid not null references trips(id) on delete cascade,
