@@ -2,18 +2,21 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { formatTotals } from "@/lib/money";
 import { TripDataProvider, useTripData } from "@/lib/trip-context";
 import { useLanguage } from "@/lib/i18n";
+import { DateField } from "@/app/components/date-field";
 
 type TripMeta = { title: string; dates: string; startDate: string; endDate: string; status: string };
+type QuickReservation = { title: string; type: string; date: string; location: string; airline: string; terminal: string; reservationNumber: string; memo: string; link: string };
+const blankQuickReservation: QuickReservation = { title: "", type: "Flight", date: "", location: "", airline: "", terminal: "", reservationNumber: "", memo: "", link: "" };
 
 function TripPageContent() {
   const { tripId } = useParams<{ tripId: string }>();
   const { language } = useLanguage();
   const ko = language === "ko";
-  const { state } = useTripData();
+  const { state, addReservation } = useTripData();
   const [trip, setTrip] = useState<TripMeta>({
     title: "여행 정보를 불러오는 중…",
     dates: "날짜를 정해 주세요",
@@ -23,6 +26,8 @@ function TripPageContent() {
   });
   const [showOtherPhases, setShowOtherPhases] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
+  const [quickReservationOpen, setQuickReservationOpen] = useState(false);
+  const [quickReservation, setQuickReservation] = useState<QuickReservation>(blankQuickReservation);
   useEffect(() => {
     const load = async () => {
       try {
@@ -184,6 +189,17 @@ function TripPageContent() {
   const stays = state.reservations.filter((item) => ["stay", "hotel", "accommodation"].some((type) => item.type.toLowerCase().includes(type)));
   const dateLabel = (value?: string) => value ? new Date(`${value}T00:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" }) : "—";
   const nightsBetween = (from?: string, to?: string) => from && to ? Math.max(0, Math.round((new Date(`${to}T00:00:00`).getTime() - new Date(`${from}T00:00:00`).getTime()) / 86400000)) : 0;
+  const openQuickReservation = (type: "Flight" | "Stay") => {
+    setQuickReservation({ ...blankQuickReservation, type });
+    setQuickReservationOpen(true);
+  };
+  const saveQuickReservation = (event: FormEvent) => {
+    event.preventDefault();
+    if (!quickReservation.title.trim() || !quickReservation.date) return;
+    addReservation({ ...quickReservation, title: quickReservation.title.trim(), cost: 0 });
+    setQuickReservationOpen(false);
+    setQuickReservation(blankQuickReservation);
+  };
   return (
     <main
       data-section="trip-overview"
@@ -244,14 +260,15 @@ function TripPageContent() {
         </div>
         <section data-section="trip-reservation-summary" className="mt-7 grid gap-4 md:grid-cols-2">
           <article className="card p-5">
-            <p className="eyebrow mb-2">{ko ? "항공편" : "Flight"}</p>
+            <div className="flex items-start justify-between gap-3"><p className="eyebrow mb-2">{ko ? "항공편" : "Flight"}</p><button type="button" onClick={() => openQuickReservation("Flight")} className="grid size-7 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold text-[var(--color-primary)]" aria-label={ko ? "항공편 예약 추가" : "Add flight reservation"}>+</button></div>
             {flights.length ? flights.map((item) => <div key={item.id}><h2 className="font-bold">{item.airline || item.title}</h2><p className="mt-2 text-sm muted">{dateLabel(item.date)}{item.time ? ` · ${item.time}` : ""}{item.terminal ? ` · ${item.terminal}` : ""}</p><p className="mt-1 text-xs muted">{item.location || (ko ? "터미널 미정" : "Terminal pending")}</p></div>) : <p className="text-sm muted">{ko ? "항공편 예약을 추가하면 표시돼요." : "Add a flight reservation to see it here."}</p>}
           </article>
           <article className="card p-5">
-            <p className="eyebrow mb-2">{ko ? "숙박" : "Stay"}</p>
+            <div className="flex items-start justify-between gap-3"><p className="eyebrow mb-2">{ko ? "숙박" : "Stay"}</p><button type="button" onClick={() => openQuickReservation("Stay")} className="grid size-7 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold text-[var(--color-primary)]" aria-label={ko ? "숙박 예약 추가" : "Add stay reservation"}>+</button></div>
             {stays.length ? stays.map((item) => <div key={item.id}><h2 className="font-bold">{item.title}</h2><p className="mt-2 text-sm muted">{nightsBetween(item.date, item.endDate || trip.endDate)}{ko ? "박" : " nights"} · {dateLabel(item.date)} — {dateLabel(item.endDate || trip.endDate)}{item.reservationNumber ? ` · ${ko ? "예약번호" : "No."} ${item.reservationNumber}` : ""}</p><p className="mt-1 text-xs muted">{item.location || (ko ? "주소 미정" : "Address pending")}</p></div>) : <p className="text-sm muted">{ko ? "숙박 예약을 추가하면 표시돼요." : "Add a stay reservation to see it here."}</p>}
           </article>
         </section>
+        {quickReservationOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 px-5 py-6"><div className="card max-h-[90vh] w-full max-w-xl overflow-y-auto p-6 sm:p-8" role="dialog" aria-modal="true" aria-labelledby="quick-reservation-title"><div className="flex items-start justify-between gap-4"><div><p className="eyebrow mb-2">{ko ? "예약 추가" : "Add reservation"}</p><h2 id="quick-reservation-title" className="text-2xl font-bold">{quickReservation.type === "Flight" ? (ko ? "항공편 예약" : "Flight reservation") : (ko ? "숙박 예약" : "Stay reservation")}</h2></div><button type="button" onClick={() => setQuickReservationOpen(false)} className="text-2xl" aria-label={ko ? "닫기" : "Close"}>×</button></div><form onSubmit={saveQuickReservation} className="mt-6 grid gap-3 sm:grid-cols-2"><label className="text-xs font-bold sm:col-span-2">{ko ? "예약 이름" : "Reservation name"}<input required value={quickReservation.title} onChange={(event) => setQuickReservation({ ...quickReservation, title: event.target.value })} placeholder={quickReservation.type === "Flight" ? "Vietnam Airlines" : (ko ? "예: 다낭 호텔" : "e.g. Da Nang hotel")} className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm" /></label><DateField label={ko ? "예약일" : "Reservation date"} required value={quickReservation.date} onChange={(value) => setQuickReservation({ ...quickReservation, date: value })} />{quickReservation.type === "Flight" && <><label className="text-xs font-bold">{ko ? "항공사" : "Airline"}<input value={quickReservation.airline} onChange={(event) => setQuickReservation({ ...quickReservation, airline: event.target.value })} className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm" /></label><label className="text-xs font-bold">{ko ? "터미널" : "Terminal"}<input value={quickReservation.terminal} onChange={(event) => setQuickReservation({ ...quickReservation, terminal: event.target.value })} className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm" /></label></>}<label className="text-xs font-bold">{ko ? "장소" : "Location"}<input value={quickReservation.location} onChange={(event) => setQuickReservation({ ...quickReservation, location: event.target.value })} className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm" /></label><label className="text-xs font-bold">{ko ? "예약번호" : "Confirmation number"}<input value={quickReservation.reservationNumber} onChange={(event) => setQuickReservation({ ...quickReservation, reservationNumber: event.target.value })} className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm" /></label><label className="text-xs font-bold sm:col-span-2">{ko ? "메모" : "Memo"}<textarea value={quickReservation.memo} onChange={(event) => setQuickReservation({ ...quickReservation, memo: event.target.value })} className="mt-2 min-h-20 w-full resize-none rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm" /></label><div className="flex justify-end gap-2 border-t border-[var(--color-border)] pt-4 sm:col-span-2"><button type="button" onClick={() => setQuickReservationOpen(false)} className="rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm font-bold">{ko ? "취소" : "Cancel"}</button><button className="rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-bold text-white">{ko ? "저장" : "Save"}</button></div></form></div></div>}
         {phaseKey === "before" ? (
           <section data-section="before-focus" className="mt-10 grid gap-5 md:grid-cols-2">
             {beforeCards.map((item, index) => (
