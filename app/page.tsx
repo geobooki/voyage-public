@@ -47,6 +47,7 @@ export default function Home() {
   const { language } = useLanguage();
   const ko = language === "ko";
   const [trips, setTrips] = useState<DashboardTrip[]>([]);
+  const [tripsLoading, setTripsLoading] = useState(true);
   const [rates, setRates] = useState<Record<string, number>>({ KRW: 1 });
   useEffect(() => {
     void fetch("/api/trips")
@@ -54,7 +55,8 @@ export default function Home() {
       .then((result) =>
         setTrips(Array.isArray(result.trips) ? result.trips : []),
       )
-      .catch(() => setTrips([]));
+      .catch(() => setTrips([]))
+      .finally(() => setTripsLoading(false));
   }, []);
   useEffect(() => {
     void fetch("/api/exchange-rates")
@@ -64,6 +66,9 @@ export default function Home() {
   }, []);
   const nextTrip = selectCurrentOrSoonTrip(trips);
   const tripStore = useTripStore(nextTrip?.id || "dashboard");
+  if (tripsLoading) {
+    return <main className="grid min-h-screen place-items-center px-6"><p className="muted">{ko ? "여행을 불러오는 중이에요." : "Loading your trips…"}</p></main>;
+  }
   const { state } = tripStore;
   const accountHref = user ? "/account" : "/auth";
   const checked = state.packing.filter((item) => item.checked).length;
