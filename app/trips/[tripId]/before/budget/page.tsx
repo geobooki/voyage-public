@@ -428,25 +428,20 @@ export default function BudgetPage() {
           )}
           <p className="mt-3 text-sm muted">
             {ko
-              ? "무료 공개 환율 API의 최신 영업일 기준입니다. 필요한 경우 아래에서 직접 조정할 수 있습니다."
-              : "Latest working-day reference rates from a free public API. You can override them below."}
+              ? "무료 공개 환율 API의 최신 영업일 기준입니다. 엔화와 베트남동은 100단위 기준으로 표시합니다."
+              : "Latest working-day reference rates from a free public API. JPY and VND are shown per 100 units."}
           </p>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             {currencies
               .filter((currency) => currency !== "KRW")
               .map((currency) => (
                 <label className="text-xs font-bold" key={currency}>
-                  {currency} → KRW
+                  {currency === "JPY" || currency === "VND" ? `100 ${currency}` : currency} → KRW
                   <input
                     type="number"
-                    step="any"
-                    value={rates[currency]}
-                    onChange={(event) =>
-                      setRates({
-                        ...rates,
-                        [currency]: Number(event.target.value),
-                      })
-                    }
+                    step="0.01"
+                    value={(rates[currency] * (currency === "JPY" || currency === "VND" ? 100 : 1)).toFixed(2)}
+                    readOnly
                     className={`mt-2 ${control}`}
                   />
                 </label>

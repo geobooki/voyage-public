@@ -7,6 +7,7 @@ import { useLanguage } from "@/lib/i18n";
 import { useTripStore } from "@/lib/trip-store";
 import { DashboardProvider, useDashboard } from "@/lib/dashboard-context";
 import type { DashboardItem } from "@/types/trip";
+import { selectCurrentOrSoonTrip } from "@/lib/trip-selection";
 
 const control = "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3 outline-none focus:border-[var(--color-primary)]";
 
@@ -54,18 +55,7 @@ export default function Home() {
       )
       .catch(() => setTrips([]));
   }, []);
-  const nextTrip = [...trips]
-    .filter(
-      (trip) =>
-        trip.status !== "completed" &&
-        (!trip.start_date ||
-          trip.start_date >= new Date().toISOString().slice(0, 10)),
-    )
-    .sort((a, b) =>
-      String(a.start_date || "9999").localeCompare(
-        String(b.start_date || "9999"),
-      ),
-    )[0];
+  const nextTrip = selectCurrentOrSoonTrip(trips);
   const tripStore = useTripStore(nextTrip?.id || "dashboard");
   const { state } = tripStore;
   const accountHref = user ? "/account" : "/auth";

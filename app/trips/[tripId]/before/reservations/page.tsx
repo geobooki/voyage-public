@@ -11,8 +11,11 @@ type Form = {
   title: string;
   type: string;
   date: string;
+  endDate: string;
   time: string;
   location: string;
+  airline: string;
+  terminal: string;
   reservationNumber: string;
   cost: string;
   memo: string;
@@ -22,8 +25,11 @@ const blank: Form = {
   title: "",
   type: "Stay",
   date: "",
+  endDate: "",
   time: "",
   location: "",
+  airline: "",
+  terminal: "",
   reservationNumber: "",
   cost: "",
   memo: "",
@@ -126,6 +132,20 @@ export default function ReservationsPage() {
               className={`mt-2 w-full ${control}`}
             />
           </label>
+          {form.type === "Flight" && <>
+            <label className="text-xs font-bold">
+              Airline
+              <input value={form.airline} onChange={(event) => setForm({ ...form, airline: event.target.value })} placeholder="e.g. Vietnam Airlines" className={`mt-2 w-full ${control}`} />
+            </label>
+            <label className="text-xs font-bold">
+              Terminal
+              <input value={form.terminal} onChange={(event) => setForm({ ...form, terminal: event.target.value })} placeholder="e.g. T2" className={`mt-2 w-full ${control}`} />
+            </label>
+          </>}
+          {form.type === "Stay" && <label className="text-xs font-bold">
+            Check-out
+            <input type="date" value={form.endDate} onChange={(event) => setForm({ ...form, endDate: event.target.value })} className={`mt-2 w-full ${control}`} />
+          </label>}
           <label className="text-xs font-bold">
             Location
             <input
@@ -199,7 +219,8 @@ export default function ReservationsPage() {
                 <span>
                   ▣ {item.date || "Date pending"} {item.time || ""}
                 </span>
-                <span>⌖ {item.location || "Location pending"}</span>
+                <span>⌖ {item.location || "Location pending"}{item.terminal ? ` · ${item.terminal}` : ""}</span>
+                {item.airline && <span>✈ {item.airline}</span>}
                 <span>
                   № {item.reservationNumber || "No confirmation number"}
                 </span>
