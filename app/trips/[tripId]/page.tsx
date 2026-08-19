@@ -297,14 +297,12 @@ function TripPageContent() {
                   ? "다음 여행"
                   : "Your next adventure"}
             </p>
-            <div className="flex flex-wrap items-start gap-3">
-              <h1 className="text-4xl font-bold">{trip.title}</h1>
-              <span className="flex flex-col items-center gap-1">
-                <Link href={`/trips/${tripId}/edit`} aria-label={ko ? "여행 수정" : "Edit trip"} className="grid size-8 place-items-center rounded-full border border-[var(--color-border)] text-sm">✎</Link>
-                {!isCompleted && <button onClick={completeTrip} disabled={savingStatus} className="rounded-md border border-[var(--color-border)] px-2 py-0.5 text-[10px] font-bold disabled:opacity-60">{savingStatus ? "…" : ko ? "완료" : "Done"}</button>}
-              </span>
-            </div>
+            <h1 className="text-4xl font-bold">{trip.title}</h1>
             <p className="mt-2 muted">{trip.dates}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href={`/trips/${tripId}/edit`} aria-label={ko ? "여행 수정" : "Edit trip"} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-sm">✎</Link>
+            {!isCompleted && <button onClick={completeTrip} disabled={savingStatus} className="rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60">{savingStatus ? "…" : ko ? "완료" : "Done"}</button>}
           </div>
         </div>
         <section data-section="trip-reservation-summary" className="mt-7 grid gap-4 md:grid-cols-2">
