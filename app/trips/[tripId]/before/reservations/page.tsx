@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
+import { MoneyField } from "@/app/components/money-field";
 
 const control =
   "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
@@ -100,12 +101,9 @@ export default function ReservationsPage() {
           </label>
           <label className="text-xs font-bold">
             Cost
-            <input
-              type="number"
+            <MoneyField
               value={form.cost}
-              onChange={(event) =>
-                setForm({ ...form, cost: event.target.value })
-              }
+              onChange={(value) => setForm({ ...form, cost: value })}
               placeholder="KRW"
               className={`mt-2 w-full ${control}`}
             />
