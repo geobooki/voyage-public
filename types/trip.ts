@@ -1,7 +1,7 @@
 export type ChecklistItem = { id: string; name: string; category: string; checked: boolean };
 export type ChecklistCategory = { id: string; name: string; color: string };
 export type BudgetItem = { id: string; name?: string; detail?: string; category: string; amount: number; currency?: string; paymentMethod?: string };
-export type Reservation = { id: string; title: string; type: string; date: string; endDate?: string; time?: string; location?: string; airline?: string; terminal?: string; reservationNumber?: string; cost: number; memo: string; link?: string };
+export type Reservation = { id: string; title: string; type: string; date: string; endDate?: string; time?: string; location?: string; departureLocation?: string; arrivalLocation?: string; departureTime?: string; arrivalTime?: string; airline?: string; terminal?: string; reservationNumber?: string; cost: number; memo: string; link?: string };
 export type ReservationDocument = { id: string; reservationId: string; fileName: string; storagePath: string; mimeType: string; size: number; createdAt: string };
 export type Place = { id: string; name: string; type: string; address: string; latitude?: number; longitude?: number; expectedCost: number; visitDate?: string; mustGo: boolean; visited: boolean; memo: string };
 export type ScheduleItem = { id: string; date: string; title: string; time: string; type: string; placeId?: string; note: string; completed: boolean };

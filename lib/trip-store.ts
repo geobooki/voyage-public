@@ -341,6 +341,10 @@ export function useTripStore(tripId = "tokyo") {
             endDate: item.end_date ? String(item.end_date) : undefined,
             time: item.time ? String(item.time) : undefined,
             location: item.location ? String(item.location) : undefined,
+            departureLocation: item.departure_location ? String(item.departure_location) : undefined,
+            arrivalLocation: item.arrival_location ? String(item.arrival_location) : undefined,
+            departureTime: item.departure_time ? String(item.departure_time) : undefined,
+            arrivalTime: item.arrival_time ? String(item.arrival_time) : undefined,
             airline: item.airline ? String(item.airline) : undefined,
             terminal: item.terminal ? String(item.terminal) : undefined,
             reservationNumber: item.reservation_number
