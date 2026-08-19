@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PackingProvider } from "@/lib/packing-context";
 
 export default async function BeforeLayout({
   children,
@@ -25,6 +26,12 @@ export default async function BeforeLayout({
             Preparation
           </Link>
           <Link
+            href={`/trips/${tripId}/before/packing`}
+            className="whitespace-nowrap muted"
+          >
+            Packing list
+          </Link>
+          <Link
             href={`/trips/${tripId}/before/budget`}
             className="whitespace-nowrap muted"
           >
@@ -38,7 +45,7 @@ export default async function BeforeLayout({
           </Link>
         </div>
       </nav>
-      {children}
+      <PackingProvider tripId={tripId}>{children}</PackingProvider>
     </>
   );
 }
