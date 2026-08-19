@@ -177,7 +177,10 @@ function TripPageContent() {
       emoji: "▣",
     },
   ];
-  const flights = state.reservations.filter((item) => item.type.toLowerCase().includes("flight"));
+  const flights = state.reservations.filter((item) => {
+    const type = item.type.toLowerCase();
+    return type.includes("flight") || type.includes("air") || Boolean(item.airline);
+  });
   const stays = state.reservations.filter((item) => ["stay", "hotel", "accommodation"].some((type) => item.type.toLowerCase().includes(type)));
   const dateLabel = (value?: string) => value ? new Date(`${value}T00:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" }) : "—";
   const nightsBetween = (from?: string, to?: string) => from && to ? Math.max(0, Math.round((new Date(`${to}T00:00:00`).getTime() - new Date(`${from}T00:00:00`).getTime()) / 86400000)) : 0;

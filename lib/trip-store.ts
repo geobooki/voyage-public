@@ -330,6 +330,27 @@ export function useTripStore(tripId = "tokyo") {
       })
       .then((data) => {
         if (!data) return;
+        const remoteReservations = (
+          data.reservations as Record<string, unknown>[] | undefined
+        )?.map(
+          (item: Record<string, unknown>) => ({
+            id: String(item.id),
+            title: String(item.title),
+            type: String(item.type),
+            date: String(item.date ?? ""),
+            endDate: item.end_date ? String(item.end_date) : undefined,
+            time: item.time ? String(item.time) : undefined,
+            location: item.location ? String(item.location) : undefined,
+            airline: item.airline ? String(item.airline) : undefined,
+            terminal: item.terminal ? String(item.terminal) : undefined,
+            reservationNumber: item.reservation_number
+              ? String(item.reservation_number)
+              : undefined,
+            cost: Number(item.cost ?? 0),
+            memo: String(item.memo ?? ""),
+            link: item.link ? String(item.link) : undefined,
+          }),
+        );
         setState((current) => ({
           ...current,
           places: data.places?.length
@@ -417,24 +438,15 @@ export function useTripStore(tripId = "tokyo") {
                 completed: Boolean(item.completed),
               }))
             : current.schedule,
-          reservations:
-            data.reservations?.map((item: Record<string, unknown>) => ({
-              id: String(item.id),
-              title: String(item.title),
-              type: String(item.type),
-              date: String(item.date ?? ""),
-              endDate: item.end_date ? String(item.end_date) : undefined,
-              time: item.time ? String(item.time) : undefined,
-              location: item.location ? String(item.location) : undefined,
-              airline: item.airline ? String(item.airline) : undefined,
-              terminal: item.terminal ? String(item.terminal) : undefined,
-              reservationNumber: item.reservation_number
-                ? String(item.reservation_number)
-                : undefined,
-              cost: Number(item.cost ?? 0),
-              memo: String(item.memo ?? ""),
-              link: item.link ? String(item.link) : undefined,
-            })) ?? current.reservations,
+          reservations: remoteReservations?.length
+            ? [
+                ...current.reservations.filter(
+                  (local) =>
+                    !remoteReservations.some((remote) => remote.id === local.id),
+                ),
+                ...remoteReservations,
+              ]
+            : current.reservations,
           souvenirs:
             data.souvenirs?.map((item: Record<string, unknown>) => ({
               id: String(item.id),
