@@ -7,6 +7,7 @@ import { useLanguage } from "@/lib/i18n";
 import { useTripData } from "@/lib/trip-context";
 import { formatTotals } from "@/lib/money";
 import { MoneyField } from "@/app/components/money-field";
+import { DateField } from "@/app/components/date-field";
 
 const control =
   "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
@@ -443,17 +444,10 @@ export default function BeforePage() {
                       className={control}
                     />
                   </div>
-                  <input
-                    type="date"
-                    lang="ko-KR"
+                  <DateField
+                    label={ko ? "예약일" : "Reservation date"}
                     value={reservation.date}
-                    onChange={(event) =>
-                      setReservation({
-                        ...reservation,
-                        date: event.target.value,
-                      })
-                    }
-                    className={`w-full ${control}`}
+                    onChange={(value) => setReservation({ ...reservation, date: value })}
                   />
                   <button className="w-full rounded-xl bg-[var(--color-primary)] py-2.5 text-sm font-bold text-white">
                     {ko ? "예약 저장" : "Save reservation"}
