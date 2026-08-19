@@ -177,22 +177,14 @@ export default function TripPage() {
                   ? "다음 여행"
                   : "Your next adventure"}
             </p>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-start gap-3">
               <h1 className="text-4xl font-bold">{trip.title}</h1>
-              <Link href={`/trips/${tripId}/edit`} aria-label={ko ? "여행 수정" : "Edit trip"} className="grid size-8 place-items-center rounded-full border border-[var(--color-border)] text-sm">✎</Link>
+              <span className="flex flex-col items-center gap-1">
+                <Link href={`/trips/${tripId}/edit`} aria-label={ko ? "여행 수정" : "Edit trip"} className="grid size-8 place-items-center rounded-full border border-[var(--color-border)] text-sm">✎</Link>
+                {trip.status !== "completed" && <button onClick={completeTrip} disabled={savingStatus} className="rounded-md border border-[var(--color-border)] px-2 py-0.5 text-[10px] font-bold disabled:opacity-60">{savingStatus ? "…" : ko ? "완료" : "Done"}</button>}
+              </span>
             </div>
             <p className="mt-2 muted">{trip.dates}</p>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            {trip.status !== "completed" && (
-              <button
-                onClick={completeTrip}
-                disabled={savingStatus}
-                className="rounded-lg border border-[var(--color-border)] px-2.5 py-1.5 text-xs font-bold disabled:opacity-60"
-              >
-                {savingStatus ? "저장 중…" : ko ? "완료" : "Done"}
-              </button>
-            )}
           </div>
         </div>
         <section data-section="trip-reservation-summary" className="mt-7 grid gap-4 md:grid-cols-2">
