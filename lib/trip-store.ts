@@ -31,6 +31,7 @@ const sync = (
     body: JSON.stringify(payload),
   }).catch(() => undefined);
 };
+/* Legacy demo state intentionally removed. User-created trips start blank.
 const initial: TripState = {
   dashboardItems: [],
   packingCategories: [
@@ -251,6 +252,7 @@ const initial: TripState = {
     revisitPlaces: "",
   },
 };
+*/
 
 const blankState = (): TripState => ({
   dashboardItems: [],
