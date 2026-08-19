@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 import { isCurrentOrSoonTrip } from "@/lib/trip-selection";
 import { useEffect, useState } from "react";
@@ -14,13 +15,14 @@ const items = [
 
 export function AppNav() {
   const { t, language } = useLanguage();
+  const pathname = usePathname();
   const [hasNowTrip, setHasNowTrip] = useState(false);
   useEffect(() => {
     void fetch("/api/trips")
       .then((response) => (response.ok ? response.json() : { trips: [] }))
       .then((result) => setHasNowTrip(Array.isArray(result.trips) && result.trips.some(isCurrentOrSoonTrip)))
       .catch(() => setHasNowTrip(false));
-  }, []);
+  }, [pathname]);
   const navigationItems = hasNowTrip
     ? [{ href: "/now", label: t("overview"), icon: "◉" }, ...items]
     : items;
