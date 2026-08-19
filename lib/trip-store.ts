@@ -287,12 +287,10 @@ const blankState = (): TripState => ({
 
 export function useTripStore(tripId = "tokyo") {
   const key = `voyage:trip:${tripId}`;
-  const [state, setState] = useState<TripState>(
-    tripId === "tokyo" ? initial : blankState(),
-  );
+  const [state, setState] = useState<TripState>(blankState());
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
-    setState(tripId === "tokyo" ? initial : blankState());
+    setState(blankState());
     setHydrated(false);
     try {
       const saved = window.localStorage.getItem(key);
