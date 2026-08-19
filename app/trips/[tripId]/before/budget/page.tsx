@@ -213,7 +213,7 @@ export default function BudgetPage() {
             : "See the KRW estimate and totals separated by currency."}
         </p>
         <section className="mt-9 grid gap-5 md:grid-cols-3">
-          <div className="card bg-[var(--color-primary)] p-6 text-white md:col-span-2">
+          <div data-section="budget-total" className="card p-6 text-white md:col-span-2">
             <p className="text-sm font-semibold text-white/70">
               {ko ? "원화 기준 예상 총액" : "Estimated total in KRW"}
             </p>

@@ -129,6 +129,7 @@ function DashboardContent({
   const flights = state.reservations.filter((item) => item.type.toLowerCase().includes("flight"));
   const stays = state.reservations.filter((item) => ["stay", "hotel", "accommodation"].some((type) => item.type.toLowerCase().includes(type)));
   const wishes = (kind: DashboardItem["kind"]) => state.dashboardItems.filter((item) => item.kind === kind);
+  const headerDate = new Date().toLocaleDateString(ko ? "ko-KR" : "en-US", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
   return (
     <main
       data-section="home-dashboard"
@@ -140,7 +141,7 @@ function DashboardContent({
       >
         <div>
           <p className="eyebrow mb-3">
-            {ko ? "2026년 9월 3일 목요일" : "Thursday, September 3, 2026"}
+            {headerDate}
           </p>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             {ko ? "좋은 아침이에요, 민지" : "Good morning, Minji"}{" "}
@@ -169,6 +170,7 @@ function DashboardContent({
           </Link>
         </div>
       </header>
+      {nextTrip && <>
       <section
         data-section="home-top-summary"
         className="mb-7 grid gap-5 md:grid-cols-3"
@@ -177,37 +179,22 @@ function DashboardContent({
           section="next-adventure"
           className="overflow-hidden bg-[var(--color-primary)] p-6 text-white sm:p-8 md:col-span-2"
         >
-          <p className="text-sm font-semibold text-white/70">
-            {ko ? "다음 여행" : "Next adventure"}
-          </p>
-          <h2 className="mt-2 text-3xl font-bold">{tripTitle}</h2>
-          <p className="mt-2 text-sm text-white/80">{tripDates}</p>
-          <div className="mt-8 rounded-2xl bg-white/10 p-4">
-            <p className="text-xs font-bold text-white/70">
-              {ko ? "여행 준비 현황" : "Trip readiness"}
-            </p>
-            <div className="mt-3 h-2 rounded-full bg-white/20">
-              <div
-                className="h-2 rounded-full bg-[var(--color-accent)]"
-                style={{ width: `${readiness}%` }}
-              />
-            </div>
-            <p className="mt-2 text-xs text-white/70">
-              {readiness}% {ko ? "완료" : "ready"}
-            </p>
-          </div>
-          <Link
-            href={
-              nextTrip ? `/trips/${nextTrip.slug || nextTrip.id}` : "/trips/new"
-            }
-            className="mt-5 inline-flex rounded-xl bg-[var(--color-surface)] px-4 py-2.5 text-sm font-bold text-[var(--color-primary)]"
-          >
-            여행 열기 →
-          </Link>
+          {nextTrip ? <>
+            <p className="text-sm font-semibold text-white/70">{ko ? "다음 여행" : "Next adventure"}</p>
+            <h2 className="mt-2 text-3xl font-bold">{tripTitle}</h2>
+            <p className="mt-2 text-sm text-white/80">{tripDates}</p>
+            <div className="mt-8 rounded-2xl bg-white/10 p-4"><p className="text-xs font-bold text-white/70">{ko ? "여행 준비 현황" : "Trip readiness"}</p><div className="mt-3 h-2 rounded-full bg-white/20"><div className="h-2 rounded-full bg-[var(--color-accent)]" style={{ width: `${readiness}%` }} /></div><p className="mt-2 text-xs text-white/70">{readiness}% {ko ? "완료" : "ready"}</p></div>
+            <Link href={`/trips/${nextTrip.slug || nextTrip.id}`} className="mt-5 inline-flex rounded-xl bg-[var(--color-surface)] px-4 py-2.5 text-sm font-bold text-[var(--color-primary)]">여행 열기 →</Link>
+          </> : <>
+            <p className="text-sm font-semibold text-white/70">{ko ? "새로운 시작" : "A new beginning"}</p>
+            <h2 className="mt-2 text-3xl font-bold">{ko ? "여행열기" : "Open a trip"}</h2>
+            <p className="mt-3 text-sm text-white/80">{ko ? "진행 중이거나 7일 이내 시작하는 여행이 없어요." : "No current or soon trip yet."}</p>
+            <Link href="/trips/new" className="mt-8 inline-flex rounded-xl bg-[var(--color-surface)] px-4 py-2.5 text-sm font-bold text-[var(--color-primary)]">여행 추가 →</Link>
+          </>}
         </DashboardCard>
         <DashboardCard section="year-summary" className="p-6">
           <p className="eyebrow">{ko ? "올해" : "This year"}</p>
-          <p className="mt-4 text-4xl font-bold">4</p>
+          <p className="mt-4 text-4xl font-bold">{trips.filter((trip) => trip.status === "completed").length}</p>
           <p className="mt-1 text-sm muted">
             {ko
               ? `${trips.filter((trip) => trip.status === "completed").length}개의 완료한 여행`
@@ -217,7 +204,7 @@ function DashboardContent({
             {[1, 2, 3, 4, 5].map((item) => (
               <span
                 key={item}
-                className={`h-2 flex-1 rounded-full ${item < 5 ? "bg-[var(--color-primary)]" : "bg-[var(--color-border)]"}`}
+              className={`h-2 flex-1 rounded-full ${item <= Math.min(5, trips.filter((trip) => trip.status === "completed").length) ? "bg-[var(--color-primary)]" : "bg-[var(--color-border)]"}`}
               />
             ))}
           </div>
@@ -320,6 +307,7 @@ function DashboardContent({
           {!wishes("tip").length && <p className="text-sm muted">{ko ? "위 입력창에서 블로그나 유튜브 링크를 추가하세요." : "Add a blog or YouTube link using the form above."}</p>}
         </div>
       </DashboardPanel>
+      </>}
     </main>
   );
 }

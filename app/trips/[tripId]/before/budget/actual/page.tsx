@@ -68,7 +68,7 @@ export default function ActualBudgetPage() {
             : "Review recorded expenses separately from your plan."}
         </p>
         <section className="mt-9 grid gap-5 md:grid-cols-3">
-          <div className="card bg-[var(--color-primary)] p-6 text-white md:col-span-2">
+          <div data-section="actual-total" className="card p-6 text-white md:col-span-2">
             <p className="text-sm font-semibold text-white/70">
               {ko ? "실제 사용액 (원화 환산)" : "Actual spent in KRW"}
             </p>
