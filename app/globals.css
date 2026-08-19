@@ -3,6 +3,9 @@
 :root {
   --color-primary: #0f766e;
   --color-primary-hover: #115e59;
+  --color-primary-soft: #dff5f1;
+  --color-info: #2563eb;
+  --color-info-soft: #e6efff;
   --color-background: #f4f8f7;
   --color-surface: #ffffff;
   --color-surface-muted: #eef3ef;
@@ -29,6 +32,7 @@
     sans-serif;
   --radius-card: 20px;
   --radius-control: 12px;
+  --radius-pill: 999px;
   --shadow-card: 0 8px 30px rgba(15, 76, 75, 0.07);
 }
 
@@ -47,6 +51,18 @@ input {
 }
 button {
   cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-info) 30%, transparent);
+  outline-offset: 2px;
+}
+button:disabled {
+  cursor: not-allowed;
 }
 .date-field-trigger {
   display: flex;
@@ -150,6 +166,25 @@ button {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.card:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
+}
+.surface-subtle {
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 800;
 }
 [data-section="next-adventure"] {
   background: var(--color-primary) !important;
