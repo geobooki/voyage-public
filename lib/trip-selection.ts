@@ -10,7 +10,8 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 export function isCurrentOrSoonTrip(trip: SelectableTrip, now = today()) {
   if (trip.status === "completed") return false;
-  const start = trip.start_date || now;
+  if (!trip.start_date) return false;
+  const start = trip.start_date;
   const end = trip.end_date || start;
   const soonLimit = new Date(`${now}T00:00:00`);
   soonLimit.setDate(soonLimit.getDate() + 7);
@@ -28,4 +29,3 @@ export function selectCurrentOrSoonTrip<T extends SelectableTrip>(trips: T[]) {
       return String(a.start_date || "9999").localeCompare(String(b.start_date || "9999"));
     })[0];
 }
-
