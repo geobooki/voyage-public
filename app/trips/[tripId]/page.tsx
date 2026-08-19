@@ -193,6 +193,28 @@ function TripPageContent() {
         >
           ← {ko ? "내 여행" : "My trips"}
         </Link>
+        <nav
+          aria-label={ko ? "여행 메뉴" : "Trip navigation"}
+          className="mt-6 -mx-5 overflow-x-auto border-y border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-3 sm:-mx-10 sm:px-10 lg:-mx-20 lg:px-20"
+        >
+          <div className="mx-auto flex max-w-6xl gap-5 whitespace-nowrap text-sm font-bold">
+            <Link href={`/trips/${tripId}`} className="text-[var(--color-primary)]">
+              {ko ? "개요" : "Overview"}
+            </Link>
+            <Link href={`/trips/${tripId}/before`} className="muted">
+              {ko ? "준비" : "Preparation"}
+            </Link>
+            <Link href={`/trips/${tripId}/before/packing`} className="muted">
+              {ko ? "준비물 목록" : "Packing list"}
+            </Link>
+            <Link href={`/trips/${tripId}/before/budget`} className="muted">
+              {ko ? "예산·환전" : "Budget & exchange"}
+            </Link>
+            <Link href={`/trips/${tripId}/before/reservations`} className="muted">
+              {ko ? "예약" : "Reservations"}
+            </Link>
+          </div>
+        </nav>
         <div
           data-section="trip-heading"
           className="mt-8 flex flex-wrap items-end justify-between gap-5"
