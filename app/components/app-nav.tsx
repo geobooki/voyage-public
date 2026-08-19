@@ -13,7 +13,7 @@ const items = [
 ];
 
 export function AppNav() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [hasNowTrip, setHasNowTrip] = useState(false);
   useEffect(() => {
     void fetch("/api/trips")
@@ -43,7 +43,7 @@ export function AppNav() {
             <span className="text-xl text-[var(--color-primary)]">
               {item.icon}
             </span>
-            {item.href === "/now" ? (t("language") === "한국어" ? "지금 여행" : "Now") : labels[item.href as keyof typeof labels]}
+            {item.href === "/now" ? (language === "ko" ? "지금 여행" : "Now") : labels[item.href as keyof typeof labels]}
           </Link>
         ))}
         <Link
