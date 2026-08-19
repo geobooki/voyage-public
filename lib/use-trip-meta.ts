@@ -9,13 +9,6 @@ export type TripMeta = {
   startDate: string;
   endDate: string;
 };
-const tokyo: TripMeta = {
-  title: "Tokyo, Japan",
-  city: "Tokyo",
-  country: "Japan",
-  startDate: "2026-09-10",
-  endDate: "2026-09-15",
-};
 const fallback: TripMeta = {
   title: "Your journey",
   city: "",
@@ -25,9 +18,7 @@ const fallback: TripMeta = {
 };
 
 export function useTripMeta(tripId: string) {
-  const [meta, setMeta] = useState<TripMeta>(
-    tripId === "tokyo" ? tokyo : fallback,
-  );
+  const [meta, setMeta] = useState<TripMeta>(fallback);
   useEffect(() => {
     let active = true;
     const load = async () => {
@@ -55,7 +46,7 @@ export function useTripMeta(tripId: string) {
             endDate: String(result.trip.end_date || ""),
           });
       } catch {
-        /* keep local/demo metadata */
+        /* keep the current blank/local state */
       }
     };
     void load();

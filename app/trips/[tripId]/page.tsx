@@ -15,11 +15,8 @@ export default function TripPage() {
   const ko = language === "ko";
   const { state } = useTripData();
   const [trip, setTrip] = useState<TripMeta>({
-    title: tripId === "tokyo" ? "Tokyo, Japan" : "Your new journey",
-    dates:
-      tripId === "tokyo"
-        ? "Sep 10 — Sep 15, 2026 · 5 nights"
-        : "Dates to be planned",
+    title: "여행 정보를 불러오는 중…",
+    dates: "날짜를 정해 주세요",
     status: "planning",
     startDate: "",
     endDate: "",
