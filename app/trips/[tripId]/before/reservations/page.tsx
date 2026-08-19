@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
 import { MoneyField } from "@/app/components/money-field";
+import { DateField } from "@/app/components/date-field";
+import { useLanguage } from "@/lib/i18n";
 
 const control =
   "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
@@ -39,6 +41,8 @@ const blank: Form = {
 
 export default function ReservationsPage() {
   const { tripId } = useParams<{ tripId: string }>();
+  const { language } = useLanguage();
+  const ko = language === "ko";
   const { state, addReservation, removeReservation } = useTripData();
   const [form, setForm] = useState<Form>(blank);
   const add = (event: FormEvent) => {
@@ -108,17 +112,7 @@ export default function ReservationsPage() {
               className={`mt-2 w-full ${control}`}
             />
           </label>
-          <label className="text-xs font-bold">
-            Date
-            <input
-              type="date"
-              value={form.date}
-              onChange={(event) =>
-                setForm({ ...form, date: event.target.value })
-              }
-              className={`mt-2 w-full ${control}`}
-            />
-          </label>
+          <DateField label={ko ? "예약일" : "Date"} value={form.date} onChange={(value) => setForm({ ...form, date: value })} />
           <label className="text-xs font-bold">
             Time
             <input
@@ -140,10 +134,7 @@ export default function ReservationsPage() {
               <input value={form.terminal} onChange={(event) => setForm({ ...form, terminal: event.target.value })} placeholder="e.g. T2" className={`mt-2 w-full ${control}`} />
             </label>
           </>}
-          {form.type === "Stay" && <label className="text-xs font-bold">
-            Check-out
-            <input type="date" value={form.endDate} onChange={(event) => setForm({ ...form, endDate: event.target.value })} className={`mt-2 w-full ${control}`} />
-          </label>}
+          {form.type === "Stay" && <DateField label={ko ? "체크아웃" : "Check-out"} value={form.endDate} onChange={(value) => setForm({ ...form, endDate: value })} />}
           <label className="text-xs font-bold">
             Location
             <input
