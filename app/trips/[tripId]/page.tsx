@@ -44,6 +44,7 @@ function TripPageContent() {
   const [packingOpen, setPackingOpen] = useState(false);
   const [packingName, setPackingName] = useState("");
   const [packingCategory, setPackingCategory] = useState("기타");
+  const compactTitleLength = trip.title.replace(/\s/g, "").length;
   useEffect(() => {
     if (packingCategories.length && !packingCategories.some((item) => item.name === packingCategory))
       setPackingCategory(packingCategories[0].name);
@@ -354,7 +355,11 @@ function TripPageContent() {
                   ? "다음 여행"
                   : "Your next adventure"}
             </p>
-            <h1 className="text-4xl font-bold">{trip.title}</h1>
+            <h1
+              className={`text-3xl font-bold sm:text-4xl ${compactTitleLength <= 6 ? "whitespace-nowrap" : "break-words"}`}
+            >
+              {trip.title}
+            </h1>
             <p className="mt-2 muted">{trip.dates}</p>
           </div>
           <div className="flex items-center gap-2">
