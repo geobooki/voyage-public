@@ -297,10 +297,24 @@ function TripPageContent() {
       className="relative min-h-screen px-5 py-8 sm:px-10 lg:px-20 lg:py-12"
     >
       <div className="mx-auto max-w-6xl">
-        <Link href={`/trips/${tripId}`} className="mb-4 grid size-10 place-items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-xl text-[var(--color-primary)] md:hidden" aria-label={ko ? "여행 개요로 이동" : "Go to trip overview"}>⌂</Link>
+        <div className="mb-4 flex items-center justify-between md:hidden">
+          <Link
+            href={`/trips/${tripId}`}
+            className="text-sm font-bold text-[var(--color-primary)]"
+          >
+            ← {ko ? "여행 개요" : "Trip overview"}
+          </Link>
+          <Link
+            href="/"
+            className="grid size-10 place-items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-xl text-[var(--color-primary)]"
+            aria-label={ko ? "홈으로 이동" : "Go home"}
+          >
+            ⌂
+          </Link>
+        </div>
         <Link
           href="/trips"
-          className="text-sm font-bold text-[var(--color-primary)]"
+          className="hidden text-sm font-bold text-[var(--color-primary)] md:inline-block"
         >
           ← {ko ? "내 여행" : "My trips"}
         </Link>
