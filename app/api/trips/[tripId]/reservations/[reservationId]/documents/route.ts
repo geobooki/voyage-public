@@ -36,18 +36,27 @@ export async function POST(request: Request, { params }: Context) {
   const path = `${tripId}/${reservationId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
   const { error: uploadError } = await supabaseServer.storage.from("reservation-pdfs").upload(path, file, { contentType: file.type, upsert: false });
   if (uploadError) return NextResponse.json({ error: `Storage 업로드에 실패했습니다: ${uploadError.message}` }, { status: 400 });
-  const { data, error } = await supabaseServer
-    .from("reservation_documents")
-    .insert({
-      trip_id: tripId,
-      reservation_id: reservationId,
-      file_name: file.name,
-      storage_path: path,
-      mime_type: file.type || "application/octet-stream",
-      size: file.size,
-    })
-    .select("id,reservation_id,file_name,storage_path,mime_type,size,created_at")
-    .single();
+  let data: Record<string, unknown> | null = null;
+  let error: { message: string } | null = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const result = await supabaseServer
+      .from("reservation_documents")
+      .insert({
+        trip_id: tripId,
+        reservation_id: reservationId,
+        file_name: file.name,
+        storage_path: path,
+        mime_type: file.type || "application/octet-stream",
+        size: file.size,
+      })
+      .select("id,reservation_id,file_name,storage_path,mime_type,size,created_at")
+      .single();
+    data = result.data;
+    error = result.error;
+    if (!error) break;
+    if (!error.message.toLowerCase().includes("foreign key") && !error.message.toLowerCase().includes("violates row-level security")) break;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
   if (error) {
     await supabaseServer.storage.from("reservation-pdfs").remove([path]);
     return NextResponse.json({ error: error.message }, { status: 400 });
