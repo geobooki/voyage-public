@@ -53,6 +53,7 @@ create table if not exists expenses (
   created_at timestamptz not null default now()
 );
 
+alter table expenses add column if not exists name text;
 alter table expenses add column if not exists krw_amount numeric(12, 2);
 
 create table if not exists travelers (
