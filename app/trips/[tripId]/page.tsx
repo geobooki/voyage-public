@@ -374,14 +374,14 @@ function TripPageContent() {
             <Link href={`/trips/${tripId}`} className="text-[var(--color-primary)]">
               {ko ? "개요" : "Overview"}
             </Link>
-            <Link href={`/trips/${tripId}/before/packing`} className="muted">
-              {ko ? "준비물" : "Packing"}
-            </Link>
             <Link href={`/trips/${tripId}/before/budget`} className="muted">
               {ko ? "예산·환전" : "Budget & exchange"}
             </Link>
             <Link href={`/trips/${tripId}/before/reservations`} className="muted">
               {ko ? "예약" : "Reservations"}
+            </Link>
+            <Link href={`/trips/${tripId}/before/packing`} className="muted">
+              {ko ? "준비물" : "Packing"}
             </Link>
           </div>
         </nav>
