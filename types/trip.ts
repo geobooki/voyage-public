@@ -18,6 +18,7 @@ export type TripState = {
   budget: BudgetItem[];
   budgetCategories: string[];
   paymentMethods: string[];
+  reservationCategories: string[];
   reservations: Reservation[];
   places: Place[];
   schedule: ScheduleItem[];

@@ -262,6 +262,7 @@ const blankState = (): TripState => ({
   budget: [],
   budgetCategories: ["항공", "숙박", "교통", "식비", "쇼핑", "활동", "기타"],
   paymentMethods: ["카드", "현금", "송금"],
+  reservationCategories: ["Flight", "Stay", "Tour", "Transport", "Activity", "Other"],
   reservations: [],
   places: [],
   schedule: [],
@@ -705,6 +706,23 @@ export function useTripStore(tripId = "tokyo") {
       { method: "DELETE" },
     ).catch(() => undefined);
   };
+  const addReservationCategory = (name: string) =>
+    update((s) =>
+      s.reservationCategories.includes(name)
+        ? s
+        : { ...s, reservationCategories: [...s.reservationCategories, name] },
+    );
+  const renameReservationCategory = (from: string, to: string) =>
+    update((s) => ({
+      ...s,
+      reservationCategories: s.reservationCategories.map((item) => item === from ? to : item),
+      reservations: s.reservations.map((item) => item.type === from ? { ...item, type: to } : item),
+    }));
+  const removeReservationCategory = (name: string) =>
+    update((s) => ({
+      ...s,
+      reservationCategories: s.reservationCategories.filter((item) => item !== name),
+    }));
   const addBudget = (budget: Omit<BudgetItem, "id">) => {
     const next = { ...budget, id: id() };
     update((s) => ({ ...s, budget: [...s.budget, next] }));
@@ -834,6 +852,9 @@ export function useTripStore(tripId = "tokyo") {
     addReservation,
     updateReservation,
     removeReservation,
+    addReservationCategory,
+    renameReservationCategory,
+    removeReservationCategory,
     addBudget,
     updateBudget,
     removeBudget,
