@@ -528,6 +528,12 @@ export function useTripStore(tripId = "tokyo", view = "full") {
   }, [state, hydrated]);
   const update = (fn: (current: TripState) => TripState) =>
     setState((current) => fn(current));
+  const updateAndPersist = (fn: (current: TripState) => TripState) =>
+    setState((current) => {
+      const next = fn(current);
+      window.localStorage.setItem(key, JSON.stringify(next));
+      return next;
+    });
   const toggleChecklist = (list: "packing" | "preparation", itemId: string) =>
     update((s) => {
       const next = s[list].map((item) =>
@@ -729,25 +735,25 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     ).catch(() => undefined);
   };
   const addReservationCategory = (name: string) =>
-    update((s) =>
+    updateAndPersist((s) =>
       s.reservationCategories.includes(name)
         ? s
         : { ...s, reservationCategories: [...s.reservationCategories, name], reservationCategoryColors: { ...s.reservationCategoryColors, [name]: "#E0F2FE" } },
     );
   const renameReservationCategory = (from: string, to: string) =>
-    update((s) => ({
+    updateAndPersist((s) => ({
       ...s,
       reservationCategories: s.reservationCategories.map((item) => item === from ? to : item),
       reservations: s.reservations.map((item) => item.type === from ? { ...item, type: to } : item),
       reservationCategoryColors: Object.fromEntries(Object.entries(s.reservationCategoryColors).map(([name, color]) => [name === from ? to : name, color])),
     }));
   const removeReservationCategory = (name: string) =>
-    update((s) => ({
+    updateAndPersist((s) => ({
       ...s,
       reservationCategories: s.reservationCategories.filter((item) => item !== name),
       reservationCategoryColors: Object.fromEntries(Object.entries(s.reservationCategoryColors).filter(([item]) => item !== name)),
     }));
-  const updateReservationCategoryColor = (name: string, color: string) => update((s) => ({ ...s, reservationCategoryColors: { ...s.reservationCategoryColors, [name]: color } }));
+  const updateReservationCategoryColor = (name: string, color: string) => updateAndPersist((s) => ({ ...s, reservationCategoryColors: { ...s.reservationCategoryColors, [name]: color } }));
   const addBudget = (budget: Omit<BudgetItem, "id">) => {
     const next = { ...budget, id: id() };
     update((s) => ({ ...s, budget: [...s.budget, next] }));
