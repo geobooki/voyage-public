@@ -7,6 +7,7 @@ import { useTripData } from "@/lib/trip-context";
 import { AirportSelect } from "@/app/components/airport-select";
 import { ReservationDocuments } from "@/app/components/reservation-documents";
 import { useLanguage } from "@/lib/i18n";
+import { formatDate } from "@/lib/date";
 
 const control = "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
 const reservationColors = ["#BAE6FD", "#DDD6FE", "#BBF7D0", "#FED7AA", "#FBCFE8", "#FEF3C7", "#C7D2FE", "#A7F3D0"];
@@ -16,7 +17,7 @@ const dateValue = (value: string | undefined) => value ? value.slice(0, 10) : ""
 const timeValue = (value: string | undefined) => value ? value.slice(0, 5) : "";
 const dateText = (value: string | undefined, ko: boolean) => {
   const normalized = dateValue(value);
-  return normalized ? new Date(`${normalized}T00:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { year: "numeric", month: "short", day: "numeric" }) : (ko ? "미정" : "Pending");
+  return normalized ? formatDate(normalized) : (ko ? "미정" : "Pending");
 };
 function DateField({ value, onChange, label, required = false }: { value: string; onChange: (value: string) => void; label: string; required?: boolean }) {
   return <label className="text-xs font-bold">{label}<input required={required} type="date" value={value} onChange={(event) => onChange(event.target.value)} className={`mt-2 w-full ${control}`} /></label>;

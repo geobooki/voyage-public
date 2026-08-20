@@ -1,6 +1,7 @@
 "use client";
 
 import type { Reservation, ScheduleItem } from "@/types/trip";
+import { formatDate } from "@/lib/date";
 
 const slots = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
 
@@ -43,7 +44,7 @@ export function TripScheduleCalendar({
           >
             <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-3">
               <p className="text-sm font-bold text-[var(--color-primary)]">
-                {date.slice(5).replace("-", "/")} · {new Date(`${date}T00:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { weekday: "short" })}
+                {formatDate(date)} · {new Date(`${date}T00:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { weekday: "short" })}
               </p>
               <p className="mt-1 text-xs muted">
                 {daySchedule.length + dayReservations.length}{ko ? "개 일정·예약" : " plans & bookings"}
