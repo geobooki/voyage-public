@@ -207,7 +207,7 @@ function TripPageContent() {
     const type = item.type.toLowerCase();
     return type.includes("flight") || type.includes("air") || Boolean(item.airline);
   });
-  const stays = state.reservations.filter((item) => ["stay", "hotel", "accommodation"].some((type) => item.type.toLowerCase().includes(type)));
+  const stays = state.reservations.filter((item) => ["stay", "숙박", "hotel", "호텔", "accommodation"].some((type) => item.type.toLowerCase().includes(type)));
   const otherReservations = state.reservations.filter((item) => !flights.some((flight) => flight.id === item.id) && !stays.some((stay) => stay.id === item.id));
   const todayFlights = flights.filter((item) => item.date === today);
   const dateLabel = (value?: string) => value ? formatDate(value) : "—";
