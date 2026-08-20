@@ -4,10 +4,62 @@ import { resolveTripIdForRequest } from "@/lib/trip-id";
 
 const slugify = (value: string) => value.trim().toLowerCase().replace(/[^a-z0-9가-힣]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || `trip-${Date.now()}`;
 
-export async function GET(_request: Request, { params }: { params: Promise<{ tripId: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ tripId: string }> }) {
   const { tripId: rawTripId } = await params;
   if (!supabase) return NextResponse.json({ configured: false, message: "Supabase environment variables are not configured." }, { status: 503 });
   const tripId = await resolveTripIdForRequest(rawTripId, supabase);
+  const view = new URL(request.url).searchParams.get("view");
+  // Detail pages already load the full trip store. Keep metadata-only callers
+  // from repeating 13 unrelated table queries just to render the header.
+  if (new URL(request.url).searchParams.get("view") === "meta") {
+    const { data, error } = await supabase.from("trips").select("id,title,slug,city,country,start_date,end_date,status,destination_currency").eq("id", tripId).single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ trip: data });
+  }
+  const viewTables: Record<string, Record<string, any>> = {
+    overview: {
+      trip: supabase.from("trips").select("id,title,slug,city,country,start_date,end_date,status,destination_currency").eq("id", tripId).single(),
+      places: supabase.from("places").select("*").eq("trip_id", tripId).order("created_at"),
+      expenses: supabase.from("expenses").select("*").eq("trip_id", tripId).order("spent_at", { ascending: false }),
+      schedule: supabase.from("schedule_items").select("*").eq("trip_id", tripId).order("date").order("time"),
+      budget: supabase.from("budget_items").select("*").eq("trip_id", tripId).order("created_at"),
+      reservations: supabase.from("reservations").select("*").eq("trip_id", tripId).order("date"),
+    },
+    preparation: {
+      checklist: supabase.from("checklist_items").select("*").eq("trip_id", tripId).order("created_at"),
+    },
+    reservations: {
+      reservations: supabase.from("reservations").select("*").eq("trip_id", tripId).order("date"),
+    },
+    budget: {
+      trip: supabase.from("trips").select("id,destination_currency").eq("id", tripId).single(),
+      expenses: supabase.from("expenses").select("*").eq("trip_id", tripId).order("spent_at", { ascending: false }),
+      budget: supabase.from("budget_items").select("*").eq("trip_id", tripId).order("created_at"),
+      exchange: supabase.from("exchange_plans").select("*").eq("trip_id", tripId).maybeSingle(),
+    },
+    during: {
+      places: supabase.from("places").select("*").eq("trip_id", tripId).order("created_at"),
+      expenses: supabase.from("expenses").select("*").eq("trip_id", tripId).order("spent_at", { ascending: false }),
+      travelers: supabase.from("travelers").select("*").eq("trip_id", tripId).order("created_at"),
+      schedule: supabase.from("schedule_items").select("*").eq("trip_id", tripId).order("date").order("time"),
+      weather: supabase.from("weather_days").select("*").eq("trip_id", tripId).order("date"),
+    },
+    after: {
+      places: supabase.from("places").select("*").eq("trip_id", tripId).order("created_at"),
+      expenses: supabase.from("expenses").select("*").eq("trip_id", tripId).order("spent_at", { ascending: false }),
+      travelers: supabase.from("travelers").select("*").eq("trip_id", tripId).order("created_at"),
+      review: supabase.from("reviews").select("*").eq("trip_id", tripId).maybeSingle(),
+    },
+  };
+  if (view && viewTables[view]) {
+    const results = await Promise.all(Object.entries(viewTables[view]).map(async ([key, query]) => {
+      const result = await query;
+      return [key, result] as const;
+    }));
+    const error = results.map(([, result]) => result.error).find(Boolean);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(Object.fromEntries(results.map(([key, result]) => [key, result.data])));
+  }
   const [trip, places, expenses, travelers, schedule, souvenirs, exchange, weather, checklist, categories, budget, reservations, review, dashboard] = await Promise.all([
     supabase.from("trips").select("*").eq("id", tripId).single(),
     supabase.from("places").select("*").eq("trip_id", tripId).order("created_at"),

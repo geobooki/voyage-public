@@ -61,7 +61,7 @@ function TripPageContent() {
             endDate: local.endDate || "",
             status: String(local.status || "planning").toLowerCase(),
           });
-        const response = await fetch(`/api/trips/${tripId}`);
+        const response = await fetch(`/api/trips/${tripId}?view=meta`);
         if (response.ok) {
           const result = await response.json();
           if (result.trip)
@@ -466,5 +466,5 @@ function TripPageContent() {
 
 export default function TripPage() {
   const { tripId } = useParams<{ tripId: string }>();
-  return <TripDataProvider tripId={tripId}><PackingProvider tripId={tripId}><TripPageContent /></PackingProvider></TripDataProvider>;
+  return <TripDataProvider tripId={tripId} view="overview"><PackingProvider tripId={tripId}><TripPageContent /></PackingProvider></TripDataProvider>;
 }
