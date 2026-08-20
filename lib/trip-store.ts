@@ -684,6 +684,7 @@ export function useTripStore(tripId = "tokyo") {
     const next = { ...reservation, id: id() };
     update((s) => ({ ...s, reservations: [...s.reservations, next] }));
     sync(tripId, "reservations", next);
+    return next.id;
   };
   const updateReservation = (reservationId: string, changes: Omit<Reservation, "id">) => {
     update((s) => ({

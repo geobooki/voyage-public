@@ -34,6 +34,20 @@ begin
   end if;
 end $$;
 
+-- 로그인한 사용자 세션에서도 동일한 Storage 작업을 허용합니다.
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'voyage authenticated reservation pdf read') then
+    create policy "voyage authenticated reservation pdf read" on storage.objects for select to authenticated using (bucket_id = 'reservation-pdfs');
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'voyage authenticated reservation pdf insert') then
+    create policy "voyage authenticated reservation pdf insert" on storage.objects for insert to authenticated with check (bucket_id = 'reservation-pdfs');
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'voyage authenticated reservation pdf delete') then
+    create policy "voyage authenticated reservation pdf delete" on storage.objects for delete to authenticated using (bucket_id = 'reservation-pdfs');
+  end if;
+end $$;
+
 do $$
 begin
   if not exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'voyage anon reservation pdf read') then
