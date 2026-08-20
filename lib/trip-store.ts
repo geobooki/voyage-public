@@ -261,6 +261,7 @@ const blankState = (): TripState => ({
   preparation: [],
   budget: [],
   budgetCategories: ["항공", "숙박", "교통", "식비", "쇼핑", "활동", "기타"],
+  budgetCategoryColors: { "항공": "#BAE6FD", "숙박": "#DDD6FE", "교통": "#FED7AA", "식비": "#FBCFE8", "쇼핑": "#FEF3C7", "활동": "#BBF7D0", "기타": "#E5E7EB" },
   paymentMethods: ["카드", "현금", "송금"],
   expenseCategories: ["항공", "숙박", "교통", "식비", "쇼핑", "활동", "기타"],
   reservationCategories: ["Flight", "Stay", "Tour", "Restaurant", "Transport", "Activity", "Other"],
@@ -308,6 +309,10 @@ export function useTripStore(tripId = "tokyo", view = "full") {
             reservationCategoryColors: {
               ...current.reservationCategoryColors,
               ...(parsed.reservationCategoryColors ?? {}),
+            },
+            budgetCategoryColors: {
+              ...current.budgetCategoryColors,
+              ...(parsed.budgetCategoryColors ?? {}),
             },
             places:
               parsed.places?.map((item) => ({
@@ -774,7 +779,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     update((s) =>
       s.budgetCategories.includes(name)
         ? s
-        : { ...s, budgetCategories: [...s.budgetCategories, name] },
+        : { ...s, budgetCategories: [...s.budgetCategories, name], budgetCategoryColors: { ...s.budgetCategoryColors, [name]: "#E0F2FE" } },
     );
   const renameBudgetCategory = (from: string, to: string) =>
     update((s) => ({
@@ -782,6 +787,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
       budgetCategories: s.budgetCategories.map((item) =>
         item === from ? to : item,
       ),
+      budgetCategoryColors: Object.fromEntries(Object.entries(s.budgetCategoryColors).map(([name, color]) => [name === from ? to : name, color])),
       budget: s.budget.map((item) =>
         item.category === from ? { ...item, category: to } : item,
       ),
@@ -790,7 +796,10 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     update((s) => ({
       ...s,
       budgetCategories: s.budgetCategories.filter((item) => item !== name),
+      budgetCategoryColors: Object.fromEntries(Object.entries(s.budgetCategoryColors).filter(([item]) => item !== name)),
     }));
+  const updateBudgetCategoryColor = (name: string, color: string) =>
+    update((s) => ({ ...s, budgetCategoryColors: { ...s.budgetCategoryColors, [name]: color } }));
   const addPaymentMethod = (name: string) =>
     update((s) =>
       s.paymentMethods.includes(name)
@@ -900,6 +909,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     addBudgetCategory,
     renameBudgetCategory,
     removeBudgetCategory,
+    updateBudgetCategoryColor,
     addPaymentMethod,
     renamePaymentMethod,
     removePaymentMethod,

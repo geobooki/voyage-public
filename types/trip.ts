@@ -17,6 +17,7 @@ export type TripState = {
   preparation: ChecklistItem[];
   budget: BudgetItem[];
   budgetCategories: string[];
+  budgetCategoryColors: Record<string, string>;
   paymentMethods: string[];
   expenseCategories: string[];
   reservationCategories: string[];
