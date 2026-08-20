@@ -9,19 +9,11 @@ import { useTripStore } from "@/lib/trip-store";
 import { DashboardProvider, useDashboard } from "@/lib/dashboard-context";
 import type { DashboardItem } from "@/types/trip";
 import { selectCurrentOrSoonTrip } from "@/lib/trip-selection";
+import { getTrips, type TripSummary } from "@/lib/trips-client";
 
 const control = "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3 outline-none focus:border-[var(--color-primary)]";
 
-type DashboardTrip = {
-  id: string;
-  slug?: string;
-  title: string;
-  city?: string;
-  country?: string;
-  start_date?: string;
-  end_date?: string;
-  status?: string;
-};
+type DashboardTrip = TripSummary;
 
 function DashboardCard({
   section,
@@ -52,18 +44,36 @@ export default function Home() {
   const [tripsLoading, setTripsLoading] = useState(true);
   const [rates, setRates] = useState<Record<string, number>>({ KRW: 1 });
   useEffect(() => {
-    void fetch("/api/trips")
-      .then((response) => (response.ok ? response.json() : { trips: [] }))
-      .then((result) =>
-        setTrips(Array.isArray(result.trips) ? result.trips : []),
-      )
+    void getTrips()
+      .then((result) => setTrips(result))
       .catch(() => setTrips([]))
       .finally(() => setTripsLoading(false));
   }, []);
   useEffect(() => {
+    const cacheKey = "voyage:exchange-rates";
+    try {
+      const cached = window.sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as { expiresAt?: number; rates?: Record<string, number> };
+        if (parsed.expiresAt && parsed.expiresAt > Date.now() && parsed.rates) {
+          setRates(parsed.rates);
+          return;
+        }
+      }
+    } catch {
+      // Fetch below remains the fallback when storage is unavailable.
+    }
     void fetch("/api/exchange-rates")
       .then((response) => (response.ok ? response.json() : null))
-      .then((result) => { if (result?.rates) setRates(result.rates); })
+      .then((result) => {
+        if (!result?.rates) return;
+        setRates(result.rates);
+        try {
+          window.sessionStorage.setItem(cacheKey, JSON.stringify({ rates: result.rates, expiresAt: Date.now() + 60 * 60_000 }));
+        } catch {
+          // Ignore storage quota/private-mode errors.
+        }
+      })
       .catch(() => undefined);
   }, []);
   const nextTrip = selectCurrentOrSoonTrip(trips);

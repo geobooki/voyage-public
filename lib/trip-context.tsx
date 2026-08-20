@@ -8,12 +8,14 @@ const TripDataContext = createContext<TripStore | null>(null);
 
 export function TripDataProvider({
   tripId,
+  view = "full",
   children,
 }: {
   tripId: string;
+  view?: string;
   children: React.ReactNode;
 }) {
-  const store = useTripStore(tripId);
+  const store = useTripStore(tripId, view);
   return (
     <TripDataContext.Provider value={store}>
       {children}

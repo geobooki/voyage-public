@@ -290,7 +290,7 @@ const blankState = (): TripState => ({
   },
 });
 
-export function useTripStore(tripId = "tokyo") {
+export function useTripStore(tripId = "tokyo", view = "full") {
   const key = `voyage:trip:${tripId}`;
   const [state, setState] = useState<TripState>(blankState());
   const [hydrated, setHydrated] = useState(false);
@@ -330,7 +330,7 @@ export function useTripStore(tripId = "tokyo") {
     } catch {
       /* demo fallback */
     }
-    fetch(`/api/trips/${tripId}`)
+    fetch(`/api/trips/${tripId}${view === "full" ? "" : `?view=${view}`}`)
       .then(async (response) => {
         if (!response.ok) return null;
         return response.json();
@@ -522,7 +522,7 @@ export function useTripStore(tripId = "tokyo") {
       })
       .catch(() => undefined)
       .finally(() => setHydrated(true));
-  }, [tripId]);
+  }, [tripId, view]);
   useEffect(() => {
     if (hydrated) window.localStorage.setItem(key, JSON.stringify(state));
   }, [state, hydrated]);

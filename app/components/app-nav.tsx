@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 import { isCurrentOrSoonTrip } from "@/lib/trip-selection";
+import { getTrips } from "@/lib/trips-client";
 import { useEffect, useState } from "react";
 
 const items = [
@@ -21,11 +22,33 @@ export function AppNav() {
   const [hasNowTrip, setHasNowTrip] = useState(false);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   useEffect(() => {
-    void fetch("/api/trips")
-      .then((response) => (response.ok ? response.json() : { trips: [] }))
-      .then((result) => setHasNowTrip(Array.isArray(result.trips) && result.trips.some(isCurrentOrSoonTrip)))
+    // AppNav stays mounted while navigating. Re-fetching the whole trip list
+    // on every route change made every click trigger an unnecessary request.
+    const cacheKey = "voyage:nav-trip-status";
+    try {
+      const cached = window.sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as { expiresAt?: number; hasNowTrip?: boolean };
+        if (parsed.expiresAt && parsed.expiresAt > Date.now()) {
+          setHasNowTrip(Boolean(parsed.hasNowTrip));
+          return;
+        }
+      }
+    } catch {
+      // Fetch below remains the fallback when storage is unavailable.
+    }
+    void getTrips()
+      .then((trips) => {
+        const next = trips.some((trip) => isCurrentOrSoonTrip(trip));
+        setHasNowTrip(next);
+        try {
+          window.sessionStorage.setItem(cacheKey, JSON.stringify({ hasNowTrip: next, expiresAt: Date.now() + 60_000 }));
+        } catch {
+          // Ignore storage quota/private-mode errors.
+        }
+      })
       .catch(() => setHasNowTrip(false));
-  }, [pathname]);
+  }, []);
   useEffect(() => {
     const viewport = window.visualViewport;
     if (!viewport) return;

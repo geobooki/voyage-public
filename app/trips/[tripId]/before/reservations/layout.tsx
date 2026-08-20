@@ -5,5 +5,5 @@ import { TripDataProvider } from "@/lib/trip-context";
 
 export default function ReservationsLayout({ children }: { children: React.ReactNode }) {
   const { tripId } = useParams<{ tripId: string }>();
-  return <TripDataProvider tripId={tripId}>{children}</TripDataProvider>;
+  return <TripDataProvider tripId={tripId} view="reservations">{children}</TripDataProvider>;
 }
