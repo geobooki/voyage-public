@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useLanguage } from "@/lib/i18n";
@@ -43,6 +44,7 @@ function DashboardPanel({ children, className = "" }: { children: React.ReactNod
 }
 
 export default function Home() {
+  const router = useRouter();
   const { user } = useAuth();
   const { language } = useLanguage();
   const ko = language === "ko";
@@ -65,6 +67,15 @@ export default function Home() {
       .catch(() => undefined);
   }, []);
   const nextTrip = selectCurrentOrSoonTrip(trips);
+  useEffect(() => {
+    if (tripsLoading || !nextTrip || !window.matchMedia("(max-width: 767px)").matches || !nextTrip.start_date) return;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(`${nextTrip.start_date}T00:00:00`);
+    const daysUntilStart = Math.round((start.getTime() - today.getTime()) / 86400000);
+    const active = nextTrip.end_date && nextTrip.start_date <= today.toISOString().slice(0, 10) && nextTrip.end_date >= today.toISOString().slice(0, 10);
+    if ((daysUntilStart >= 0 && daysUntilStart <= 1) || active) router.replace(`/trips/${nextTrip.slug || nextTrip.id}`);
+  }, [nextTrip, router, tripsLoading]);
   const tripStore = useTripStore(nextTrip?.id || "dashboard");
   if (tripsLoading) {
     return <main className="grid min-h-screen place-items-center px-6"><p className="muted">{ko ? "여행을 불러오는 중이에요." : "Loading your trips…"}</p></main>;
