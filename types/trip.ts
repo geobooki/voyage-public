@@ -19,6 +19,7 @@ export type TripState = {
   budgetCategories: string[];
   budgetCategoryColors: Record<string, string>;
   paymentMethods: string[];
+  paymentMethodColors: Record<string, string>;
   expenseCategories: string[];
   reservationCategories: string[];
   reservationCategoryColors: Record<string, string>;
