@@ -15,6 +15,7 @@ type PackingContextValue = PackingState & {
   removeItem: (id: string) => void;
   addCategory: (category: Omit<ChecklistCategory, "id">) => void;
   updateCategory: (id: string, changes: Omit<ChecklistCategory, "id">) => void;
+  updateCategories: (categories: ChecklistCategory[]) => void;
   removeCategory: (id: string) => void;
 };
 
@@ -30,6 +31,9 @@ const makeId = () =>
   typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : `packing-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const categoryColors = ["#D9F99D", "#BAE6FD", "#DDD6FE", "#FBCFE8", "#BBF7D0", "#FED7AA"];
+const randomCategoryColor = () => categoryColors[Math.floor(Math.random() * categoryColors.length)];
 
 export function PackingProvider({
   tripId,
@@ -143,7 +147,7 @@ export function PackingProvider({
       void fetch(`/api/trips/${tripId}/checklist?id=${encodeURIComponent(itemId)}`, { method: "DELETE" }).catch(() => undefined);
     },
     addCategory: (category) => {
-      const next = { ...category, id: makeId() };
+      const next = { ...category, color: category.color || randomCategoryColor(), id: makeId() };
       const nextCategories = [...categories, next];
       setCategories(nextCategories);
       persist(items, nextCategories);
@@ -162,6 +166,23 @@ export function PackingProvider({
       setItems(nextItems);
       persist(nextItems, nextCategories);
       sync("checklist-categories", { ...changes, id: categoryId, kind: "packing" }, "PATCH");
+    },
+    updateCategories: (nextCategories) => {
+      const previousCategories = categories;
+      const nextItems = items.map((item) => {
+        const renamed = nextCategories.find((next) =>
+          previousCategories.some((previous) => previous.id === next.id && previous.name === item.category),
+        );
+        return renamed ? { ...item, category: renamed.name } : item;
+      });
+      setCategories(nextCategories);
+      setItems(nextItems);
+      persist(nextItems, nextCategories);
+      nextCategories.forEach((category) => sync("checklist-categories", { ...category, kind: "packing" }, "PATCH"));
+      nextItems.forEach((item) => {
+        const previous = items.find((current) => current.id === item.id);
+        if (previous && previous.category !== item.category) sync("checklist", { ...item, kind: "packing" }, "PATCH");
+      });
     },
     removeCategory: (categoryId) => {
       const category = categories.find((item) => item.id === categoryId);
