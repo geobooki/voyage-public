@@ -529,6 +529,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
             detail: item.detail ? String(item.detail) : undefined,
             url: item.url ? String(item.url) : undefined,
             category: item.category ? String(item.category) : undefined,
+            completed: Boolean(item.completed),
           })) ?? current.dashboardItems,
         }));
       })
@@ -881,6 +882,13 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     update((s) => ({ ...s, dashboardItems: s.dashboardItems.filter((item) => item.id !== itemId) }));
     void fetch(`/api/trips/${tripId}/dashboard?id=${encodeURIComponent(itemId)}`, { method: "DELETE" }).catch(() => undefined);
   };
+  const updateDashboardItem = (itemId: string, changes: Omit<DashboardItem, "id">) => {
+    update((s) => ({
+      ...s,
+      dashboardItems: s.dashboardItems.map((item) => item.id === itemId ? { ...item, ...changes } : item),
+    }));
+    sync(tripId, "dashboard", { ...changes, id: itemId }, "PATCH");
+  };
   return {
     state,
     toggleChecklist,
@@ -929,6 +937,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     saveExchange,
     saveReview,
     addDashboardItem,
+    updateDashboardItem,
     removeDashboardItem,
   };
 }

@@ -6,11 +6,13 @@ create table if not exists public.dashboard_items (
   title text not null,
   detail text,
   url text,
+  completed boolean not null default false,
   created_at timestamptz not null default now()
 );
 
 create index if not exists dashboard_items_trip_id_idx on public.dashboard_items(trip_id);
 alter table public.dashboard_items enable row level security;
+alter table public.dashboard_items add column if not exists completed boolean not null default false;
 
 do $$
 begin

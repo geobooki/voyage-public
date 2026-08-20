@@ -10,7 +10,7 @@ export type Traveler = { id: string; name: string };
 export type Souvenir = { id: string; name: string; estimatedPrice: number; purchased: boolean; actualPrice: number; memo: string };
 export type ExchangePlan = { from: string; to: string; rate: number; expectedCash: number; cardEstimate: number; plannedExchange: number; actualExchange: number };
 export type WeatherDay = { date: string; temperature: number; condition: string; icon: string };
-export type DashboardItem = { id: string; kind: "do" | "eat" | "souvenir" | "tip"; title: string; detail?: string; url?: string; category?: string };
+export type DashboardItem = { id: string; kind: "do" | "eat" | "souvenir" | "tip"; title: string; detail?: string; url?: string; category?: string; completed?: boolean };
 export type TripState = {
   packing: ChecklistItem[];
   packingCategories: ChecklistCategory[];

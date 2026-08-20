@@ -197,6 +197,7 @@ create table if not exists dashboard_items (
 );
 
 alter table dashboard_items add column if not exists category text;
+alter table dashboard_items add column if not exists completed boolean not null default false;
 
 create index if not exists places_trip_id_idx on places(trip_id);
 create index if not exists expenses_trip_id_idx on expenses(trip_id);
