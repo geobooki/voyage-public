@@ -262,6 +262,7 @@ const blankState = (): TripState => ({
   budget: [],
   budgetCategories: ["항공", "숙박", "교통", "식비", "쇼핑", "활동", "기타"],
   paymentMethods: ["카드", "현금", "송금"],
+  expenseCategories: ["항공", "숙박", "교통", "식비", "쇼핑", "활동", "기타"],
   reservationCategories: ["Flight", "Stay", "Tour", "Transport", "Activity", "Other"],
   reservations: [],
   places: [],
@@ -413,9 +414,10 @@ export function useTripStore(tripId = "tokyo") {
                   checked: Boolean(item.checked),
                 }))
             : current.preparation,
-          expenses:
+            expenses:
             data.expenses?.map((item: Record<string, unknown>) => ({
               id: String(item.id),
+              name: item.name ? String(item.name) : undefined,
               amount: Number(item.amount),
               currency: String(item.currency),
               category: String(item.category),
@@ -673,6 +675,20 @@ export function useTripStore(tripId = "tokyo") {
       body: JSON.stringify(next),
     }).catch(() => undefined);
   };
+  const updateExpense = (expenseId: string, changes: Omit<Expense, "id">) => {
+    update((s) => ({
+      ...s,
+      expenses: s.expenses.map((item) => item.id === expenseId ? { ...changes, id: expenseId } : item),
+    }));
+    void fetch(`/api/trips/${tripId}/expenses?id=${encodeURIComponent(expenseId)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...changes, id: expenseId }) }).catch(() => undefined);
+  };
+  const removeExpense = (expenseId: string) => {
+    update((s) => ({ ...s, expenses: s.expenses.filter((item) => item.id !== expenseId) }));
+    void fetch(`/api/trips/${tripId}/expenses?id=${encodeURIComponent(expenseId)}`, { method: "DELETE" }).catch(() => undefined);
+  };
+  const addExpenseCategory = (name: string) => update((s) => s.expenseCategories.includes(name) ? s : { ...s, expenseCategories: [...s.expenseCategories, name] });
+  const renameExpenseCategory = (from: string, to: string) => update((s) => ({ ...s, expenseCategories: s.expenseCategories.map((item) => item === from ? to : item), expenses: s.expenses.map((item) => item.category === from ? { ...item, category: to } : item) }));
+  const removeExpenseCategory = (name: string) => update((s) => ({ ...s, expenseCategories: s.expenseCategories.filter((item) => item !== name) }));
   const addTraveler = (name: string) => {
     const next = { id: id(), name };
     update((s) => ({ ...s, travelers: [...s.travelers, next] }));
@@ -849,6 +865,11 @@ export function useTripStore(tripId = "tokyo") {
     toggleScheduleComplete,
     togglePlace,
     addExpense,
+    updateExpense,
+    removeExpense,
+    addExpenseCategory,
+    renameExpenseCategory,
+    removeExpenseCategory,
     addTraveler,
     addReservation,
     updateReservation,
