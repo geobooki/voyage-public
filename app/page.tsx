@@ -170,7 +170,7 @@ function DashboardContent({
     setTipOpen(null);
   };
   const flights = state.reservations.filter((item) => item.type.toLowerCase().includes("flight"));
-  const stays = state.reservations.filter((item) => ["stay", "hotel", "accommodation"].some((type) => item.type.toLowerCase().includes(type)));
+  const stays = state.reservations.filter((item) => ["stay", "숙박", "hotel", "호텔", "accommodation"].some((type) => item.type.toLowerCase().includes(type)));
   const wishes = (kind: DashboardItem["kind"]) => state.dashboardItems.filter((item) => item.kind === kind);
   const tipItems = wishes("tip");
   const blogTips = tipItems.filter((item) => !item.url?.toLowerCase().includes("youtube.com") && !item.url?.toLowerCase().includes("youtu.be"));
