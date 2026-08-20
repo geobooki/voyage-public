@@ -41,6 +41,7 @@ export default function SchedulePage() {
     new Set([
       ...state.schedule.map((entry) => entry.date),
       ...state.weather.map((day) => day.date),
+      ...state.reservations.flatMap((reservation) => [reservation.date, reservation.endDate]),
     ]),
   )
     .filter(Boolean)
@@ -173,10 +174,30 @@ export default function SchedulePage() {
                   {date}
                 </p>
                 <span className="text-xs muted">
-                  {state.schedule.filter((entry) => entry.date === date).length}
+                  {state.schedule.filter((entry) => entry.date === date).length + state.reservations.filter((reservation) => reservation.date === date || reservation.endDate === date).length}
                   개
                 </span>
               </div>
+              {state.reservations
+                .filter((reservation) => reservation.date === date || reservation.endDate === date)
+                .sort((a, b) => (a.date === date ? a.time || a.departureTime || "00:00" : a.arrivalTime || "23:59").localeCompare(b.date === date ? b.time || b.departureTime || "00:00" : b.arrivalTime || "23:59"))
+                .map((reservation) => (
+                  <div
+                    data-section="schedule-reservation"
+                    className="mt-4 rounded-2xl border-l-4 border-[var(--color-accent)] bg-[var(--color-surface)] p-4 shadow-sm"
+                    key={`${date}-${reservation.id}`}
+                  >
+                    <p className="text-xs font-bold text-[var(--color-accent)]">
+                      {reservation.type} · {reservation.date === date ? (reservation.time || reservation.departureTime || "시간 미정") : (reservation.arrivalTime || "도착")}
+                    </p>
+                    <p className="mt-2 text-sm font-bold">{reservation.title}</p>
+                    <p className="mt-2 text-xs muted">
+                      {reservation.departureLocation && reservation.arrivalLocation
+                        ? `${reservation.departureLocation} → ${reservation.arrivalLocation}`
+                        : reservation.location || "예약 장소 미정"}
+                    </p>
+                  </div>
+                ))}
               {state.schedule
                 .filter((entry) => entry.date === date)
                 .sort((a, b) => a.time.localeCompare(b.time))
