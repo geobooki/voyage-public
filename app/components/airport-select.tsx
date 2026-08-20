@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 
 type Airport = { name: string; country: string; code: string };
 
@@ -41,5 +41,50 @@ export function AirportSelect({
   required?: boolean;
 }) {
   const listId = useId();
-  return <label className="text-xs font-bold">{label}<input required={required} list={listId} value={value} onChange={(event) => onChange(event.target.value)} placeholder="공항명, 국가 또는 IATA 코드 검색" className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm" /><datalist id={listId}>{airports.map((airport) => <option key={airport.code} value={airportLabel(airport)}>{airport.country} · {airport.code}</option>)}</datalist></label>;
+  const [focused, setFocused] = useState(false);
+  const query = value.trim().toLocaleLowerCase("ko");
+  const matches = airports.filter((airport) =>
+    [airport.name, airport.country, airport.code, airportLabel(airport)]
+      .some((part) => part.toLocaleLowerCase("ko").includes(query)),
+  ).slice(0, 8);
+
+  return (
+    <label className="relative text-xs font-bold">
+      {label}
+      <input
+        required={required}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => window.setTimeout(() => setFocused(false), 150)}
+        placeholder="공항명, 국가 또는 IATA 코드 검색"
+        className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm"
+        role="combobox"
+        aria-expanded={focused}
+        aria-controls={listId}
+        aria-autocomplete="list"
+      />
+      {focused && matches.length > 0 && (
+        <div id={listId} role="listbox" className="absolute inset-x-0 top-full z-20 mt-1 max-h-60 overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1 shadow-lg">
+          {matches.map((airport) => (
+            <button
+              type="button"
+              role="option"
+              aria-selected={value === airportLabel(airport)}
+              key={airport.code}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                onChange(airportLabel(airport));
+                setFocused(false);
+              }}
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-[var(--color-surface-muted)]"
+            >
+              <span className="font-semibold">{airport.name}({airport.country})</span>
+              <span className="text-xs muted">{airport.code}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </label>
+  );
 }
