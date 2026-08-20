@@ -43,6 +43,7 @@ export function PackingBoard({ compact = false }: { compact?: boolean }) {
     const unknown = [...new Set(list.map((item) => item.category).filter((name) => !knownNames.has(name)))];
     return [...known, ...unknown.map((name) => ({ category: { id: `legacy-${name}`, name, color: "#FEF3C7" }, items: ordered(list).filter((item) => item.category === name) }))];
   };
+  const categoryBoards = boards(items);
   const submitItem = (event: FormEvent) => {
     event.preventDefault();
     if (!newItem.trim()) return;
@@ -85,25 +86,22 @@ export function PackingBoard({ compact = false }: { compact?: boolean }) {
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        {boards(incomplete).map((board) => (
-          <div key={board.category.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-3">
+        {categoryBoards.map((board) => {
+          const pending = board.items.filter((item) => !item.checked);
+          const done = board.items.filter((item) => item.checked);
+          return <div key={board.category.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-3">
             <div className="mb-2 rounded-xl px-3 py-2 text-xs font-bold" style={{ backgroundColor: board.category.color }}>{board.category.name}</div>
             <div className="space-y-1">
-              {board.items.map((item) => (
-                <div key={item.id} className="flex items-center gap-2 rounded-xl bg-[var(--color-surface)] px-2 py-2">
-                  <input type="checkbox" checked={item.checked} onChange={() => toggleItem(item.id)} className="size-4 accent-[var(--color-primary)]" />
-                  <span className="flex-1 text-sm font-semibold">{item.name}</span>
-                  <button type="button" onClick={() => removeItem(item.id)} className="text-sm font-bold text-[var(--color-danger)]" aria-label={ko ? `${item.name} 삭제` : `Delete ${item.name}`}>×</button>
-                </div>
-              ))}
+              {pending.map((item) => <div key={item.id} className="flex items-center gap-2 rounded-xl bg-[var(--color-surface)] px-2 py-2"><input type="checkbox" checked={false} onChange={() => toggleItem(item.id)} className="size-4 accent-[var(--color-primary)]" /><span className="flex-1 text-sm font-semibold">{item.name}</span><button type="button" onClick={() => removeItem(item.id)} className="text-sm font-bold text-[var(--color-danger)]" aria-label={ko ? `${item.name} 삭제` : `Delete ${item.name}`}>×</button></div>)}
+              {showCompleted && done.length > 0 && <><p className="mt-3 border-t border-[var(--color-border)] pt-3 text-[11px] font-bold muted">{ko ? "완료된 준비물" : "Completed"}</p>{done.map((item) => <div key={item.id} className="flex items-center gap-2 rounded-xl bg-[var(--color-surface)] px-2 py-2"><input type="checkbox" checked onChange={() => toggleItem(item.id)} className="size-4 accent-[var(--color-primary)]" /><span className="flex-1 text-sm font-semibold line-through text-[var(--color-text-muted)]">{item.name}</span><button type="button" onClick={() => removeItem(item.id)} className="text-sm font-bold text-[var(--color-danger)]">×</button></div>)}</>}
+              {!pending.length && (!showCompleted || !done.length) && <p className="py-2 text-xs muted">{ko ? "아직 준비물이 없어요." : "No items yet."}</p>}
             </div>
-          </div>
-        ))}
-        {!incomplete.length && <p className="py-6 text-sm muted">{ko ? "아직 준비물이 없어요. 아래에서 추가해 주세요." : "No packing items yet. Add one below."}</p>}
+          </div>;
+        })}
+        {!items.length && <p className="py-6 text-sm muted">{ko ? "아직 준비물이 없어요. 아래에서 추가해 주세요." : "No packing items yet. Add one below."}</p>}
       </div>
 
       {completed.length > 0 && <button type="button" onClick={() => setShowCompleted((value) => !value)} className="mt-4 text-sm font-bold text-[var(--color-primary)]">{showCompleted ? (ko ? "완료한 준비물 숨기기" : "Hide completed") : (ko ? `완료한 준비물 ${completed.length}개 보기` : `Show ${completed.length} completed`)}</button>}
-      {showCompleted && <div className="mt-5 border-t border-[var(--color-border)] pt-4"><p className="mb-2 text-xs font-bold muted">{ko ? "완료된 준비물" : "Completed items"}</p><div className="grid gap-3 sm:grid-cols-2">{boards(completed).map((board) => <div key={board.category.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-3"><div className="mb-2 rounded-xl px-3 py-2 text-xs font-bold" style={{ backgroundColor: board.category.color }}>{board.category.name}</div>{board.items.map((item) => <div key={item.id} className="flex items-center gap-2 rounded-xl bg-[var(--color-surface)] px-2 py-2"><input type="checkbox" checked onChange={() => toggleItem(item.id)} className="size-4 accent-[var(--color-primary)]" /><span className="flex-1 text-sm font-semibold line-through text-[var(--color-text-muted)]">{item.name}</span><button type="button" onClick={() => removeItem(item.id)} className="text-sm font-bold text-[var(--color-danger)]">×</button></div>)}</div>)}</div></div>}
 
       <form onSubmit={submitItem} className="mt-5 grid gap-2 border-t border-[var(--color-border)] pt-5 sm:grid-cols-[1fr_auto]">
         <input ref={itemInputRef} value={newItem} onChange={(event) => setNewItem(event.target.value)} placeholder={ko ? "준비물 추가" : "Add an item"} className={`min-w-0 ${control}`} />
