@@ -21,7 +21,7 @@ function toRow(resource: string, tripId: string, body: Record<string, unknown>) 
   const base = { trip_id: tripId, ...(uuid(body.id) ? { id: body.id } : {}) };
   if (resource === "checklist") return { ...base, kind: body.kind ?? "packing", category: body.category ?? "General", name: body.name, checked: Boolean(body.checked) };
   if (resource === "checklist-categories") return { ...base, kind: body.kind ?? "packing", name: body.name, color: body.color ?? "#FDE68A" };
-  if (resource === "dashboard") return { ...base, kind: body.kind ?? "do", title: body.title, detail: body.detail ?? null, url: body.url ?? null };
+  if (resource === "dashboard") return { ...base, kind: body.kind ?? "do", title: body.title, detail: body.detail ?? null, category: body.category ?? null, url: body.url ?? null };
   if (resource === "places") return { ...base, name: body.name, type: body.type ?? "other", address: body.address ?? null, latitude: body.latitude ?? null, longitude: body.longitude ?? null, expected_cost: Number(body.expectedCost ?? 0), visit_date: body.visitDate || null, must_go: Boolean(body.mustGo), visited: Boolean(body.visited), memo: body.memo ?? null };
   if (resource === "schedule") return { ...base, place_id: body.placeId ?? null, date: body.date ?? "2026-09-10", time: body.time ?? null, type: body.type ?? "other", title: body.title, note: body.note ?? null, completed: Boolean(body.completed), sort_order: Number(body.order ?? 0) };
   if (resource === "souvenirs") return { ...base, name: body.name, estimated_price: Number(body.estimatedPrice ?? 0), purchased: Boolean(body.purchased), actual_price: Number(body.actualPrice ?? 0), memo: body.memo ?? null };

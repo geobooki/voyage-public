@@ -509,6 +509,7 @@ export function useTripStore(tripId = "tokyo") {
             title: String(item.title),
             detail: item.detail ? String(item.detail) : undefined,
             url: item.url ? String(item.url) : undefined,
+            category: item.category ? String(item.category) : undefined,
           })) ?? current.dashboardItems,
         }));
       })

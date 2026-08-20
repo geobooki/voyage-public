@@ -195,6 +195,8 @@ create table if not exists dashboard_items (
   created_at timestamptz not null default now()
 );
 
+alter table dashboard_items add column if not exists category text;
+
 create index if not exists places_trip_id_idx on places(trip_id);
 create index if not exists expenses_trip_id_idx on expenses(trip_id);
 create index if not exists expenses_place_id_idx on expenses(place_id);
