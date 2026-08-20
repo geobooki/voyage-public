@@ -195,7 +195,7 @@ function TripPageContent() {
       text: ko
         ? `${state.reservations.length}건 저장됨`
         : `${state.reservations.length} saved`,
-      emoji: "▣",
+      emoji: "🎟️",
     },
   ];
   const flights = state.reservations.filter((item) => {

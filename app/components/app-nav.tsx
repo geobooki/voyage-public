@@ -44,8 +44,8 @@ export function AppNav() {
   const tripItems = tripId
     ? [
         { href: `/trips/${tripId}/before/budget`, label: language === "ko" ? "예산" : "Budget", icon: "₩" },
-        { href: `/trips/${tripId}/before/reservations`, label: language === "ko" ? "예약" : "Bookings", icon: "▣" },
-        { href: `/trips/${tripId}/during/schedule`, label: language === "ko" ? "일정" : "Schedule", icon: "▤" },
+        { href: `/trips/${tripId}/before/reservations`, label: language === "ko" ? "예약" : "Bookings", icon: "🎟️" },
+        { href: `/trips/${tripId}/during/schedule`, label: language === "ko" ? "일정" : "Schedule", icon: "🗓️" },
       ]
     : [];
   return (
