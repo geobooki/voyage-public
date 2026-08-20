@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { resolveTripIdForRequest } from "@/lib/trip-id";
-import { supabase } from "@/lib/supabase";
+import { supabaseServer } from "@/lib/supabase-server";
 
 type Context = { params: Promise<{ tripId: string; reservationId: string }> };
 
 export async function GET(_request: Request, { params }: Context) {
-  if (!supabase) return NextResponse.json({ configured: false }, { status: 503 });
-  const storageClient = supabase;
+  if (!supabaseServer) return NextResponse.json({ configured: false }, { status: 503 });
+  const storageClient = supabaseServer;
   const { tripId: rawTripId, reservationId } = await params;
-  const tripId = await resolveTripIdForRequest(rawTripId, supabase);
-  const { data, error } = await supabase
+  const tripId = await resolveTripIdForRequest(rawTripId, supabaseServer);
+  const { data, error } = await supabaseServer
     .from("reservation_documents")
     .select("id,reservation_id,file_name,storage_path,mime_type,size,created_at")
     .eq("trip_id", tripId)
@@ -24,9 +24,9 @@ export async function GET(_request: Request, { params }: Context) {
 }
 
 export async function POST(request: Request, { params }: Context) {
-  if (!supabase) return NextResponse.json({ configured: false }, { status: 503 });
+  if (!supabaseServer) return NextResponse.json({ configured: false }, { status: 503 });
   const { tripId: rawTripId, reservationId } = await params;
-  const tripId = await resolveTripIdForRequest(rawTripId, supabase);
+  const tripId = await resolveTripIdForRequest(rawTripId, supabaseServer);
   const form = await request.formData();
   const file = form.get("file");
   if (!(file instanceof File)) return NextResponse.json({ error: "A file is required." }, { status: 400 });
@@ -34,9 +34,9 @@ export async function POST(request: Request, { params }: Context) {
     return NextResponse.json({ error: "Only images or PDF files up to 10MB are supported." }, { status: 400 });
   }
   const path = `${tripId}/${reservationId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-  const { error: uploadError } = await supabase.storage.from("reservation-pdfs").upload(path, file, { contentType: file.type, upsert: false });
-  if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 400 });
-  const { data, error } = await supabase
+  const { error: uploadError } = await supabaseServer.storage.from("reservation-pdfs").upload(path, file, { contentType: file.type, upsert: false });
+  if (uploadError) return NextResponse.json({ error: `Storage 업로드에 실패했습니다: ${uploadError.message}` }, { status: 400 });
+  const { data, error } = await supabaseServer
     .from("reservation_documents")
     .insert({
       trip_id: tripId,
@@ -49,28 +49,28 @@ export async function POST(request: Request, { params }: Context) {
     .select("id,reservation_id,file_name,storage_path,mime_type,size,created_at")
     .single();
   if (error) {
-    await supabase.storage.from("reservation-pdfs").remove([path]);
+    await supabaseServer.storage.from("reservation-pdfs").remove([path]);
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
   return NextResponse.json({ document: data }, { status: 201 });
 }
 
 export async function DELETE(request: Request, { params }: Context) {
-  if (!supabase) return NextResponse.json({ configured: false }, { status: 503 });
+  if (!supabaseServer) return NextResponse.json({ configured: false }, { status: 503 });
   const { tripId: rawTripId } = await params;
-  const tripId = await resolveTripIdForRequest(rawTripId, supabase);
+  const tripId = await resolveTripIdForRequest(rawTripId, supabaseServer);
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Document id is required." }, { status: 400 });
-  const { data: document, error: findError } = await supabase
+  const { data: document, error: findError } = await supabaseServer
     .from("reservation_documents")
     .select("storage_path")
     .eq("id", id)
     .eq("trip_id", tripId)
     .single();
   if (findError) return NextResponse.json({ error: findError.message }, { status: 400 });
-  const { error: storageError } = await supabase.storage.from("reservation-pdfs").remove([document.storage_path]);
+  const { error: storageError } = await supabaseServer.storage.from("reservation-pdfs").remove([document.storage_path]);
   if (storageError) return NextResponse.json({ error: storageError.message }, { status: 400 });
-  const { error } = await supabase.from("reservation_documents").delete().eq("id", id).eq("trip_id", tripId);
+  const { error } = await supabaseServer.from("reservation_documents").delete().eq("id", id).eq("trip_id", tripId);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ deleted: true });
 }
