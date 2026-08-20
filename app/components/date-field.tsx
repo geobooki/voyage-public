@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/lib/i18n";
+import { formatDate } from "@/lib/date";
 
 type DateFieldProps = {
   value: string;
@@ -59,13 +60,7 @@ export function DateField({
     ];
   }, [month]);
   const display = selected
-    ? ko
-      ? `${selected.getFullYear()}년 ${selected.getMonth() + 1}월 ${selected.getDate()}일`
-      : selected.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })
+    ? formatDate(selected)
     : ko
       ? "날짜를 선택하세요"
       : "Select a date";

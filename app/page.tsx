@@ -10,6 +10,7 @@ import { DashboardProvider, useDashboard } from "@/lib/dashboard-context";
 import type { DashboardItem } from "@/types/trip";
 import { selectCurrentOrSoonTrip } from "@/lib/trip-selection";
 import { getTrips, type TripSummary } from "@/lib/trips-client";
+import { formatDate } from "@/lib/date";
 
 const control = "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3 outline-none focus:border-[var(--color-primary)]";
 
@@ -174,7 +175,7 @@ function DashboardContent({
   const tipItems = wishes("tip");
   const blogTips = tipItems.filter((item) => !item.url?.toLowerCase().includes("youtube.com") && !item.url?.toLowerCase().includes("youtu.be"));
   const youtubeTips = tipItems.filter((item) => item.url?.toLowerCase().includes("youtube.com") || item.url?.toLowerCase().includes("youtu.be"));
-  const headerDate = new Date().toLocaleDateString(ko ? "ko-KR" : "en-US", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
+  const headerDate = `${formatDate(new Date())} · ${new Date().toLocaleDateString(ko ? "ko-KR" : "en-US", { weekday: "long" })}`;
   return (
     <main
       data-section="home-dashboard"

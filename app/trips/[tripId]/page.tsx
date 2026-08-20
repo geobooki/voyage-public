@@ -11,6 +11,7 @@ import { DateField } from "@/app/components/date-field";
 import { AirportSelect } from "@/app/components/airport-select";
 import { ReservationDocuments } from "@/app/components/reservation-documents";
 import { TripScheduleCalendar } from "@/app/components/trip-schedule-calendar";
+import { formatDate } from "@/lib/date";
 
 type TripMeta = { title: string; dates: string; startDate: string; endDate: string; status: string };
 type QuickReservation = { title: string; type: string; date: string; endDate: string; time: string; location: string; departureLocation: string; arrivalLocation: string; departureTime: string; arrivalTime: string; airline: string; terminal: string; reservationNumber: string; memo: string; link: string };
@@ -208,7 +209,7 @@ function TripPageContent() {
   const stays = state.reservations.filter((item) => ["stay", "hotel", "accommodation"].some((type) => item.type.toLowerCase().includes(type)));
   const otherReservations = state.reservations.filter((item) => !flights.some((flight) => flight.id === item.id) && !stays.some((stay) => stay.id === item.id));
   const todayFlights = flights.filter((item) => item.date === today);
-  const dateLabel = (value?: string) => value ? new Date(`${value}T00:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" }) : "—";
+  const dateLabel = (value?: string) => value ? formatDate(value) : "—";
   const nightsBetween = (from?: string, to?: string) => from && to ? Math.max(0, Math.round((new Date(`${to}T00:00:00`).getTime() - new Date(`${from}T00:00:00`).getTime()) / 86400000)) : 0;
   const openQuickReservation = (type: "Flight" | "Stay") => {
     setQuickReservation({ ...blankQuickReservation, type });
