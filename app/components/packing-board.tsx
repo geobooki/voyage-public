@@ -9,24 +9,19 @@ const control = "rounded-xl border border-[var(--color-border)] bg-[var(--color-
 export function PackingBoard({ compact = false }: { compact?: boolean }) {
   const { language } = useLanguage();
   const ko = language === "ko";
-  const { items, categories, toggleItem, addItem, removeItem, addCategory, updateCategory, removeCategory } = usePacking();
+  const { items, categories, toggleItem, addItem, removeItem, addCategory, updateCategories, removeCategory } = usePacking();
   const [newItem, setNewItem] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [category, setCategory] = useState("기타");
   const [showCompleted, setShowCompleted] = useState(false);
   const [sortMode, setSortMode] = useState<"category" | "name">("category");
   const [managerOpen, setManagerOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState("");
-  const [draft, setDraft] = useState({ name: "", color: "#FEF3C7" });
+  const [drafts, setDrafts] = useState<Record<string, { name: string; color: string }>>({});
 
   useEffect(() => {
     if (!categories.length) return;
     if (!categories.some((item) => item.name === category)) setCategory(categories[0].name);
-    if (!selectedId) {
-      setSelectedId(categories[0].id);
-      setDraft({ name: categories[0].name, color: categories[0].color });
-    }
-  }, [categories, category, selectedId]);
+  }, [categories, category]);
 
   const completed = items.filter((item) => item.checked);
   const incomplete = items.filter((item) => !item.checked);
@@ -48,19 +43,19 @@ export function PackingBoard({ compact = false }: { compact?: boolean }) {
   const submitCategory = (event: FormEvent) => {
     event.preventDefault();
     if (!newCategory.trim()) return;
-    addCategory({ name: newCategory.trim(), color: "#FEF3C7" });
+    addCategory({ name: newCategory.trim(), color: "" });
     setCategory(newCategory.trim());
     setNewCategory("");
   };
   const openManager = () => {
-    const first = categories[0];
-    if (first) {
-      setSelectedId(first.id);
-      setDraft({ name: first.name, color: first.color });
-    }
+    setDrafts(Object.fromEntries(categories.map((item) => [item.id, { name: item.name, color: item.color }])));
     setManagerOpen(true);
   };
-  const selected = categories.find((item) => item.id === selectedId);
+  const saveCategories = () => {
+    const next = categories.map((item) => ({ ...item, ...drafts[item.id], name: drafts[item.id]?.name.trim() || item.name }));
+    updateCategories(next);
+    setManagerOpen(false);
+  };
   const title = compact ? (ko ? "준비물 현황" : "Packing status") : (ko ? "준비물 목록" : "Packing list");
 
   return (
@@ -113,7 +108,7 @@ export function PackingBoard({ compact = false }: { compact?: boolean }) {
         <div className="mt-3 flex flex-wrap gap-2">{categories.map((item) => <span key={item.id} className="rounded-full px-3 py-1.5 text-xs font-bold" style={{ backgroundColor: item.color }}>{item.name}</span>)}</div>
       </div>
 
-      {managerOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 px-5"><div className="card w-full max-w-md p-6"><div className="flex items-center justify-between"><h3 className="text-lg font-bold">{ko ? "카테고리 관리" : "Manage categories"}</h3><button type="button" onClick={() => setManagerOpen(false)} className="text-xl">×</button></div><div className="mt-4 grid grid-cols-2 gap-2">{categories.map((item) => <button type="button" key={item.id} onClick={() => { setSelectedId(item.id); setDraft({ name: item.name, color: item.color }); }} className={`rounded-xl border px-3 py-2 text-left text-sm font-bold ${selectedId === item.id ? "border-[var(--color-primary)]" : "border-[var(--color-border)]"}`} style={{ backgroundColor: item.color }}>{item.name}</button>)}</div>{selected && <><input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} className={`mt-3 w-full ${control}`} /><div className="mt-3 flex flex-wrap gap-2">{["#FEF3C7", "#DBEAFE", "#E0E7FF", "#FCE7F3", "#DCFCE7", "#FECACA"].map((color) => <button type="button" key={color} onClick={() => setDraft({ ...draft, color })} className={`size-8 rounded-full border-2 ${draft.color === color ? "border-black" : "border-white"}`} style={{ backgroundColor: color }} aria-label={color} />)}</div><div className="mt-5 flex gap-2"><button type="button" onClick={() => { if (draft.name.trim()) updateCategory(selected.id, { name: draft.name.trim(), color: draft.color }); setManagerOpen(false); }} className="flex-1 rounded-xl bg-[var(--color-primary)] py-2.5 text-sm font-bold text-white">{ko ? "저장" : "Save"}</button><button type="button" onClick={() => { removeCategory(selected.id); setManagerOpen(false); }} className="rounded-xl border border-[var(--color-danger)] px-4 py-2.5 text-sm font-bold text-[var(--color-danger)]">{ko ? "삭제" : "Delete"}</button></div></>}</div></div>}
+      {managerOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 px-5"><div className="card max-h-[85vh] w-full max-w-lg overflow-y-auto p-6"><div className="flex items-center justify-between"><div><h3 className="text-lg font-bold">{ko ? "카테고리 관리" : "Manage categories"}</h3><p className="mt-1 text-xs muted">{ko ? "변경사항은 저장할 때 한 번에 반영돼요." : "All changes are applied together when you save."}</p></div><button type="button" onClick={() => setManagerOpen(false)} className="text-xl">×</button></div><div className="mt-5 space-y-3">{categories.map((item) => { const draft = drafts[item.id] || item; return <div key={item.id} className="rounded-2xl border border-[var(--color-border)] p-3"><div className="flex gap-2"><input value={draft.name} onChange={(event) => setDrafts((current) => ({ ...current, [item.id]: { ...draft, name: event.target.value } }))} className={`min-w-0 flex-1 ${control}`} /><button type="button" onClick={() => { removeCategory(item.id); setDrafts((current) => { const next = { ...current }; delete next[item.id]; return next; }); }} className="rounded-xl border border-[var(--color-danger)] px-3 text-sm font-bold text-[var(--color-danger)]" aria-label={ko ? `${item.name} 삭제` : `Delete ${item.name}`}>×</button></div><div className="mt-3 flex flex-wrap gap-2">{["#D9F99D", "#BAE6FD", "#DDD6FE", "#FBCFE8", "#BBF7D0", "#FED7AA"].map((color) => <button type="button" key={color} onClick={() => setDrafts((current) => ({ ...current, [item.id]: { ...draft, color } }))} className={`size-8 rounded-full border-2 ${draft.color === color ? "border-black" : "border-white"}`} style={{ backgroundColor: color }} aria-label={color} />)}</div></div>; })}</div><div className="mt-5 flex justify-end gap-2 border-t border-[var(--color-border)] pt-4"><button type="button" onClick={() => setManagerOpen(false)} className="rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-bold">{ko ? "취소" : "Cancel"}</button><button type="button" onClick={saveCategories} className="rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-sm font-bold text-white">{ko ? "일괄 저장" : "Save all"}</button></div></div></div>}
     </section>
   );
 }

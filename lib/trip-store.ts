@@ -685,6 +685,15 @@ export function useTripStore(tripId = "tokyo") {
     update((s) => ({ ...s, reservations: [...s.reservations, next] }));
     sync(tripId, "reservations", next);
   };
+  const updateReservation = (reservationId: string, changes: Omit<Reservation, "id">) => {
+    update((s) => ({
+      ...s,
+      reservations: s.reservations.map((item) =>
+        item.id === reservationId ? { ...changes, id: reservationId } : item,
+      ),
+    }));
+    sync(tripId, "reservations", { ...changes, id: reservationId }, "PATCH");
+  };
   const removeReservation = (reservationId: string) => {
     update((s) => ({
       ...s,
@@ -822,6 +831,7 @@ export function useTripStore(tripId = "tokyo") {
     addExpense,
     addTraveler,
     addReservation,
+    updateReservation,
     removeReservation,
     addBudget,
     updateBudget,

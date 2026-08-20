@@ -1,0 +1,17 @@
+{
+  "name": "Voyage 여행 기록",
+  "short_name": "Voyage",
+  "description": "여행 전·중·후를 한 곳에서 관리하는 여행 기록 앱",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5fbf8",
+  "theme_color": "#16a66a",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
