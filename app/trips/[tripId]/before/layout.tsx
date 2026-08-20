@@ -20,16 +20,10 @@ export default async function BeforeLayout({
             Overview
           </Link>
           <Link
-            href={`/trips/${tripId}/before/preparation`}
-            className="whitespace-nowrap muted"
-          >
-            Preparation
-          </Link>
-          <Link
             href={`/trips/${tripId}/before/packing`}
             className="whitespace-nowrap muted"
           >
-            Packing list
+            Packing
           </Link>
           <Link
             href={`/trips/${tripId}/before/budget`}
