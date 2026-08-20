@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/date";
 const slots = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
 
 const hourOf = (value?: string) => (value ? Number(value.slice(0, 2)) : null);
+const isStay = (type: string) => ["stay", "숙박", "hotel", "호텔", "accommodation"].includes(type.trim().toLowerCase());
 
 // The calendar keeps a compact two-hour grid. An event at 09:00 therefore
 // belongs to the 08:00–10:00 row instead of disappearing between rows.
@@ -32,7 +33,13 @@ export function TripScheduleCalendar({
     <div className="mt-6 grid gap-3 md:grid-cols-3">
       {dates.map((date) => {
         const daySchedule = schedule.filter((item) => item.date === date);
-        const dayReservations = reservations.filter((item) => item.date === date);
+        const dayStays = reservations.filter((item) => {
+          if (!isStay(item.type)) return false;
+          const start = item.date;
+          const end = item.endDate || start;
+          return start <= date && date <= end;
+        });
+        const dayReservations = reservations.filter((item) => item.date === date && !isStay(item.type));
         const untimed = [
           ...dayReservations.filter((item) => !item.time && !item.departureTime).map((item) => ({ kind: "reservation" as const, item })),
           ...daySchedule.filter((item) => !item.time).map((item) => ({ kind: "schedule" as const, item })),
@@ -50,6 +57,7 @@ export function TripScheduleCalendar({
                 {daySchedule.length + dayReservations.length}{ko ? "개 일정·예약" : " plans & bookings"}
               </p>
             </header>
+            {dayStays.length > 0 && <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2">{dayStays.map((item) => <div key={item.id} className="flex items-center gap-2 text-[11px]"><span aria-hidden="true">⌂</span><span className="truncate font-bold">{item.title}</span><span className="ml-auto shrink-0 muted">{item.location || (ko ? "숙소" : "Stay")}</span></div>)}</div>}
             <div className="divide-y divide-[var(--color-border)]">
               {untimed.map(({ kind, item }) => {
                 return <div key={`${kind}-${item.id}`} className="min-h-14 bg-[var(--color-surface)] px-3 py-3 text-xs"><span className="font-bold text-[var(--color-primary)]">{kind === "reservation" ? (ko ? "예약" : "Booking") : "—"}</span><p className="mt-1 font-bold">{item.title}</p></div>;
