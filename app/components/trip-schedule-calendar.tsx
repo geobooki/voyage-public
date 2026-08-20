@@ -32,6 +32,7 @@ export function TripScheduleCalendar({
   ko,
   onAdd,
   onReservationClick,
+  onScheduleClick,
 }: {
   dates: string[];
   schedule: ScheduleItem[];
@@ -39,6 +40,7 @@ export function TripScheduleCalendar({
   ko: boolean;
   onAdd: (date: string, time: string) => void;
   onReservationClick: (reservation: Reservation) => void;
+  onScheduleClick: (schedule: ScheduleItem) => void;
 }) {
   return (
     <div className="mt-6 grid gap-3 md:grid-cols-3">
@@ -71,7 +73,8 @@ export function TripScheduleCalendar({
             {dayStays.length > 0 && <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2">{dayStays.map((item) => <div key={item.id} className="flex items-center gap-2 text-[11px]"><span aria-hidden="true">⌂</span><span className="truncate font-bold">{item.title}</span><span className="ml-auto shrink-0 muted">{item.location || (ko ? "숙소" : "Stay")}</span></div>)}</div>}
             <div className="divide-y divide-[var(--color-border)]">
               {untimed.map(({ kind, item }) => {
-                return <div key={`${kind}-${item.id}`} role={kind === "reservation" ? "button" : undefined} tabIndex={kind === "reservation" ? 0 : undefined} onClick={kind === "reservation" ? () => onReservationClick(item as Reservation) : undefined} className={`min-h-14 bg-[var(--color-surface)] px-3 py-3 text-xs ${kind === "reservation" ? "cursor-pointer" : "border-l-2 border-dashed border-[var(--color-accent)]"}`} style={kind === "reservation" ? { borderLeft: `3px solid ${reservationColor((item as Reservation).type)}` } : undefined}><span className="font-bold text-[var(--color-primary)]">{kind === "reservation" ? (ko ? "예약" : "Booking") : (ko ? "내 일정" : "My plan")}</span><p className="mt-1 font-bold">{item.title}</p></div>;
+                const clickable = kind === "reservation" || kind === "schedule";
+                return <div key={`${kind}-${item.id}`} role={clickable ? "button" : undefined} tabIndex={clickable ? 0 : undefined} onClick={clickable ? () => (kind === "reservation" ? onReservationClick(item as Reservation) : onScheduleClick(item as ScheduleItem)) : undefined} onKeyDown={clickable ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); if (kind === "reservation") onReservationClick(item as Reservation); else onScheduleClick(item as ScheduleItem); } } : undefined} className={`min-h-14 bg-[var(--color-surface)] px-3 py-3 text-xs ${clickable ? "cursor-pointer" : ""} ${kind === "schedule" ? "border-l-2 border-dashed border-[var(--color-accent)]" : ""}`} style={kind === "reservation" ? { borderLeft: `3px solid ${reservationColor((item as Reservation).type)}` } : undefined}><span className="font-bold text-[var(--color-primary)]">{kind === "reservation" ? (ko ? "예약" : "Booking") : (ko ? "내 일정" : "My plan")}</span><p className="mt-1 font-bold">{item.title}</p></div>;
               })}
               {slots.map((slot, index) => {
                 const slotHour = hourOf(slot) ?? 0;
@@ -89,7 +92,7 @@ export function TripScheduleCalendar({
                     </span>
                     <span className="min-w-0 flex-1 space-y-1">
                       {slotReservations.map((item) => <span key={`reservation-${item.id}`} role="button" tabIndex={0} onClick={(event) => { event.stopPropagation(); onReservationClick(item); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); event.stopPropagation(); onReservationClick(item); } }} className="block cursor-pointer rounded-lg border bg-[var(--color-surface)] px-2 py-1.5" style={{ borderColor: reservationColor(item.type) }}><span className="block text-[10px] font-bold" style={{ color: reservationColor(item.type) }}>{ko ? "예약" : "Booking"} · {item.type}{item.departureTime || item.time ? ` · ${item.departureTime || item.time}` : ""}</span><span className="block truncate text-xs font-bold">{item.title}</span>{item.departureLocation && <span className="block truncate text-[10px] muted">{item.departureLocation} → {item.arrivalLocation}</span>}</span>)}
-                      {slotSchedule.map((item) => <span key={item.id} className={`block rounded-lg border border-dashed border-[var(--color-accent)] bg-[var(--color-surface)] px-2 py-1.5 ${item.completed ? "opacity-60" : ""}`}><span className={`block text-[10px] font-bold text-[var(--color-accent)] ${item.completed ? "line-through" : ""}`}>{ko ? "내 일정" : "My plan"}</span><span className={`block truncate text-xs font-bold ${item.completed ? "line-through" : ""}`}>{item.title}</span><span className="mt-0.5 block truncate text-[10px] muted">{item.time ? `${item.time}${item.endTime ? `–${item.endTime}` : item.durationMinutes ? ` · ${item.durationMinutes}분` : ""} · ` : ""}{item.type}{item.note ? ` · ${item.note}` : ""}</span></span>)}
+                      {slotSchedule.map((item) => <span key={item.id} role="button" tabIndex={0} onClick={(event) => { event.stopPropagation(); onScheduleClick(item); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); event.stopPropagation(); onScheduleClick(item); } }} className={`block cursor-pointer rounded-lg border border-dashed border-[var(--color-accent)] bg-[var(--color-surface)] px-2 py-1.5 ${item.completed ? "opacity-60" : ""}`}><span className={`block text-[10px] font-bold text-[var(--color-accent)] ${item.completed ? "line-through" : ""}`}>{ko ? "내 일정" : "My plan"}</span><span className={`block truncate text-xs font-bold ${item.completed ? "line-through" : ""}`}>{item.title}</span><span className="mt-0.5 block truncate text-[10px] muted">{item.time ? `${item.time}${item.endTime ? `–${item.endTime}` : item.durationMinutes ? ` · ${item.durationMinutes}분` : ""} · ` : ""}{item.type}{item.note ? ` · ${item.note}` : ""}</span></span>)}
                       {!slotReservations.length && !slotSchedule.length && <span className="block text-[10px] text-[var(--color-border)]">＋</span>}
                     </span>
                   </button>
