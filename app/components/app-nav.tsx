@@ -16,6 +16,7 @@ const items = [
 export function AppNav() {
   const { t, language } = useLanguage();
   const pathname = usePathname();
+  const tripId = pathname.match(/^\/trips\/([^/]+)/)?.[1];
   const [hasNowTrip, setHasNowTrip] = useState(false);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   useEffect(() => {
@@ -58,6 +59,15 @@ export function AppNav() {
             {item.href === "/now" ? (language === "ko" ? "지금 여행" : "Now") : labels[item.href as keyof typeof labels]}
           </Link>
         ))}
+        {tripId && tripId !== "new" && (
+          <Link
+            href={`/trips/${tripId}/before/budget`}
+            className={`ds-nav-item flex min-w-20 flex-col items-center gap-1 rounded-xl px-3 py-2 text-[11px] font-bold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-primary)] md:hidden ${pathname.includes("/budget") ? "ds-nav-item-active" : ""}`}
+          >
+            <span className="text-xl text-[var(--color-primary)]">₩</span>
+            {language === "ko" ? "예산" : "Budget"}
+          </Link>
+        )}
         <Link
           href="/settings"
           className={`ds-nav-item flex min-w-20 flex-col items-center gap-1 rounded-xl px-3 py-2 text-[11px] font-bold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-primary)] md:mt-auto ${pathname === "/settings" ? "ds-nav-item-active" : ""}`}
