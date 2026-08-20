@@ -296,6 +296,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
   const key = `voyage:trip:${tripId}`;
   const [state, setState] = useState<TripState>(blankState());
   const [hydrated, setHydrated] = useState(false);
+  const hasExchangeAmount = (value: ExchangePlan) => value.expectedCash > 0 || value.cardEstimate > 0 || value.plannedExchange > 0 || value.actualExchange > 0;
   useEffect(() => {
     setState(blankState());
     setHydrated(false);
@@ -509,19 +510,23 @@ export function useTripStore(tripId = "tokyo", view = "full") {
                 revisitPlaces: String(data.review.revisit_places ?? ""),
               }
             : current.review,
-          exchange: data.exchange
-            ? {
-                from: String(data.exchange.from_currency ?? "KRW"),
-                to: String(data.exchange.to_currency ?? "JPY"),
-                rate: Number(data.exchange.rate ?? 0),
-                expectedCash: Number(data.exchange.expected_cash ?? 0),
-                cardEstimate: Number(data.exchange.card_estimate ?? 0),
-                plannedExchange: Number(data.exchange.planned_exchange ?? 0),
-                actualExchange: Number(data.exchange.actual_exchange ?? 0),
-              }
-            : data.trip?.destination_currency
+          exchange: (() => {
+            const remote = data.exchange
+              ? {
+                  from: String(data.exchange.from_currency ?? "KRW"),
+                  to: String(data.exchange.to_currency ?? "JPY"),
+                  rate: Number(data.exchange.rate ?? 0),
+                  expectedCash: Number(data.exchange.expected_cash ?? 0),
+                  cardEstimate: Number(data.exchange.card_estimate ?? 0),
+                  plannedExchange: Number(data.exchange.planned_exchange ?? 0),
+                  actualExchange: Number(data.exchange.actual_exchange ?? 0),
+                }
+              : null;
+            if (remote && (!hasExchangeAmount(current.exchange) || hasExchangeAmount(remote))) return remote;
+            return data.trip?.destination_currency
               ? { ...current.exchange, to: String(data.trip.destination_currency) }
-              : current.exchange,
+              : current.exchange;
+          })(),
           dashboardItems: data.dashboard?.map((item: Record<string, unknown>) => ({
             id: String(item.id),
             kind: String(item.kind) as DashboardItem["kind"],
@@ -866,7 +871,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     ).catch(() => undefined);
   };
   const saveExchange = (exchange: ExchangePlan) => {
-    update((s) => ({ ...s, exchange }));
+    updateAndPersist((s) => ({ ...s, exchange }));
     sync(tripId, "exchange", exchange);
   };
   const saveReview = (review: TripState["review"]) => {
