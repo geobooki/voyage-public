@@ -263,6 +263,7 @@ const blankState = (): TripState => ({
   budgetCategories: ["항공", "숙박", "교통", "식비", "쇼핑", "활동", "기타"],
   budgetCategoryColors: { "항공": "#BAE6FD", "숙박": "#DDD6FE", "교통": "#FED7AA", "식비": "#FBCFE8", "쇼핑": "#FEF3C7", "활동": "#BBF7D0", "기타": "#E5E7EB" },
   paymentMethods: ["카드", "현금", "송금"],
+  paymentMethodColors: { "카드": "#BAE6FD", "현금": "#BBF7D0", "송금": "#DDD6FE" },
   expenseCategories: ["항공", "숙박", "교통", "식비", "쇼핑", "활동", "기타"],
   reservationCategories: ["Flight", "Stay", "Tour", "Restaurant", "Transport", "Activity", "Other"],
   reservationCategoryColors: { Flight: "#BAE6FD", Stay: "#DDD6FE", Tour: "#BBF7D0", Restaurant: "#FBCFE8", Transport: "#FED7AA", Activity: "#FBCFE8", Other: "#FEF3C7" },
@@ -313,6 +314,10 @@ export function useTripStore(tripId = "tokyo", view = "full") {
             budgetCategoryColors: {
               ...current.budgetCategoryColors,
               ...(parsed.budgetCategoryColors ?? {}),
+            },
+            paymentMethodColors: {
+              ...current.paymentMethodColors,
+              ...(parsed.paymentMethodColors ?? {}),
             },
             places:
               parsed.places?.map((item) => ({
@@ -804,7 +809,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     update((s) =>
       s.paymentMethods.includes(name)
         ? s
-        : { ...s, paymentMethods: [...s.paymentMethods, name] },
+        : { ...s, paymentMethods: [...s.paymentMethods, name], paymentMethodColors: { ...s.paymentMethodColors, [name]: "#E0F2FE" } },
     );
   const renamePaymentMethod = (from: string, to: string) =>
     update((s) => ({
@@ -812,6 +817,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
       paymentMethods: s.paymentMethods.map((item) =>
         item === from ? to : item,
       ),
+      paymentMethodColors: Object.fromEntries(Object.entries(s.paymentMethodColors).map(([name, color]) => [name === from ? to : name, color])),
       budget: s.budget.map((item) =>
         item.paymentMethod === from ? { ...item, paymentMethod: to } : item,
       ),
@@ -820,7 +826,10 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     update((s) => ({
       ...s,
       paymentMethods: s.paymentMethods.filter((item) => item !== name),
+      paymentMethodColors: Object.fromEntries(Object.entries(s.paymentMethodColors).filter(([item]) => item !== name)),
     }));
+  const updatePaymentMethodColor = (name: string, color: string) =>
+    update((s) => ({ ...s, paymentMethodColors: { ...s.paymentMethodColors, [name]: color } }));
   const removeBudget = (budgetId: string) => {
     update((s) => ({
       ...s,
@@ -913,6 +922,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     addPaymentMethod,
     renamePaymentMethod,
     removePaymentMethod,
+    updatePaymentMethodColor,
     addSouvenir,
     toggleSouvenir,
     removeSouvenir,
