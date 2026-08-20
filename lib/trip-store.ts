@@ -264,6 +264,7 @@ const blankState = (): TripState => ({
   paymentMethods: ["카드", "현금", "송금"],
   expenseCategories: ["항공", "숙박", "교통", "식비", "쇼핑", "활동", "기타"],
   reservationCategories: ["Flight", "Stay", "Tour", "Transport", "Activity", "Other"],
+  reservationCategoryColors: { Flight: "#BAE6FD", Stay: "#DDD6FE", Tour: "#BBF7D0", Transport: "#FED7AA", Activity: "#FBCFE8", Other: "#FEF3C7" },
   reservations: [],
   places: [],
   schedule: [],
@@ -304,6 +305,10 @@ export function useTripStore(tripId = "tokyo") {
           return {
             ...current,
             ...parsed,
+            reservationCategoryColors: {
+              ...current.reservationCategoryColors,
+              ...(parsed.reservationCategoryColors ?? {}),
+            },
             places:
               parsed.places?.map((item) => ({
                 ...item,
@@ -727,19 +732,22 @@ export function useTripStore(tripId = "tokyo") {
     update((s) =>
       s.reservationCategories.includes(name)
         ? s
-        : { ...s, reservationCategories: [...s.reservationCategories, name] },
+        : { ...s, reservationCategories: [...s.reservationCategories, name], reservationCategoryColors: { ...s.reservationCategoryColors, [name]: "#E0F2FE" } },
     );
   const renameReservationCategory = (from: string, to: string) =>
     update((s) => ({
       ...s,
       reservationCategories: s.reservationCategories.map((item) => item === from ? to : item),
       reservations: s.reservations.map((item) => item.type === from ? { ...item, type: to } : item),
+      reservationCategoryColors: Object.fromEntries(Object.entries(s.reservationCategoryColors).map(([name, color]) => [name === from ? to : name, color])),
     }));
   const removeReservationCategory = (name: string) =>
     update((s) => ({
       ...s,
       reservationCategories: s.reservationCategories.filter((item) => item !== name),
+      reservationCategoryColors: Object.fromEntries(Object.entries(s.reservationCategoryColors).filter(([item]) => item !== name)),
     }));
+  const updateReservationCategoryColor = (name: string, color: string) => update((s) => ({ ...s, reservationCategoryColors: { ...s.reservationCategoryColors, [name]: color } }));
   const addBudget = (budget: Omit<BudgetItem, "id">) => {
     const next = { ...budget, id: id() };
     update((s) => ({ ...s, budget: [...s.budget, next] }));
@@ -877,6 +885,7 @@ export function useTripStore(tripId = "tokyo") {
     addReservationCategory,
     renameReservationCategory,
     removeReservationCategory,
+    updateReservationCategoryColor,
     addBudget,
     updateBudget,
     removeBudget,
