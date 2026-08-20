@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
+import type { ScheduleItem } from "@/types/trip";
 
 type ScheduleForm = {
   date: string;
   title: string;
   time: string;
+  endTime: string;
+  durationMinutes: string;
   type: string;
   placeId?: string;
   note: string;
@@ -31,12 +34,16 @@ export default function SchedulePage() {
     date: defaultDate,
     title: "",
     time: "09:00",
+    endTime: "",
+    durationMinutes: "",
     type: "Sightseeing",
     placeId: "",
     note: "",
   });
   const [item, setItem] = useState<ScheduleForm>(() => empty());
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [dayIndex, setDayIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
   const dates = Array.from(
     new Set([
       ...state.schedule.map((entry) => entry.date),
@@ -48,12 +55,14 @@ export default function SchedulePage() {
     .sort();
   const save = (event: FormEvent) => {
     event.preventDefault();
-    if (!item.title.trim() || !item.date) return;
+    if (!item.title.trim() || !item.date || (!item.endTime && !item.durationMinutes)) return;
+    if (item.endTime && item.durationMinutes) return;
     const current = state.schedule.find((entry) => entry.id === editingId);
     const value = {
       ...item,
       title: item.title.trim(),
       note: item.note.trim(),
+      durationMinutes: item.durationMinutes ? Number(item.durationMinutes) : undefined,
       completed: current?.completed ?? false,
     };
     if (editingId) updateSchedule(editingId, value);
@@ -61,18 +70,22 @@ export default function SchedulePage() {
     setItem(empty());
     setEditingId(null);
   };
-  const edit = (entry: ScheduleForm & { id: string; completed: boolean }) => {
+  const edit = (entry: ScheduleItem) => {
     setEditingId(entry.id);
     setItem({
       date: entry.date,
       title: entry.title,
       time: entry.time,
+      endTime: entry.endTime ?? "",
+      durationMinutes: entry.durationMinutes ? String(entry.durationMinutes) : "",
       type: entry.type,
       placeId: entry.placeId ?? "",
       note: entry.note,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  const visibleDates = dates.slice(dayIndex, dayIndex + 1);
+  const moveDay = (direction: number) => setDayIndex((current) => Math.max(0, Math.min(Math.max(0, dates.length - 1), current + direction)));
   return (
     <main
       data-section="schedule-board"
@@ -114,6 +127,23 @@ export default function SchedulePage() {
             type="time"
             value={item.time}
             onChange={(event) => setItem({ ...item, time: event.target.value })}
+            className={control}
+          />
+          <input
+            type="time"
+            value={item.endTime}
+            onChange={(event) => setItem({ ...item, endTime: event.target.value, durationMinutes: "" })}
+            placeholder="종료 시간"
+            aria-label="종료 시간"
+            className={control}
+          />
+          <input
+            type="number"
+            min="1"
+            value={item.durationMinutes}
+            onChange={(event) => setItem({ ...item, durationMinutes: event.target.value, endTime: "" })}
+            placeholder="소요 시간(분)"
+            aria-label="소요 시간(분)"
             className={control}
           />
           <select
@@ -162,8 +192,13 @@ export default function SchedulePage() {
             편집 취소
           </button>
         )}
-        <div className="mt-6 grid gap-4 lg:grid-cols-3">
-          {dates.map((date) => (
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <button type="button" onClick={() => moveDay(-1)} disabled={dayIndex === 0} className="grid size-10 place-items-center rounded-full border border-[var(--color-border)] text-xl font-bold disabled:opacity-30" aria-label="이전 날짜">‹</button>
+          <p className="text-sm font-bold text-[var(--color-primary)]">{dates.length ? `${dayIndex + 1} / ${dates.length}` : "일정 없음"}</p>
+          <button type="button" onClick={() => moveDay(1)} disabled={dayIndex >= dates.length - 1} className="grid size-10 place-items-center rounded-full border border-[var(--color-border)] text-xl font-bold disabled:opacity-30" aria-label="다음 날짜">›</button>
+        </div>
+        <div className="mt-3" onTouchStart={(event) => setTouchStart(event.touches[0]?.clientX ?? null)} onTouchEnd={(event) => { if (touchStart == null) return; const delta = (event.changedTouches[0]?.clientX ?? touchStart) - touchStart; if (Math.abs(delta) > 45) moveDay(delta < 0 ? 1 : -1); setTouchStart(null); }}>
+          {visibleDates.map((date) => (
             <section
               data-section={`schedule-day-${date}`}
               className="min-h-56 rounded-[20px] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4"
@@ -208,7 +243,7 @@ export default function SchedulePage() {
                     key={entry.id}
                   >
                     <div className="flex items-start gap-3">
-                      <input
+                  <input
                         type="checkbox"
                         checked={entry.completed}
                         onChange={() => toggleScheduleComplete(entry.id)}
@@ -221,7 +256,7 @@ export default function SchedulePage() {
                         className="block flex-1 text-left"
                       >
                         <p className="text-xs font-bold text-[var(--color-primary)]">
-                          {entry.time || "시간 미정"}
+                          {entry.time || "시간 미정"}{entry.endTime ? ` – ${entry.endTime}` : entry.durationMinutes ? ` · ${entry.durationMinutes}분` : ""}
                         </p>
                         <p
                           className={`mt-2 text-sm font-bold ${entry.completed ? "line-through" : ""}`}
