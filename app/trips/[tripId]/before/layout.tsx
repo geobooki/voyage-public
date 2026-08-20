@@ -20,12 +20,6 @@ export default async function BeforeLayout({
             Overview
           </Link>
           <Link
-            href={`/trips/${tripId}/before/packing`}
-            className="whitespace-nowrap muted"
-          >
-            Packing
-          </Link>
-          <Link
             href={`/trips/${tripId}/before/budget`}
             className="whitespace-nowrap muted"
           >
@@ -36,6 +30,12 @@ export default async function BeforeLayout({
             className="whitespace-nowrap muted"
           >
             Reservations
+          </Link>
+          <Link
+            href={`/trips/${tripId}/before/packing`}
+            className="whitespace-nowrap muted"
+          >
+            Packing
           </Link>
         </div>
       </nav>
