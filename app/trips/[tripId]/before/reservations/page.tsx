@@ -12,7 +12,7 @@ import { formatDate } from "@/lib/date";
 const control = "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
 const reservationColors = ["#BAE6FD", "#DDD6FE", "#BBF7D0", "#FED7AA", "#FBCFE8", "#FEF3C7", "#C7D2FE", "#A7F3D0"];
 type Form = { title: string; type: string; date: string; endDate: string; time: string; location: string; departureLocation: string; arrivalLocation: string; departureTime: string; arrivalTime: string; airline: string; terminal: string; reservationNumber: string; memo: string; link: string };
-const blank: Form = { title: "", type: "Stay", date: "", endDate: "", time: "", location: "", departureLocation: "", arrivalLocation: "", departureTime: "", arrivalTime: "", airline: "", terminal: "", reservationNumber: "", memo: "", link: "" };
+const blank: Form = { title: "", type: "Tour", date: "", endDate: "", time: "", location: "", departureLocation: "", arrivalLocation: "", departureTime: "", arrivalTime: "", airline: "", terminal: "", reservationNumber: "", memo: "", link: "" };
 const dateValue = (value: string | undefined) => value ? value.slice(0, 10) : "";
 const timeValue = (value: string | undefined) => value ? value.slice(0, 5) : "";
 const dateText = (value: string | undefined, ko: boolean) => {
