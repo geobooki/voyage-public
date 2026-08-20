@@ -43,6 +43,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ trip
       travelers: supabase.from("travelers").select("*").eq("trip_id", tripId).order("created_at"),
       schedule: supabase.from("schedule_items").select("*").eq("trip_id", tripId).order("date").order("time"),
       weather: supabase.from("weather_days").select("*").eq("trip_id", tripId).order("date"),
+      reservations: supabase.from("reservations").select("*").eq("trip_id", tripId).order("date"),
     },
     after: {
       places: supabase.from("places").select("*").eq("trip_id", tripId).order("created_at"),
