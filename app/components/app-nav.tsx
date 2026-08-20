@@ -17,12 +17,21 @@ export function AppNav() {
   const { t, language } = useLanguage();
   const pathname = usePathname();
   const [hasNowTrip, setHasNowTrip] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   useEffect(() => {
     void fetch("/api/trips")
       .then((response) => (response.ok ? response.json() : { trips: [] }))
       .then((result) => setHasNowTrip(Array.isArray(result.trips) && result.trips.some(isCurrentOrSoonTrip)))
       .catch(() => setHasNowTrip(false));
   }, [pathname]);
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const updateKeyboardState = () => setKeyboardOpen(window.innerHeight - viewport.height > 120);
+    updateKeyboardState();
+    viewport.addEventListener("resize", updateKeyboardState);
+    return () => viewport.removeEventListener("resize", updateKeyboardState);
+  }, []);
   const navigationItems = hasNowTrip
     ? [{ href: "/now", label: t("overview"), icon: "◉" }, ...items]
     : items;
@@ -34,7 +43,7 @@ export function AppNav() {
     <nav
       aria-label="Primary navigation"
       data-component="side-navigation"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 px-4 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur md:inset-y-0 md:right-auto md:w-24 md:border-r md:border-t-0 md:px-2 md:py-6"
+      className={`${keyboardOpen ? "hidden md:block" : ""} fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 px-4 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur md:inset-y-0 md:right-auto md:w-24 md:border-r md:border-t-0 md:px-2 md:py-6`}
     >
       <div className="mx-auto flex max-w-md justify-around gap-2 md:flex md:h-full md:flex-col md:justify-start">
         {navigationItems.map((item) => (

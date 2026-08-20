@@ -96,6 +96,9 @@ export function PackingProvider({
         const nextCategories = Array.isArray(data.categories) && data.categories.length
           ? data.categories
           : [defaultCategory];
+        // Do not replace an existing local list with an empty remote response
+        // while the Supabase checklist tables are still empty or unavailable.
+        if (saved && nextItems.length === 0 && nextCategories.length === 1 && nextCategories[0].id === defaultCategory.id) return;
         setItems(nextItems);
         setCategories(nextCategories);
         persist(nextItems, nextCategories);

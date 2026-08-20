@@ -153,20 +153,30 @@ const ko: Record<string, string> = {
   "Unlinked expense": "연결되지 않은 지출",
 };
 const originalText = new WeakMap<Node, string>();
+const lastTranslatedText = new WeakMap<Node, string>();
 const originalPlaceholder = new WeakMap<Element, string>();
+const lastTranslatedPlaceholder = new WeakMap<Element, string>();
+const originalOptionValue = new WeakMap<HTMLOptionElement, string>();
 
 export function LocaleBridge() {
   const { language } = useLanguage();
   useEffect(() => {
     const translate = () => {
+      // Options without an explicit value use their visible text as the value.
+      // Preserve the English data value before translating labels in the DOM.
+      document.querySelectorAll<HTMLOptionElement>("option").forEach((option) => {
+        if (!originalOptionValue.has(option)) originalOptionValue.set(option, option.value);
+      });
       const walker = document.createTreeWalker(
         document.body,
         NodeFilter.SHOW_TEXT,
       );
       let node: Node | null;
       while ((node = walker.nextNode())) {
-        if (!originalText.has(node))
-          originalText.set(node, node.nodeValue || "");
+        const current = node.nodeValue || "";
+        const previousTranslation = lastTranslatedText.get(node);
+        if (!originalText.has(node) || (previousTranslation !== undefined && current !== previousTranslation))
+          originalText.set(node, current);
         const source = originalText.get(node) || "";
         let translated = source;
         if (language === "ko")
@@ -176,16 +186,19 @@ export function LocaleBridge() {
               translated = translated.replaceAll(key, ko[key]);
             });
         node.nodeValue = translated;
+        lastTranslatedText.set(node, translated);
       }
       document
         .querySelectorAll<HTMLElement>(
           "input[placeholder], textarea[placeholder]",
         )
         .forEach((element) => {
-          if (!originalPlaceholder.has(element))
+          const current = element.getAttribute("placeholder") || "";
+          const previousTranslation = lastTranslatedPlaceholder.get(element);
+          if (!originalPlaceholder.has(element) || (previousTranslation !== undefined && current !== previousTranslation))
             originalPlaceholder.set(
               element,
-              element.getAttribute("placeholder") || "",
+              current,
             );
           let value = originalPlaceholder.get(element) || "";
           if (language === "ko")
@@ -195,12 +208,16 @@ export function LocaleBridge() {
                 value = value.replaceAll(key, ko[key]);
               });
           element.setAttribute("placeholder", value);
+          lastTranslatedPlaceholder.set(element, value);
         });
       document
         .querySelectorAll<HTMLInputElement>('input[type="date"]')
         .forEach((element) => {
           element.lang = language === "ko" ? "ko-KR" : "en-US";
         });
+      document.querySelectorAll<HTMLOptionElement>("option").forEach((option) => {
+        option.value = originalOptionValue.get(option) || option.value;
+      });
     };
     translate();
     const observer = new MutationObserver(translate);

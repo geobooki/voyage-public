@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { usePacking } from "@/lib/packing-context";
 
@@ -17,11 +17,20 @@ export function PackingBoard({ compact = false }: { compact?: boolean }) {
   const [sortMode, setSortMode] = useState<"category" | "name">("category");
   const [managerOpen, setManagerOpen] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, { name: string; color: string }>>({});
+  const itemInputRef = useRef<HTMLInputElement>(null);
+  const previousItemCount = useRef(items.length);
 
   useEffect(() => {
     if (!categories.length) return;
     if (!categories.some((item) => item.name === category)) setCategory(categories[0].name);
   }, [categories, category]);
+  useEffect(() => {
+    if (items.length > previousItemCount.current) {
+      itemInputRef.current?.focus();
+      itemInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    previousItemCount.current = items.length;
+  }, [items.length]);
 
   const completed = items.filter((item) => item.checked);
   const incomplete = items.filter((item) => !item.checked);
@@ -97,7 +106,7 @@ export function PackingBoard({ compact = false }: { compact?: boolean }) {
       {showCompleted && <div className="mt-5 border-t border-[var(--color-border)] pt-4"><p className="mb-2 text-xs font-bold muted">{ko ? "완료된 준비물" : "Completed items"}</p><div className="grid gap-3 sm:grid-cols-2">{boards(completed).map((board) => <div key={board.category.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-3"><div className="mb-2 rounded-xl px-3 py-2 text-xs font-bold" style={{ backgroundColor: board.category.color }}>{board.category.name}</div>{board.items.map((item) => <div key={item.id} className="flex items-center gap-2 rounded-xl bg-[var(--color-surface)] px-2 py-2"><input type="checkbox" checked onChange={() => toggleItem(item.id)} className="size-4 accent-[var(--color-primary)]" /><span className="flex-1 text-sm font-semibold line-through text-[var(--color-text-muted)]">{item.name}</span><button type="button" onClick={() => removeItem(item.id)} className="text-sm font-bold text-[var(--color-danger)]">×</button></div>)}</div>)}</div></div>}
 
       <form onSubmit={submitItem} className="mt-5 grid gap-2 border-t border-[var(--color-border)] pt-5 sm:grid-cols-[1fr_auto]">
-        <input value={newItem} onChange={(event) => setNewItem(event.target.value)} placeholder={ko ? "준비물 추가" : "Add an item"} className={`min-w-0 ${control}`} />
+        <input ref={itemInputRef} value={newItem} onChange={(event) => setNewItem(event.target.value)} placeholder={ko ? "준비물 추가" : "Add an item"} className={`min-w-0 ${control}`} />
         <button className="rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-bold text-white">{ko ? "추가" : "Add"}</button>
         <select value={category} onChange={(event) => setCategory(event.target.value)} className={`sm:col-span-2 ${control}`} aria-label={ko ? "준비물 카테고리" : "Packing category"}>{categories.map((item) => <option key={item.id}>{item.name}</option>)}</select>
       </form>
