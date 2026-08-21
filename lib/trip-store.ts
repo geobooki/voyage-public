@@ -430,8 +430,8 @@ export function useTripStore(tripId = "tokyo", view = "full") {
                   checked: Boolean(item.checked),
                 }))
             : current.preparation,
-            expenses:
-            data.expenses?.map((item: Record<string, unknown>) => ({
+            expenses: data.expenses?.length
+              ? data.expenses.map((item: Record<string, unknown>) => ({
               id: String(item.id),
               name: item.name ? String(item.name) : undefined,
               amount: Number(item.amount),
@@ -443,12 +443,14 @@ export function useTripStore(tripId = "tokyo", view = "full") {
               date: String(item.spent_at ?? "").slice(0, 10),
               time: String(item.spent_at ?? "").slice(11, 16),
               krwAmount: item.krw_amount == null ? undefined : Number(item.krw_amount),
-            })) ?? current.expenses,
-          travelers:
-            data.travelers?.map((item: Record<string, unknown>) => ({
+            }))
+              : current.expenses,
+          travelers: data.travelers?.length
+            ? data.travelers.map((item: Record<string, unknown>) => ({
               id: String(item.id),
               name: String(item.name),
-            })) ?? current.travelers,
+            }))
+            : current.travelers,
           schedule: data.schedule?.length
             ? data.schedule.map((item: Record<string, unknown>) => ({
                 id: String(item.id),
@@ -472,22 +474,24 @@ export function useTripStore(tripId = "tokyo", view = "full") {
                 ...remoteReservations,
               ]
             : current.reservations,
-          souvenirs:
-            data.souvenirs?.map((item: Record<string, unknown>) => ({
+          souvenirs: data.souvenirs?.length
+            ? data.souvenirs.map((item: Record<string, unknown>) => ({
               id: String(item.id),
               name: String(item.name),
               estimatedPrice: Number(item.estimated_price),
               purchased: Boolean(item.purchased),
               actualPrice: Number(item.actual_price),
               memo: String(item.memo ?? ""),
-            })) ?? current.souvenirs,
-          weather:
-            data.weather?.map((item: Record<string, unknown>) => ({
+            }))
+            : current.souvenirs,
+          weather: data.weather?.length
+            ? data.weather.map((item: Record<string, unknown>) => ({
               date: String(item.date),
               temperature: Number(item.temperature),
               condition: String(item.condition ?? ""),
               icon: String(item.icon ?? "☀"),
-            })) ?? current.weather,
+            }))
+            : current.weather,
           budget: data.budget?.length
             ? data.budget.map((item: Record<string, unknown>) => ({
                 id: String(item.id),
@@ -527,7 +531,8 @@ export function useTripStore(tripId = "tokyo", view = "full") {
               ? { ...current.exchange, to: String(data.trip.destination_currency) }
               : current.exchange;
           })(),
-          dashboardItems: data.dashboard?.map((item: Record<string, unknown>) => ({
+          dashboardItems: data.dashboard?.length
+            ? data.dashboard.map((item: Record<string, unknown>) => ({
             id: String(item.id),
             kind: String(item.kind) as DashboardItem["kind"],
             title: String(item.title),
@@ -535,7 +540,8 @@ export function useTripStore(tripId = "tokyo", view = "full") {
             url: item.url ? String(item.url) : undefined,
             category: item.category ? String(item.category) : undefined,
             completed: Boolean(item.completed),
-          })) ?? current.dashboardItems,
+          }))
+            : current.dashboardItems,
         }));
       })
       .catch(() => undefined)
@@ -545,7 +551,11 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     if (hydrated) window.localStorage.setItem(key, JSON.stringify(state));
   }, [state, hydrated]);
   const update = (fn: (current: TripState) => TripState) =>
-    setState((current) => fn(current));
+    setState((current) => {
+      const next = fn(current);
+      window.localStorage.setItem(key, JSON.stringify(next));
+      return next;
+    });
   const updateAndPersist = (fn: (current: TripState) => TripState) =>
     setState((current) => {
       const next = fn(current);
