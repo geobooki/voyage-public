@@ -10,6 +10,7 @@ const tableByResource: Record<string, string> = {
   reservations: "reservations",
   travelers: "travelers",
   budget: "budget_items",
+  expenses: "expenses",
   review: "reviews",
   exchange: "exchange_plans",
   "checklist-categories": "checklist_categories",
@@ -29,6 +30,7 @@ function toRow(resource: string, tripId: string, body: Record<string, unknown>) 
   if (resource === "reservations") return { ...base, type: body.type ?? "other", title: body.title, date: body.date || null, end_date: body.endDate || null, time: body.time || null, location: body.location ?? null, departure_location: body.departureLocation ?? null, arrival_location: body.arrivalLocation ?? null, departure_time: body.departureTime || null, arrival_time: body.arrivalTime || null, airline: body.airline ?? null, terminal: body.terminal ?? null, reservation_number: body.reservationNumber ?? null, cost: Number(body.cost ?? 0), memo: body.memo ?? null, link: body.link ?? null };
   if (resource === "travelers") return { ...base, name: body.name };
   if (resource === "budget") return { ...base, name: body.name ?? null, detail: body.detail ?? null, category: body.category ?? "Other", estimated_amount: Number(body.amount ?? body.estimatedAmount ?? 0), currency: body.currency ?? "KRW", payment_method: body.paymentMethod ?? null };
+  if (resource === "expenses") return { ...base, name: body.name ?? null, amount: Number(body.amount ?? 0), currency: body.currency ?? "KRW", category: body.category ?? "other", payment_method: body.paymentMethod ?? null, place_id: body.placeId ?? null, payer_id: body.payerId ?? null, memo: body.memo ?? null, spent_at: body.date ? `${body.date}T${body.time || "12:00"}:00` : new Date().toISOString(), krw_amount: body.krwAmount == null ? null : Number(body.krwAmount) };
   if (resource === "review") return { ...base, rating: body.rating ?? null, comment: body.comment ?? null, good_things: body.goodThings ?? null, bad_things: body.badThings ?? null, revisit_places: body.revisitPlaces ?? null };
   return { ...base, from_currency: body.from ?? "KRW", to_currency: body.to ?? "JPY", rate: Number(body.rate ?? 0), expected_cash: Number(body.expectedCash ?? 0), card_estimate: Number(body.cardEstimate ?? 0), planned_exchange: Number(body.plannedExchange ?? 0), actual_exchange: Number(body.actualExchange ?? 0) };
 }

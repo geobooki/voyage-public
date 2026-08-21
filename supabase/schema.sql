@@ -55,6 +55,7 @@ create table if not exists expenses (
 
 alter table expenses add column if not exists name text;
 alter table expenses add column if not exists krw_amount numeric(12, 2);
+alter table expenses add column if not exists payment_method text;
 
 create table if not exists travelers (
   id uuid primary key default gen_random_uuid(),

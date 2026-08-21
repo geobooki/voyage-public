@@ -462,13 +462,14 @@ export function useTripStore(tripId = "tokyo", view = "full") {
                   checked: Boolean(item.checked),
                 }))
             : current.preparation,
-            expenses: data.expenses?.length
+              expenses: data.expenses?.length
               ? data.expenses.map((item: Record<string, unknown>) => ({
               id: String(item.id),
               name: item.name ? String(item.name) : undefined,
               amount: Number(item.amount),
               currency: String(item.currency),
               category: String(item.category),
+              paymentMethod: item.payment_method ? String(item.payment_method) : undefined,
               placeId: item.place_id ? String(item.place_id) : undefined,
               payerId: item.payer_id ? String(item.payer_id) : undefined,
               memo: String(item.memo ?? ""),
