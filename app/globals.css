@@ -1,49 +1,49 @@
 @import "tailwindcss";
 
 :root {
-  /* Seed-inspired semantic design tokens. Keep components on roles, not raw colors. */
-  --palette-green-50: #effcf4;
-  --palette-green-100: #dcfce9;
-  --palette-green-500: #22c55e;
-  --palette-green-600: #16a34a;
-  --palette-green-700: #15803d;
-  --palette-blue-50: #eff8ff;
-  --palette-blue-100: #dff1ff;
-  --palette-blue-500: #38bdf8;
-  --palette-blue-600: #2563eb;
-  --palette-blue-700: #1d4ed8;
+  /* Fresh blue palette: keep components on semantic roles, not raw colors. */
+  --palette-green-50: #c9ffdb;
+  --palette-green-100: #a4fcd6;
+  --palette-green-500: #3ba0b6;
+  --palette-green-600: #278bc7;
+  --palette-green-700: #5686d8;
+  --palette-blue-50: #d1e9ff;
+  --palette-blue-100: #c0eaff;
+  --palette-blue-500: #71bbff;
+  --palette-blue-600: #5686d8;
+  --palette-blue-700: #278bc7;
   --palette-slate-50: #f8fafc;
   --palette-slate-100: #f1f5f9;
   --palette-slate-200: #e2e8f0;
   --palette-slate-500: #64748b;
   --palette-slate-700: #334155;
   --palette-slate-900: #0f172a;
-  --color-primary: var(--palette-green-600);
-  --color-primary-hover: var(--palette-green-700);
-  --color-primary-soft: var(--palette-green-100);
-  --color-info: var(--palette-blue-600);
-  --color-info-soft: var(--palette-blue-100);
-  --color-background: #f5fbf8;
+  --color-primary: #5686d8;
+  --color-primary-hover: #278bc7;
+  --color-primary-soft: #c0eaff;
+  --color-info: #278bc7;
+  --color-info-soft: #d1e9ff;
+  --color-background: #d1e9ff;
   --color-surface: #ffffff;
-  --color-surface-muted: #eef8f3;
+  --color-surface-muted: #c0eaff;
   --color-text-primary: var(--palette-slate-900);
   --color-text-secondary: var(--palette-slate-500);
   --color-text-muted: #94a3b8;
-  --color-border: #dcebe2;
-  --color-accent: var(--palette-blue-500);
+  --color-border: #9bd0ff;
+  --color-accent: #71bbff;
   --color-warning: #b7791f;
   --color-danger: #dc5a5a;
-  --color-success: var(--palette-green-600);
-  --color-avatar: #c7f0d5;
-  --color-trip-tokyo: #dcebe4;
+  --color-success: #3ba0b6;
+  --color-avatar: #a4fcd6;
+  --color-trip-tokyo: #c0eaff;
   --color-trip-jeju: #f5e4d2;
   --color-trip-lisbon: #e5e0ef;
-  --color-surface-sand: #f9eee0;
-  --color-surface-blue: #e5f0f4;
-  --color-surface-green: #e6f1e9;
+  --color-surface-sand: #c9ffdb;
+  --color-surface-blue: #b9deff;
+  --color-surface-green: #c9ffdb;
   --color-error-surface: #fff1ec;
-  --color-map-surface: #eaf1ed;
-  --color-map-dot: #9ab6a8;
+  --color-map-surface: #b9deff;
+  --color-map-dot: #3ba0b6;
   --font-family-base:
     ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -51,7 +51,7 @@
   --radius-control: 14px;
   --radius-small: 10px;
   --radius-pill: 999px;
-  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.03), 0 12px 34px rgba(21, 128, 61, 0.08);
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.03), 0 12px 34px rgba(86, 134, 216, 0.12);
   --shadow-dialog: 0 24px 80px rgba(15, 23, 42, 0.2);
   --space-page: clamp(20px, 4vw, 56px);
 }
@@ -62,8 +62,8 @@
 body {
   margin: 0;
   background:
-    radial-gradient(circle at 92% 0%, rgba(56, 189, 248, 0.1), transparent 26rem),
-    radial-gradient(circle at 8% 18%, rgba(34, 197, 94, 0.07), transparent 24rem),
+    radial-gradient(circle at 92% 0%, rgba(113, 187, 255, 0.18), transparent 26rem),
+    radial-gradient(circle at 8% 18%, rgba(164, 252, 214, 0.18), transparent 24rem),
     var(--color-background);
   color: var(--color-text-primary);
   font-family: var(--font-family-base);
