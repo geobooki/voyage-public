@@ -19,17 +19,49 @@ const id = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2, 10);
+type PendingMutation = { key: string; resource: string; payload: Record<string, unknown>; method: "POST" | "PATCH" | "DELETE" };
+const pendingKey = (tripId: string) => `voyage:pending:${tripId}`;
+const readPending = (tripId: string): PendingMutation[] => {
+  try { return JSON.parse(window.localStorage.getItem(pendingKey(tripId)) || "[]") as PendingMutation[]; } catch { return []; }
+};
+const writePending = (tripId: string, items: PendingMutation[]) => {
+  if (items.length) window.localStorage.setItem(pendingKey(tripId), JSON.stringify(items));
+  else window.localStorage.removeItem(pendingKey(tripId));
+};
+const mutationKey = (resource: string, method: string, payload: Record<string, unknown>) => `${method}:${resource}:${String(payload.id || "new")}`;
+const sendMutation = async (tripId: string, mutation: PendingMutation) => {
+  const query = mutation.method === "DELETE" && mutation.payload.id ? `?id=${encodeURIComponent(String(mutation.payload.id))}` : "";
+  const response = await fetch(`/api/trips/${tripId}/${mutation.resource}${query}`, {
+    method: mutation.method,
+    headers: mutation.method === "DELETE" ? undefined : { "Content-Type": "application/json" },
+    body: mutation.method === "DELETE" ? undefined : JSON.stringify(mutation.payload),
+  });
+  if (!response.ok) throw new Error(`Unable to sync ${mutation.resource}`);
+};
+const flushPending = async (tripId: string) => {
+  const pending = readPending(tripId);
+  for (const mutation of pending) {
+    try {
+      await sendMutation(tripId, mutation);
+      writePending(tripId, readPending(tripId).filter((item) => item.key !== mutation.key));
+    } catch {
+      return;
+    }
+  }
+};
 const sync = (
   tripId: string,
   resource: string,
   payload: Record<string, unknown>,
-  method: "POST" | "PATCH" = "POST",
+  method: "POST" | "PATCH" | "DELETE" = "POST",
 ) => {
-  void fetch(`/api/trips/${tripId}/${resource}`, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  }).catch(() => undefined);
+  const mutation = { key: mutationKey(resource, method, payload), resource, payload, method };
+  void sendMutation(tripId, mutation)
+    .then(() => writePending(tripId, readPending(tripId).filter((item) => item.key !== mutation.key)))
+    .catch(() => {
+      const pending = readPending(tripId).filter((item) => item.key !== mutation.key);
+      writePending(tripId, [...pending, mutation]);
+    });
 };
 /* Legacy demo state intentionally removed. User-created trips start blank.
 const initial: TripState = {
@@ -550,6 +582,12 @@ export function useTripStore(tripId = "tokyo", view = "full") {
   useEffect(() => {
     if (hydrated) window.localStorage.setItem(key, JSON.stringify(state));
   }, [state, hydrated]);
+  useEffect(() => {
+    const flush = () => { void flushPending(tripId); };
+    flush();
+    window.addEventListener("online", flush);
+    return () => window.removeEventListener("online", flush);
+  }, [tripId]);
   const update = (fn: (current: TripState) => TripState) =>
     setState((current) => {
       const next = fn(current);
@@ -585,10 +623,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
       ...s,
       [list]: s[list].filter((item) => item.id !== itemId),
     }));
-    void fetch(
-      `/api/trips/${tripId}/checklist?id=${encodeURIComponent(itemId)}`,
-      { method: "DELETE" },
-    ).catch(() => undefined);
+    sync(tripId, "checklist", { id: itemId }, "DELETE");
   };
   const updateChecklistCategory = (
     list: "packing" | "preparation",
@@ -653,7 +688,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
         packing: s.packing.map((item) => item.category === category.name ? { ...item, category: "기타" } : item),
       };
     });
-    void fetch(`/api/trips/${tripId}/checklist-categories?id=${encodeURIComponent(categoryId)}`, { method: "DELETE" }).catch(() => undefined);
+    sync(tripId, "checklist-categories", { id: categoryId }, "DELETE");
   };
   const addPlace = (place: Omit<Place, "id">) => {
     const next = { ...place, id: id() };
@@ -682,10 +717,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
       ...s,
       schedule: s.schedule.filter((item) => item.id !== scheduleId),
     }));
-    void fetch(
-      `/api/trips/${tripId}/schedule?id=${encodeURIComponent(scheduleId)}`,
-      { method: "DELETE" },
-    ).catch(() => undefined);
+    sync(tripId, "schedule", { id: scheduleId }, "DELETE");
   };
   const toggleScheduleComplete = (scheduleId: string) =>
     update((s) => {
@@ -708,22 +740,18 @@ export function useTripStore(tripId = "tokyo", view = "full") {
   const addExpense = (expense: Omit<Expense, "id">) => {
     const next = { ...expense, id: id() };
     update((s) => ({ ...s, expenses: [...s.expenses, next] }));
-    void fetch(`/api/trips/${tripId}/expenses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(next),
-    }).catch(() => undefined);
+    sync(tripId, "expenses", next);
   };
   const updateExpense = (expenseId: string, changes: Omit<Expense, "id">) => {
     update((s) => ({
       ...s,
       expenses: s.expenses.map((item) => item.id === expenseId ? { ...changes, id: expenseId } : item),
     }));
-    void fetch(`/api/trips/${tripId}/expenses?id=${encodeURIComponent(expenseId)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...changes, id: expenseId }) }).catch(() => undefined);
+    sync(tripId, "expenses", { ...changes, id: expenseId }, "PATCH");
   };
   const removeExpense = (expenseId: string) => {
     update((s) => ({ ...s, expenses: s.expenses.filter((item) => item.id !== expenseId) }));
-    void fetch(`/api/trips/${tripId}/expenses?id=${encodeURIComponent(expenseId)}`, { method: "DELETE" }).catch(() => undefined);
+    sync(tripId, "expenses", { id: expenseId }, "DELETE");
   };
   const addExpenseCategory = (name: string) => update((s) => s.expenseCategories.includes(name) ? s : { ...s, expenseCategories: [...s.expenseCategories, name] });
   const renameExpenseCategory = (from: string, to: string) => update((s) => ({ ...s, expenseCategories: s.expenseCategories.map((item) => item === from ? to : item), expenses: s.expenses.map((item) => item.category === from ? { ...item, category: to } : item) }));
@@ -731,11 +759,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
   const addTraveler = (name: string) => {
     const next = { id: id(), name };
     update((s) => ({ ...s, travelers: [...s.travelers, next] }));
-    void fetch(`/api/trips/${tripId}/travelers`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(next),
-    }).catch(() => undefined);
+    sync(tripId, "travelers", next);
   };
   const addReservation = (reservation: Omit<Reservation, "id">) => {
     const next = { ...reservation, id: id() };
@@ -757,10 +781,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
       ...s,
       reservations: s.reservations.filter((item) => item.id !== reservationId),
     }));
-    void fetch(
-      `/api/trips/${tripId}/reservations?id=${encodeURIComponent(reservationId)}`,
-      { method: "DELETE" },
-    ).catch(() => undefined);
+    sync(tripId, "reservations", { id: reservationId }, "DELETE");
   };
   const addReservationCategory = (name: string) =>
     updateAndPersist((s) =>
@@ -851,10 +872,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
       ...s,
       budget: s.budget.filter((item) => item.id !== budgetId),
     }));
-    void fetch(
-      `/api/trips/${tripId}/budget?id=${encodeURIComponent(budgetId)}`,
-      { method: "DELETE" },
-    ).catch(() => undefined);
+    sync(tripId, "budget", { id: budgetId }, "DELETE");
   };
   const addSouvenir = (souvenir: Omit<Souvenir, "id">) => {
     const next = { ...souvenir, id: id() };
@@ -875,10 +893,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
       ...s,
       souvenirs: s.souvenirs.filter((item) => item.id !== souvenirId),
     }));
-    void fetch(
-      `/api/trips/${tripId}/souvenirs?id=${encodeURIComponent(souvenirId)}`,
-      { method: "DELETE" },
-    ).catch(() => undefined);
+    sync(tripId, "souvenirs", { id: souvenirId }, "DELETE");
   };
   const saveExchange = (exchange: ExchangePlan) => {
     updateAndPersist((s) => ({ ...s, exchange }));
@@ -895,7 +910,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
   };
   const removeDashboardItem = (itemId: string) => {
     update((s) => ({ ...s, dashboardItems: s.dashboardItems.filter((item) => item.id !== itemId) }));
-    void fetch(`/api/trips/${tripId}/dashboard?id=${encodeURIComponent(itemId)}`, { method: "DELETE" }).catch(() => undefined);
+    sync(tripId, "dashboard", { id: itemId }, "DELETE");
   };
   const updateDashboardItem = (itemId: string, changes: Omit<DashboardItem, "id">) => {
     update((s) => ({

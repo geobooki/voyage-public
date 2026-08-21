@@ -8,6 +8,7 @@ const tableByResource: Record<string, string> = {
   schedule: "schedule_items",
   souvenirs: "souvenirs",
   reservations: "reservations",
+  travelers: "travelers",
   budget: "budget_items",
   review: "reviews",
   exchange: "exchange_plans",
@@ -26,6 +27,7 @@ function toRow(resource: string, tripId: string, body: Record<string, unknown>) 
   if (resource === "schedule") return { ...base, place_id: body.placeId ?? null, date: body.date ?? "2026-09-10", time: body.time ?? null, end_time: body.endTime || null, duration_minutes: body.durationMinutes ? Number(body.durationMinutes) : null, type: body.type ?? "other", title: body.title, note: body.note ?? null, completed: Boolean(body.completed), sort_order: Number(body.order ?? 0) };
   if (resource === "souvenirs") return { ...base, name: body.name, estimated_price: Number(body.estimatedPrice ?? 0), purchased: Boolean(body.purchased), actual_price: Number(body.actualPrice ?? 0), memo: body.memo ?? null };
   if (resource === "reservations") return { ...base, type: body.type ?? "other", title: body.title, date: body.date || null, end_date: body.endDate || null, time: body.time || null, location: body.location ?? null, departure_location: body.departureLocation ?? null, arrival_location: body.arrivalLocation ?? null, departure_time: body.departureTime || null, arrival_time: body.arrivalTime || null, airline: body.airline ?? null, terminal: body.terminal ?? null, reservation_number: body.reservationNumber ?? null, cost: Number(body.cost ?? 0), memo: body.memo ?? null, link: body.link ?? null };
+  if (resource === "travelers") return { ...base, name: body.name };
   if (resource === "budget") return { ...base, name: body.name ?? null, detail: body.detail ?? null, category: body.category ?? "Other", estimated_amount: Number(body.amount ?? body.estimatedAmount ?? 0), currency: body.currency ?? "KRW", payment_method: body.paymentMethod ?? null };
   if (resource === "review") return { ...base, rating: body.rating ?? null, comment: body.comment ?? null, good_things: body.goodThings ?? null, bad_things: body.badThings ?? null, revisit_places: body.revisitPlaces ?? null };
   return { ...base, from_currency: body.from ?? "KRW", to_currency: body.to ?? "JPY", rate: Number(body.rate ?? 0), expected_cash: Number(body.expectedCash ?? 0), card_estimate: Number(body.cardEstimate ?? 0), planned_exchange: Number(body.plannedExchange ?? 0), actual_exchange: Number(body.actualExchange ?? 0) };
