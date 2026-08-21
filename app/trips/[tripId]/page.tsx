@@ -123,6 +123,7 @@ function TripPageContent() {
   const total = formatTotals(state.expenses);
   const expenseCategories = [...new Set([...state.expenseCategories, ...state.budgetCategories])];
   const remainingExchange = Math.max(0, (state.exchange.plannedExchange || state.exchange.expectedCash || 0) - (state.exchange.actualExchange || 0));
+  const overviewWeather = state.weather.find((item) => item.date === localDateIso(new Date())) || state.weather[0];
   const plannedTotal = formatTotals(state.budget);
   const sections = ko
     ? [
@@ -440,13 +441,14 @@ function TripPageContent() {
             {!isCompleted && <button onClick={completeTrip} disabled={savingStatus} className="rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60">{savingStatus ? "…" : ko ? "완료" : "Done"}</button>}
           </div>
         </div>
-        <section data-section="trip-finance-summary" className="mt-7 grid gap-4 md:grid-cols-3">
+        <section data-section="trip-finance-summary" className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <article className="card flex items-center justify-between gap-4 bg-[var(--color-primary)] p-5 text-white md:col-span-1">
             <div><p className="text-xs font-bold text-white/75">{ko ? "지출 빠르게 추가" : "Quick expense"}</p><p className="mt-2 text-sm text-white/85">{ko ? "여행 중 바로 기록해요" : "Log it while you travel"}</p></div>
             <button type="button" onClick={() => setQuickExpenseOpen(true)} className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-2xl font-bold text-[var(--color-primary)]" aria-label={ko ? "지출 빠르게 추가" : "Add quick expense"}>+</button>
           </article>
           <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "현재까지 지출" : "Spent so far"}</p><p className="mt-2 text-xl font-bold">{total || (ko ? "아직 지출 없음" : "No spending yet")}</p><p className="mt-1 text-xs muted">{state.expenses.length}{ko ? "건" : " expenses"}</p></article>
           <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "남은 환전금액" : "Remaining exchange"}</p><p className="mt-2 text-xl font-bold">{remainingExchange.toLocaleString()} {state.exchange.to || "JPY"}</p><p className="mt-1 text-xs muted">{ko ? "현금 환전 기준" : "Cash exchange balance"}</p></article>
+          <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "여행 날씨" : "Trip weather"}</p>{overviewWeather ? <div className="mt-2 flex items-center gap-2"><span className="text-2xl" aria-hidden="true">{overviewWeather.icon}</span><div><p className="text-sm font-bold">{overviewWeather.condition}</p><p className="text-xs muted">{overviewWeather.date} · {overviewWeather.temperature}°C</p></div></div> : <div className="mt-2"><p className="text-sm font-bold">{ko ? "날씨 정보 없음" : "No weather yet"}</p><Link href={`/trips/${tripId}/during/weather`} className="mt-1 block text-xs font-bold text-[var(--color-primary)]">{ko ? "날씨 추가 →" : "Add weather →"}</Link></div>}</article>
         </section>
         <section data-section="trip-schedule-board" className="card mt-7 p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
