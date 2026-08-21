@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
-import type { ScheduleItem } from "@/types/trip";
+import { useLanguage } from "@/lib/i18n";
+import { TripScheduleCalendar } from "@/app/components/trip-schedule-calendar";
+import type { Reservation, ScheduleItem } from "@/types/trip";
 
 type ScheduleForm = {
   date: string;
@@ -21,6 +23,8 @@ const control =
 
 export default function SchedulePage() {
   const { tripId } = useParams<{ tripId: string }>();
+  const { language } = useLanguage();
+  const ko = language === "ko";
   const {
     state,
     addSchedule,
@@ -44,6 +48,7 @@ export default function SchedulePage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dayIndex, setDayIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [schedulePage, setSchedulePage] = useState(0);
   const dates = Array.from(
     new Set([
       ...state.schedule.map((entry) => entry.date),
@@ -51,7 +56,7 @@ export default function SchedulePage() {
       ...state.reservations.flatMap((reservation) => [reservation.date, reservation.endDate]),
     ]),
   )
-    .filter(Boolean)
+    .filter((date): date is string => Boolean(date))
     .sort();
   const save = (event: FormEvent) => {
     event.preventDefault();
@@ -85,6 +90,12 @@ export default function SchedulePage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const visibleDates = dates.slice(dayIndex, dayIndex + 1);
+  const schedulePageCount = Math.max(1, Math.ceil(dates.length / 3));
+  const visibleDesktopDates = dates.slice(schedulePage * 3, schedulePage * 3 + 3);
+  const openAt = (date: string, time: string) => {
+    setItem((current) => ({ ...current, date, time }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   const moveDay = (direction: number) => setDayIndex((current) => Math.max(0, Math.min(Math.max(0, dates.length - 1), current + direction)));
   return (
     <main
@@ -192,12 +203,20 @@ export default function SchedulePage() {
             편집 취소
           </button>
         )}
-        <div className="mt-6 flex items-center justify-between gap-3">
+        {dates.length > 0 && <section className="card mt-7 p-6 sm:p-8">
+          <div className="flex items-center justify-between gap-3">
+            <div><p className="eyebrow mb-2">{ko ? "여행 일정" : "Trip schedule"}</p><h2 className="text-2xl font-bold">{ko ? "날짜별로 여행을 채워요." : "Build the trip day by day."}</h2><p className="mt-2 text-sm muted">{ko ? "시간을 누르면 위 입력폼에 일정이 채워져요." : "Click a time to start a plan."}</p></div>
+            <div className="hidden items-center gap-2 md:flex"><button type="button" onClick={() => setSchedulePage((current) => Math.max(0, current - 1))} disabled={schedulePage === 0} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "이전 3일" : "Previous three days"}>‹</button><span className="text-xs font-bold muted">{schedulePage * 3 + 1}–{Math.min((schedulePage + 1) * 3, dates.length)} / {dates.length}{ko ? "일" : " days"}</span><button type="button" onClick={() => setSchedulePage((current) => Math.min(schedulePageCount - 1, current + 1))} disabled={schedulePage >= schedulePageCount - 1} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "다음 3일" : "Next three days"}>›</button></div>
+          </div>
+          <div className="hidden md:block"><TripScheduleCalendar dates={visibleDesktopDates} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openAt} onReservationClick={(_reservation: Reservation) => undefined} onScheduleClick={edit} /></div>
+          <div className="md:hidden"><TripScheduleCalendar dates={[dates[dayIndex]]} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openAt} onReservationClick={(_reservation: Reservation) => undefined} onScheduleClick={edit} /></div>
+        </section>}
+        <div className="hidden">
           <button type="button" onClick={() => moveDay(-1)} disabled={dayIndex === 0} className="grid size-10 place-items-center rounded-full border border-[var(--color-border)] text-xl font-bold disabled:opacity-30" aria-label="이전 날짜">‹</button>
           <p className="text-sm font-bold text-[var(--color-primary)]">{dates.length ? `${dayIndex + 1} / ${dates.length}` : "일정 없음"}</p>
           <button type="button" onClick={() => moveDay(1)} disabled={dayIndex >= dates.length - 1} className="grid size-10 place-items-center rounded-full border border-[var(--color-border)] text-xl font-bold disabled:opacity-30" aria-label="다음 날짜">›</button>
         </div>
-        <div className="mt-3" onTouchStart={(event) => setTouchStart(event.touches[0]?.clientX ?? null)} onTouchEnd={(event) => { if (touchStart == null) return; const delta = (event.changedTouches[0]?.clientX ?? touchStart) - touchStart; if (Math.abs(delta) > 45) moveDay(delta < 0 ? 1 : -1); setTouchStart(null); }}>
+        <div className="hidden" onTouchStart={(event) => setTouchStart(event.touches[0]?.clientX ?? null)} onTouchEnd={(event) => { if (touchStart == null) return; const delta = (event.changedTouches[0]?.clientX ?? touchStart) - touchStart; if (Math.abs(delta) > 45) moveDay(delta < 0 ? 1 : -1); setTouchStart(null); }}>
           {visibleDates.map((date) => (
             <section
               data-section={`schedule-day-${date}`}
