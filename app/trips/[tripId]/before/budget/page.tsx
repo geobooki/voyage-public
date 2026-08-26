@@ -52,6 +52,7 @@ export default function BudgetPage() {
   const actualKrw = state.expenses.reduce((sum, item) => sum + toKrw(item.amount, item.currency, item.krwAmount), 0);
   const plannedExchangeKrw = toKrw(exchange.plannedExchange, destination);
   const today = localDate();
+  useEffect(() => { if (state.expenses.length > 0 && !state.expenses.some((item) => item.date === today)) setExpenseDateFilter("all"); }, [state.expenses, today]);
   const visibleExpenses = expenseDateFilter === "today" ? state.expenses.filter((item) => item.date === today) : state.expenses;
   const isCashPayment = (paymentMethod?: string) => /현금|cash/i.test(paymentMethod || "");
   const isCardPayment = (paymentMethod?: string) => /카드|card/i.test(paymentMethod || "");
