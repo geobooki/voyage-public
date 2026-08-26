@@ -592,6 +592,14 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     window.addEventListener("online", flush);
     return () => window.removeEventListener("online", flush);
   }, [tripId]);
+  useEffect(() => {
+    if (!hydrated || !state.expenses.length) return;
+    const recoveryKey = `voyage:expenses-recovered:${tripId}`;
+    if (window.localStorage.getItem(recoveryKey)) return;
+    void Promise.all(state.expenses.map((expense) => sendMutation(tripId, { key: `recovery:${expense.id}`, resource: "expenses", payload: expense, method: "POST" })))
+      .then(() => window.localStorage.setItem(recoveryKey, "1"))
+      .catch(() => undefined);
+  }, [hydrated, state.expenses, tripId]);
   const update = (fn: (current: TripState) => TripState) =>
     setState((current) => {
       const next = fn(current);

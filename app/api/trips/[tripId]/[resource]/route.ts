@@ -43,7 +43,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tri
   const tripId = await resolveTripIdForRequest(rawTripId, supabase);
   const row = toRow(resource, tripId, await request.json());
   const client = supabase.from(table) as any;
-  const query = resource === "review" || resource === "exchange" ? client.upsert(row, { onConflict: "trip_id" }) : client.insert(row);
+  const query = resource === "review" || resource === "exchange" ? client.upsert(row, { onConflict: "trip_id" }) : resource === "expenses" ? client.upsert(row, { onConflict: "id" }) : client.insert(row);
   const { data, error } = await query.select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json(data, { status: 201 });
