@@ -153,6 +153,11 @@ export default function AfterPage() {
           <div className="mt-4 space-y-2">{state.budget.length ? state.budget.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--color-background)] px-4 py-3 text-sm"><span className="min-w-0 truncate">{item.name || item.category}</span><strong className="shrink-0">{item.currency || "KRW"} {item.amount.toLocaleString()}</strong></div>) : <p className="text-sm muted">저장된 예산 항목이 없습니다.</p>}</div>
         </section>
         <section className="card mt-5 p-7">
+          <p className="eyebrow mb-2">전체 지출</p>
+          <h2 className="text-xl font-bold">여행 중 사용한 내역</h2>
+          <div className="mt-5 space-y-2">{state.expenses.length ? [...state.expenses].sort((a, b) => `${b.date}T${b.time || "12:00"}`.localeCompare(`${a.date}T${a.time || "12:00"}`)).map((expense) => <div key={expense.id} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--color-background)] px-4 py-3 text-sm"><div className="min-w-0"><p className="truncate font-bold">{expense.name || expense.category}</p><p className="mt-1 text-xs muted">{expense.date} {expense.time || "12:00"} · {expense.category} · {expense.paymentMethod || "결제수단 미지정"}</p></div><strong className="shrink-0">{expense.currency} {expense.amount.toLocaleString()}</strong></div>) : <p className="text-sm muted">저장된 지출 내역이 없습니다.</p>}</div>
+        </section>
+        <section className="card mt-5 p-7">
           <p className="eyebrow mb-2">Travel personality</p>
           <h2 className="text-2xl font-bold">{style}</h2>
           <p className="mt-2 text-sm muted">
