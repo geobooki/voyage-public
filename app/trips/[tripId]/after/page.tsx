@@ -24,6 +24,7 @@ export default function AfterPage() {
   const [travelerName, setTravelerName] = useState("");
   useEffect(() => setReview(state.review), [state.review]);
   const totalLabel = formatTotals(state.expenses);
+  const plannedLabel = formatTotals(state.budget);
   const currencyTotals = totalsByCurrency(state.expenses);
   const categoryTotals = expenseCategories.map((category) => {
     const expenses = state.expenses.filter(
@@ -143,6 +144,13 @@ export default function AfterPage() {
             <p className="mt-2 text-sm muted">Your rating</p>
           </div>
         </div>
+        <section className="card mt-5 p-7">
+          <div className="flex items-center justify-between gap-3">
+            <div><p className="eyebrow mb-2">예산 기록</p><h2 className="text-xl font-bold">여행 전 예산과 환전 내역</h2><p className="mt-2 text-sm muted">완료된 여행에서도 예산과 지출 기록은 그대로 보관됩니다.</p></div>
+            <Link href={`/trips/${tripId}/before/budget`} className="shrink-0 rounded-xl border border-[var(--color-border)] px-3 py-2 text-xs font-bold text-[var(--color-primary)]">예산 보기</Link>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-[var(--color-background)] p-4"><p className="text-xs muted">예상 총액</p><p className="mt-1 font-bold">{plannedLabel || "—"}</p></div><div className="rounded-xl bg-[var(--color-background)] p-4"><p className="text-xs muted">실제 사용액</p><p className="mt-1 font-bold">{totalLabel || "—"}</p></div></div>
+        </section>
         <section className="card mt-5 p-7">
           <p className="eyebrow mb-2">Travel personality</p>
           <h2 className="text-2xl font-bold">{style}</h2>
