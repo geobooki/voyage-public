@@ -36,7 +36,10 @@ const sendMutation = async (tripId: string, mutation: PendingMutation) => {
     headers: mutation.method === "DELETE" ? undefined : { "Content-Type": "application/json" },
     body: mutation.method === "DELETE" ? undefined : JSON.stringify(mutation.payload),
   });
-  if (!response.ok) throw new Error(`Unable to sync ${mutation.resource}`);
+  if (!response.ok) {
+    const result = await response.json().catch(() => ({}));
+    throw new Error(String(result.error || `Unable to sync ${mutation.resource}`));
+  }
 };
 const flushPending = async (tripId: string) => {
   const pending = readPending(tripId);
