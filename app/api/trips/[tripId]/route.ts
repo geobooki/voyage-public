@@ -48,6 +48,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ trip
     after: {
       places: supabase.from("places").select("*").eq("trip_id", tripId).order("created_at"),
       expenses: supabase.from("expenses").select("*").eq("trip_id", tripId).order("spent_at", { ascending: false }),
+      budget: supabase.from("budget_items").select("*").eq("trip_id", tripId).order("created_at"),
+      exchange: supabase.from("exchange_plans").select("*").eq("trip_id", tripId).maybeSingle(),
       travelers: supabase.from("travelers").select("*").eq("trip_id", tripId).order("created_at"),
       review: supabase.from("reviews").select("*").eq("trip_id", tripId).maybeSingle(),
     },
