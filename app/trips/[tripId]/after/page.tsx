@@ -150,6 +150,7 @@ export default function AfterPage() {
             <Link href={`/trips/${tripId}/before/budget`} className="shrink-0 rounded-xl border border-[var(--color-border)] px-3 py-2 text-xs font-bold text-[var(--color-primary)]">예산 보기</Link>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-[var(--color-background)] p-4"><p className="text-xs muted">예상 총액</p><p className="mt-1 font-bold">{plannedLabel || "—"}</p></div><div className="rounded-xl bg-[var(--color-background)] p-4"><p className="text-xs muted">실제 사용액</p><p className="mt-1 font-bold">{totalLabel || "—"}</p></div></div>
+          <div className="mt-4 space-y-2">{state.budget.length ? state.budget.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--color-background)] px-4 py-3 text-sm"><span className="min-w-0 truncate">{item.name || item.category}</span><strong className="shrink-0">{item.currency || "KRW"} {item.amount.toLocaleString()}</strong></div>) : <p className="text-sm muted">저장된 예산 항목이 없습니다.</p>}</div>
         </section>
         <section className="card mt-5 p-7">
           <p className="eyebrow mb-2">Travel personality</p>

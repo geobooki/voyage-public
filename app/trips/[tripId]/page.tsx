@@ -558,8 +558,9 @@ function TripPageContent() {
             <button type="button" onClick={() => setShowOtherPhases((value) => !value)} className="mt-4 text-sm font-bold text-[var(--color-primary)]">
               {showOtherPhases ? (ko ? "다른 단계 접기" : "Hide other phases") : (ko ? "다른 단계 보기" : "Show other phases")}
             </button>
-          </>
+        </>
         )}
+        {phaseKey === "after" && <Link href={`/trips/${tripId}/before/budget`} className="card mt-7 flex items-center justify-between gap-4 p-6 hover:-translate-y-0.5"><div><p className="eyebrow mb-2">{ko ? "가계부" : "Ledger"}</p><h2 className="text-xl font-bold">{ko ? "예산·환전·지출 내역 보기" : "View budget, exchange, and spending"}</h2><p className="mt-1 text-sm muted">{formatTotals(state.expenses) || (ko ? "저장된 지출이 없어요." : "No spending recorded yet.")}</p></div><span className="text-sm font-bold text-[var(--color-primary)]">→</span></Link>}
         <section data-section="trip-snapshot" className="card mt-7 p-7">
           <div className="flex items-center justify-between">
             <div>
