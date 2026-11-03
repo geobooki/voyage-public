@@ -18,7 +18,7 @@ export default function NewTripPage() {
     title: "",
     country: "",
     city: "",
-    destinationCurrency: "JPY",
+    destinationCurrency: "KRW",
     tripType: "international" as "domestic" | "international",
     startDate: "",
     endDate: "",
@@ -131,7 +131,7 @@ export default function NewTripPage() {
             <label className="block">
               <span className="mb-2 block text-sm font-bold">도착 통화</span>
               <select value={form.destinationCurrency} onChange={(e) => setForm({ ...form, destinationCurrency: e.target.value })} className={control}>
-                {['JPY', 'USD', 'EUR', 'VND', 'THB', 'TWD', 'CNY', 'GBP', 'AUD', 'CAD', 'SGD', 'HKD'].map((currency) => <option key={currency}>{currency}</option>)}
+                {['KRW', 'JPY', 'USD', 'EUR', 'VND', 'THB', 'TWD', 'CNY', 'GBP', 'AUD', 'CAD', 'SGD', 'HKD'].map((currency) => <option key={currency}>{currency}</option>)}
               </select>
               <span className="mt-1 block text-xs muted">지도 기능을 준비 중이라 경도·위도는 지금 입력하지 않습니다.</span>
             </label>

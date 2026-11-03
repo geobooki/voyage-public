@@ -39,7 +39,7 @@ const ko: Dictionary = {
   openSection: "열기 →",
   tripOverview: "여행 개요",
   world: "나의 세계",
-  newChapter: "새로운 장",
+  newChapter: "새로운 경험",
   nextAdventure: "다음 여행",
   readyMemories: "새로운 추억을 만들 준비가 되었나요?",
   travelBeautifully: "여행을 아름답게 기록하세요",
