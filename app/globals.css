@@ -346,6 +346,12 @@ a[class*="bg-[var(--color-primary)]"]:hover {
 .safe-bottom {
   padding-bottom: max(20px, env(safe-area-inset-bottom));
 }
+@media (min-width: 640px) {
+  /* Give the ledger's total-spent summary enough room for large KRW values. */
+  main > div > div[class~="mt-10"][class~="flex"] > div[class~="flex"][class~="gap-3"] > div:last-child {
+    min-width: 18rem;
+  }
+}
 /* Keep the native dropdown indicator visually separated from the edge. */
 select:not([multiple]) {
   padding-right: 2.75rem !important;
