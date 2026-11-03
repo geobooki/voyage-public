@@ -7,6 +7,10 @@ import { useLanguage } from "@/lib/i18n";
 
 type Mode = "signin" | "signup" | "forgot";
 const control = "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3 outline-none focus:border-[var(--color-primary)]";
+const withTimeout = <T,>(promise: Promise<T>, milliseconds = 12000) => Promise.race([
+  promise,
+  new Promise<T>((_, reject) => window.setTimeout(() => reject(new Error("요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.")), milliseconds)),
+]);
 
 export default function AuthPage() {
   const { language } = useLanguage();
@@ -34,9 +38,11 @@ export default function AuthPage() {
         const result = await signUp(email, password);
         if (result.error) setError(result.error); else if (result.needsConfirmation) window.location.href = "/auth?emailSent=1"; else window.location.href = "/";
       } else {
-        const result = await sendPasswordReset(email);
+        const result = await withTimeout(sendPasswordReset(email));
         if (result.error) setError(result.error); else setMessage(ko ? "비밀번호 재설정 메일을 확인하세요." : "Check your email for a password reset link.");
       }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : (ko ? "요청에 실패했습니다." : "The request failed."));
     } finally { setBusy(false); }
   };
 
