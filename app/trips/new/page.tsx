@@ -18,7 +18,7 @@ export default function NewTripPage() {
     title: "",
     country: "",
     city: "",
-    destinationCurrency: "KRW",
+    destinationCurrency: "JPY",
     tripType: "international" as "domestic" | "international",
     startDate: "",
     endDate: "",
@@ -101,7 +101,7 @@ export default function NewTripPage() {
                 className={control}
               />
             </label>
-            <fieldset><legend className="mb-2 block text-sm font-bold">여행 유형</legend><div className="grid grid-cols-2 gap-3"><label className={`rounded-xl border px-4 py-3 text-sm font-bold ${form.tripType === "domestic" ? "border-[var(--color-primary)] bg-[var(--color-surface-muted)]" : "border-[var(--color-border)]"}`}><input type="radio" name="tripType" value="domestic" checked={form.tripType === "domestic"} onChange={() => setForm({ ...form, tripType: "domestic" })} className="mr-2"/>국내</label><label className={`rounded-xl border px-4 py-3 text-sm font-bold ${form.tripType === "international" ? "border-[var(--color-primary)] bg-[var(--color-surface-muted)]" : "border-[var(--color-border)]"}`}><input type="radio" name="tripType" value="international" checked={form.tripType === "international"} onChange={() => setForm({ ...form, tripType: "international" })} className="mr-2"/>국외</label></div><p className="mt-1 text-xs muted">기본 준비물 목록을 자동으로 추가합니다.</p></fieldset>
+            <fieldset><legend className="mb-2 block text-sm font-bold">여행 유형</legend><div className="grid grid-cols-2 gap-3"><label className={`rounded-xl border px-4 py-3 text-sm font-bold ${form.tripType === "domestic" ? "border-[var(--color-primary)] bg-[var(--color-surface-muted)]" : "border-[var(--color-border)]"}`}><input type="radio" name="tripType" value="domestic" checked={form.tripType === "domestic"} onChange={() => setForm({ ...form, tripType: "domestic", destinationCurrency: "KRW" })} className="mr-2"/>국내</label><label className={`rounded-xl border px-4 py-3 text-sm font-bold ${form.tripType === "international" ? "border-[var(--color-primary)] bg-[var(--color-surface-muted)]" : "border-[var(--color-border)]"}`}><input type="radio" name="tripType" value="international" checked={form.tripType === "international"} onChange={() => setForm({ ...form, tripType: "international", destinationCurrency: form.destinationCurrency === "KRW" ? "JPY" : form.destinationCurrency })} className="mr-2"/>국외</label></div><p className="mt-1 text-xs muted">기본 준비물 목록과 도착 통화를 여행 유형에 맞춰 설정합니다.</p></fieldset>
             <div className="grid gap-5 sm:grid-cols-2">
               <label>
                 <span className="mb-2 block text-sm font-bold">
