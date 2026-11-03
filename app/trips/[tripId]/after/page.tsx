@@ -63,16 +63,16 @@ export default function AfterPage() {
     .sort((a, b) => b.count - a.count);
   const settlementByCurrency = Object.entries(currencyTotals).map(
     ([currency, total]) => {
-      const share = state.travelers.length ? total / state.travelers.length : 0;
-      const balances = state.travelers.map((traveler) => {
-        const paid = state.expenses
-          .filter(
-            (expense) =>
-              expense.currency === currency && expense.payerId === traveler.id,
-          )
-          .reduce((sum, expense) => sum + expense.amount, 0);
-        return { ...traveler, paid, balance: paid - share };
+      const owedByTraveler = new Map(state.travelers.map((traveler) => [traveler.id, 0]));
+      const paidByTraveler = new Map(state.travelers.map((traveler) => [traveler.id, 0]));
+      state.expenses.filter((expense) => expense.currency === currency).forEach((expense) => {
+        const participants = expense.participantIds?.length ? state.travelers.filter((traveler) => expense.participantIds?.includes(traveler.id)) : state.travelers;
+        const share = participants.length ? expense.amount / participants.length : 0;
+        participants.forEach((traveler) => owedByTraveler.set(traveler.id, (owedByTraveler.get(traveler.id) || 0) + share));
+        if (expense.payerId) paidByTraveler.set(expense.payerId, (paidByTraveler.get(expense.payerId) || 0) + expense.amount);
       });
+      const share = state.travelers.length ? total / state.travelers.length : 0;
+      const balances = state.travelers.map((traveler) => ({ ...traveler, paid: paidByTraveler.get(traveler.id) || 0, owed: owedByTraveler.get(traveler.id) || 0, balance: (paidByTraveler.get(traveler.id) || 0) - (owedByTraveler.get(traveler.id) || 0) }));
       const debtors = balances
         .filter((person) => person.balance < -0.5)
         .map((person) => ({ name: person.name, amount: -person.balance }));
@@ -249,7 +249,7 @@ export default function AfterPage() {
               >
                 <p className="eyebrow mb-2">{currency} settlement</p>
                 <p className="text-sm muted">
-                  Equal share · {Math.round(share).toLocaleString()} {currency}{" "}
+                  기본 균등분담 · {Math.round(share).toLocaleString()} {currency}{" "}
                   per person
                 </p>
                 <div className="mt-3 space-y-2">
@@ -261,9 +261,7 @@ export default function AfterPage() {
                       <span className="flex-1 font-semibold">
                         {traveler.name}
                       </span>
-                      <span className="text-xs muted">
-                        Paid {traveler.paid.toLocaleString()} {currency}
-                      </span>
+                      <span className="text-xs muted">Paid {traveler.paid.toLocaleString()} · Owes {Math.round(traveler.owed).toLocaleString()} {currency}</span>
                       <span
                         className={`font-bold ${traveler.balance >= 0 ? "text-[var(--color-success)]" : "text-[var(--color-warning)]"}`}
                       >
