@@ -1,14 +1,26 @@
-import Link from "next/link";
-import { PackingProvider } from "@/lib/packing-context";
+"use client";
 
-export default async function BeforeLayout({
+import Link from "next/link";
+import { use } from "react";
+import { PackingProvider } from "@/lib/packing-context";
+import { useTripMeta } from "@/lib/use-trip-meta";
+
+export default function BeforeLayout({
   children,
   params,
 }: Readonly<{
   children: React.ReactNode;
   params: Promise<{ tripId: string }>;
 }>) {
-  const { tripId } = await params;
+  const { tripId } = use(params);
+  return <BeforeNavigation tripId={tripId}>
+      <PackingProvider tripId={tripId}>{children}</PackingProvider>
+    </BeforeNavigation>;
+}
+
+function BeforeNavigation({ tripId, children }: { tripId: string; children: React.ReactNode }) {
+  const trip = useTripMeta(tripId);
+  const international = trip.tripType === "international";
   return (
     <>
       <nav className="border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-3 sm:px-10 lg:px-20">
@@ -23,14 +35,14 @@ export default async function BeforeLayout({
             href={`/trips/${tripId}/before/budget`}
             className="whitespace-nowrap muted"
           >
-            Budget & exchange
+            {international ? "Budget & exchange" : "Expenses"}
           </Link>
-          <Link
+          {international && <Link
             href={`/trips/${tripId}/before/reservations`}
             className="whitespace-nowrap muted"
           >
             Reservations
-          </Link>
+          </Link>}
           <Link
             href={`/trips/${tripId}/before/packing`}
             className="whitespace-nowrap muted"
@@ -39,7 +51,7 @@ export default async function BeforeLayout({
           </Link>
         </div>
       </nav>
-      <PackingProvider tripId={tripId}>{children}</PackingProvider>
+      {children}
     </>
   );
 }
