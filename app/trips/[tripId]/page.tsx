@@ -7,6 +7,7 @@ import { formatTotals } from "@/lib/money";
 import { TripDataProvider, useTripData } from "@/lib/trip-context";
 import { PackingProvider, usePacking } from "@/lib/packing-context";
 import { useLanguage } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 import { DateField } from "@/app/components/date-field";
 import { AirportSelect } from "@/app/components/airport-select";
 import { ReservationDocuments } from "@/app/components/reservation-documents";
@@ -23,6 +24,7 @@ const localDateIso = (date: Date) => `${date.getFullYear()}-${String(date.getMon
 function TripPageContent() {
   const { tripId } = useParams<{ tripId: string }>();
   const { language } = useLanguage();
+  const { user } = useAuth();
   const ko = language === "ko";
   const { state, addExpense, addReservation, updateReservation, addSchedule, updateSchedule, addDashboardItem, updateDashboardItem, removeDashboardItem } = useTripData();
   const { items: packingItems, categories: packingCategories, addItem } = usePacking();
@@ -64,7 +66,7 @@ function TripPageContent() {
         const local = JSON.parse(
           window.localStorage.getItem("voyage:trips") || "[]",
         ).find((item: { id: string }) => item.id === tripId);
-        if (local)
+        if (user && local)
           setTrip({
             title: local.title || `${local.city}, ${local.country}`,
             dates: `${local.startDate} — ${local.endDate}`,
@@ -89,7 +91,7 @@ function TripPageContent() {
       }
     };
     void load();
-  }, [tripId]);
+  }, [tripId, user]);
   const completeTrip = async () => {
     setSavingStatus(true);
     setTrip((current) => ({ ...current, status: "completed" }));
