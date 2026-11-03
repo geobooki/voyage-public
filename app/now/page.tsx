@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { selectCurrentOrSoonTrip } from "@/lib/trip-selection";
 import { useLanguage } from "@/lib/i18n";
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
 
 type Trip = { id: string; slug?: string; title: string; city?: string; start_date?: string; end_date?: string; status?: string };
 type Detail = { checklist?: { checked?: boolean }[]; schedule?: { id: string; date: string; time?: string; title: string; completed?: boolean }[]; reservations?: { id: string; type: string; title: string; date?: string; end_date?: string; time?: string; airline?: string; terminal?: string; reservation_number?: string; location?: string }[] };
@@ -18,14 +19,14 @@ export default function NowPage() {
   const [detail, setDetail] = useState<Detail>({});
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    void fetch("/api/trips")
+    void authenticatedFetch("/api/trips")
       .then((response) => (response.ok ? response.json() : { trips: [] }))
       .then(async (result) => {
         const candidates = (Array.isArray(result.trips) ? result.trips : []) as Trip[];
         const selected = selectCurrentOrSoonTrip<Trip>(candidates);
         setTrip(selected);
         if (selected) {
-          const response = await fetch(`/api/trips/${selected.slug || selected.id}`);
+          const response = await authenticatedFetch(`/api/trips/${selected.slug || selected.id}`);
           if (response.ok) setDetail(await response.json());
         }
       })
