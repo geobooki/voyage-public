@@ -40,10 +40,10 @@ export default function TripsPage() {
     const load = async () => {
       try {
         const saved = JSON.parse(window.localStorage.getItem("voyage:trips") || "[]");
-        const localTrips = user ? saved.map((item: TripCard) => ({ ...item, title: item.title || `${item.city}, ${item.country}`, color: "bg-[var(--color-surface-muted)]", emoji: "✦" })) : [];
+        const localTrips = user ? saved.map((item: TripCard) => ({ ...item, title: item.title || `${item.city}, ${item.country}`, color: "bg-[var(--color-surface-muted)]", emoji: "🧳" })) : [];
         const response = await authenticatedFetch("/api/trips");
         const result = response.ok ? await response.json() : null;
-        const remoteTrips = result?.trips?.map((item: Record<string, unknown>) => ({ id: String(item.id), slug: item.slug ? String(item.slug) : undefined, title: String(item.title), country: String(item.country ?? ""), city: String(item.city ?? ""), startDate: String(item.start_date ?? ""), endDate: String(item.end_date ?? ""), destinationCurrency: String(item.destination_currency ?? "JPY"), status: String(item.status ?? "planning"), color: "bg-[var(--color-surface-muted)]", emoji: "✦" })) ?? [];
+        const remoteTrips = result?.trips?.map((item: Record<string, unknown>) => ({ id: String(item.id), slug: item.slug ? String(item.slug) : undefined, title: String(item.title), country: String(item.country ?? ""), city: String(item.city ?? ""), startDate: String(item.start_date ?? ""), endDate: String(item.end_date ?? ""), destinationCurrency: String(item.destination_currency ?? "JPY"), status: String(item.status ?? "planning"), color: "bg-[var(--color-surface-muted)]", emoji: "🧳" })) ?? [];
         setTrips([...remoteTrips, ...localTrips].filter((trip, index, list) => list.findIndex((item) => item.id === trip.id) === index));
       } catch { setTrips([]); }
     };

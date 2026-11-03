@@ -191,7 +191,7 @@ function DashboardContent({
           </p>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             {ko ? "좋은 아침이에요, 민지" : "Good morning, Minji"}{" "}
-            <span aria-hidden>✦</span>
+            <span aria-hidden>☀</span>
           </h1>
           <p className="mt-2 muted">
             {ko

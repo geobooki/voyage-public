@@ -135,21 +135,21 @@ function TripPageContent() {
           label: "여행 전",
           title: "준비하기",
           text: `준비물 ${packed}% 완료`,
-          emoji: "◌",
+          emoji: "🧳",
         },
         {
           key: "during",
           label: "여행 중",
           title: "추억 만들기",
           text: `일정 ${state.schedule.length}개 · 장소 ${state.places.length}곳`,
-          emoji: "✦",
+          emoji: "📅",
         },
         {
           key: "after",
           label: "여행 후",
           title: "기록 남기기",
           text: total || "아직 지출 없음",
-          emoji: "♡",
+          emoji: "📖",
         },
       ]
     : [
@@ -158,21 +158,21 @@ function TripPageContent() {
           label: "Before",
           title: "Get ready",
           text: `${packed}% packing complete`,
-          emoji: "◌",
+          emoji: "🧳",
         },
         {
           key: "during",
           label: "During",
           title: "Make memories",
           text: `${state.schedule.length} plans · ${state.places.length} places`,
-          emoji: "✦",
+          emoji: "📅",
         },
         {
           key: "after",
           label: "After",
           title: "Keep the story",
           text: `${total || "No spend yet"}`,
-          emoji: "♡",
+          emoji: "📖",
         },
       ];
   const today = localDateIso(new Date());
@@ -214,7 +214,7 @@ function TripPageContent() {
       text: ko
         ? `${state.reservations.length}건 저장됨`
         : `${state.reservations.length} saved`,
-      emoji: "🎟️",
+      emoji: "🎫",
     },
   ];
   const flights = state.reservations.filter((item) => {
