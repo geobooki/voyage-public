@@ -115,10 +115,10 @@ export default function SchedulePage() {
         >
           ← 여행 중
         </Link>
-        <p className="eyebrow mt-10 mb-3">일정 보드</p>
-        <h1 className="text-4xl font-bold">하루하루를 완성해요.</h1>
+        <p className="eyebrow mt-10 mb-3">여행 일정</p>
+        <h1 className="text-4xl font-bold">여행 일정 추가</h1>
         <p className="mt-2 muted">
-          일정을 완료하면 추억 탭에 자동으로 기록됩니다.
+          일정을 추가하면 메인 여행 일정 타임테이블에도 똑같이 표시됩니다.
         </p>
         <form onSubmit={save} className="card mt-9 space-y-4 p-5 sm:p-6">
           <div className="grid gap-3 sm:grid-cols-2">
