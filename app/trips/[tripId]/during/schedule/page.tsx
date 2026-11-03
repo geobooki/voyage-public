@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
 import { useLanguage } from "@/lib/i18n";
 import { TripScheduleCalendar } from "@/app/components/trip-schedule-calendar";
@@ -36,8 +36,18 @@ export default function SchedulePage() {
     removeSchedule,
     toggleScheduleComplete,
   } = useTripData();
-  const defaultDate =
-    state.weather[0]?.date || new Date().toISOString().slice(0, 10);
+  const tripDates = useMemo(() => {
+    if (!trip.startDate || !trip.endDate) return [];
+    const dates: string[] = [];
+    const cursor = new Date(`${trip.startDate}T00:00:00`);
+    const end = new Date(`${trip.endDate}T00:00:00`);
+    while (cursor <= end && dates.length < 31) {
+      dates.push(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`);
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return dates;
+  }, [trip.startDate, trip.endDate]);
+  const defaultDate = tripDates[0] || state.weather[0]?.date || new Date().toISOString().slice(0, 10);
   const empty = (): ScheduleForm => ({
     date: defaultDate,
     title: "",
@@ -53,15 +63,13 @@ export default function SchedulePage() {
   const [dayIndex, setDayIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [schedulePage, setSchedulePage] = useState(0);
-  const dates = Array.from(
+  const dates = tripDates.length ? tripDates : Array.from(
     new Set([
       ...state.schedule.map((entry) => entry.date),
       ...state.weather.map((day) => day.date),
       ...state.reservations.flatMap((reservation) => [reservation.date, reservation.endDate]),
     ]),
-  )
-    .filter((date): date is string => Boolean(date))
-    .sort();
+  ).filter((date): date is string => Boolean(date)).sort();
   const save = (event: FormEvent) => {
     event.preventDefault();
     if (!item.title.trim() || !item.date || !item.time) return;
@@ -142,9 +150,9 @@ export default function SchedulePage() {
             편집 취소
           </button>
         )}
-        {dates.length > 0 && <section className="card mt-7 p-6 sm:p-8">
+        {dates.length > 0 && <section data-section="trip-schedule-board" className="card mt-7 p-6 sm:p-8">
           <div className="flex items-center justify-between gap-3">
-            <div><p className="eyebrow mb-2">{ko ? "여행 일정" : "Trip schedule"}</p><h2 className="text-2xl font-bold">{ko ? "날짜별로 여행을 채워요." : "Build the trip day by day."}</h2><p className="mt-2 text-sm muted">{ko ? "시간을 누르면 위 입력폼에 일정이 채워져요." : "Click a time to start a plan."}</p></div>
+            <div><p className="eyebrow mb-2">{ko ? "여행 일정" : "Trip schedule"}</p><h2 className="text-2xl font-bold">{ko ? "날짜별로 여행을 채워요." : "Build the trip day by day."}</h2><p className="mt-2 text-sm muted">{ko ? "시간을 누르면 그 시간에 일정을 추가할 수 있어요." : "Click a time to add a plan."}</p></div>
             <div className="hidden items-center gap-2 md:flex"><button type="button" onClick={() => setSchedulePage((current) => Math.max(0, current - 1))} disabled={schedulePage === 0} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "이전 3일" : "Previous three days"}>‹</button><span className="text-xs font-bold muted">{schedulePage * 3 + 1}–{Math.min((schedulePage + 1) * 3, dates.length)} / {dates.length}{ko ? "일" : " days"}</span><button type="button" onClick={() => setSchedulePage((current) => Math.min(schedulePageCount - 1, current + 1))} disabled={schedulePage >= schedulePageCount - 1} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "다음 3일" : "Next three days"}>›</button></div>
           </div>
           <div className="hidden md:block"><TripScheduleCalendar dates={visibleDesktopDates} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openAt} onReservationClick={(_reservation: Reservation) => undefined} onScheduleClick={edit} /></div>
