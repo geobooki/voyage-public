@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth";
 
 export type TripMeta = {
   title: string;
@@ -20,14 +21,15 @@ const fallback: TripMeta = {
 };
 
 export function useTripMeta(tripId: string) {
+  const { user } = useAuth();
   const [meta, setMeta] = useState<TripMeta>(fallback);
   useEffect(() => {
     let active = true;
     const load = async () => {
       try {
-        const local = JSON.parse(
+        const local = user ? JSON.parse(
           window.localStorage.getItem("voyage:trips") || "[]",
-        ).find((item: Record<string, unknown>) => item.id === tripId);
+        ).find((item: Record<string, unknown>) => item.id === tripId) : null;
         if (active && local)
           setMeta({
             title: String(local.title || "Your journey"),
@@ -57,6 +59,6 @@ export function useTripMeta(tripId: string) {
     return () => {
       active = false;
     };
-  }, [tripId]);
+  }, [tripId, user]);
   return meta;
 }

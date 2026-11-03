@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { DateField } from "@/app/components/date-field";
 import { useLanguage } from "@/lib/i18n";
 import { authenticatedFetch } from "@/lib/authenticated-fetch";
+import { useAuth } from "@/lib/auth";
 
 type TripCard = {
   id: string;
@@ -27,6 +28,7 @@ const dates = (trip: TripCard) => trip.startDate && trip.endDate ? `${trip.start
 
 export default function TripsPage() {
   const { t, language } = useLanguage();
+  const { user } = useAuth();
   const ko = language === "ko";
   const [trips, setTrips] = useState<TripCard[]>([]);
   const [editing, setEditing] = useState<TripCard | null>(null);
@@ -38,7 +40,7 @@ export default function TripsPage() {
     const load = async () => {
       try {
         const saved = JSON.parse(window.localStorage.getItem("voyage:trips") || "[]");
-        const localTrips = saved.map((item: TripCard) => ({ ...item, title: item.title || `${item.city}, ${item.country}`, color: "bg-[var(--color-surface-muted)]", emoji: "✦" }));
+        const localTrips = user ? saved.map((item: TripCard) => ({ ...item, title: item.title || `${item.city}, ${item.country}`, color: "bg-[var(--color-surface-muted)]", emoji: "✦" })) : [];
         const response = await authenticatedFetch("/api/trips");
         const result = response.ok ? await response.json() : null;
         const remoteTrips = result?.trips?.map((item: Record<string, unknown>) => ({ id: String(item.id), slug: item.slug ? String(item.slug) : undefined, title: String(item.title), country: String(item.country ?? ""), city: String(item.city ?? ""), startDate: String(item.start_date ?? ""), endDate: String(item.end_date ?? ""), destinationCurrency: String(item.destination_currency ?? "JPY"), status: String(item.status ?? "planning"), color: "bg-[var(--color-surface-muted)]", emoji: "✦" })) ?? [];
@@ -46,7 +48,7 @@ export default function TripsPage() {
       } catch { setTrips([]); }
     };
     void load();
-  }, []);
+  }, [user]);
 
   const openEdit = (trip: TripCard) => {
     setEditing(trip);

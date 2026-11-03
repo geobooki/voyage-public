@@ -334,10 +334,21 @@ export function useTripStore(tripId = "tokyo", view = "full") {
   const [state, setState] = useState<TripState>(blankState());
   const [hydrated, setHydrated] = useState(false);
   const [reloadNonce, setReloadNonce] = useState(0);
+  const [authReady, setAuthReady] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
   const hasExchangeAmount = (value: ExchangePlan) => value.expectedCash > 0 || value.cardEstimate > 0 || value.plannedExchange > 0 || value.actualExchange > 0;
   useEffect(() => {
+    if (!supabaseBrowser) { setAuthReady(true); return; }
+    void supabaseBrowser.auth.getSession().then(({ data }) => {
+      setAuthenticated(Boolean(data.session));
+      setAuthReady(true);
+    });
+  }, []);
+  useEffect(() => {
+    if (!authReady) return;
     setState(blankState());
     setHydrated(false);
+    if (!authenticated) { setHydrated(true); return; }
     try {
       const saved = window.localStorage.getItem(key);
       if (saved)
@@ -586,10 +597,10 @@ export function useTripStore(tripId = "tokyo", view = "full") {
       })
       .catch(() => undefined)
       .finally(() => setHydrated(true));
-  }, [tripId, view, reloadNonce]);
+  }, [tripId, view, reloadNonce, authReady, authenticated]);
 
   useEffect(() => {
-    if (!supabaseBrowser || !tripId) return;
+    if (!supabaseBrowser || !tripId || !authenticated) return;
     const realtimeClient = supabaseBrowser;
     const tables = ["trips", "places", "expenses", "travelers", "checklist_items", "checklist_categories", "budget_items", "reservations", "schedule_items", "exchange_plans", "dashboard_items", "souvenirs"];
     const channel = realtimeClient.channel(`voyage-trip-${tripId}`);
@@ -598,11 +609,12 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     });
     channel.subscribe();
     return () => { void realtimeClient.removeChannel(channel); };
-  }, [tripId]);
+  }, [tripId, authenticated]);
   useEffect(() => {
-    if (hydrated) window.localStorage.setItem(key, JSON.stringify(state));
-  }, [state, hydrated]);
+    if (hydrated && authenticated) window.localStorage.setItem(key, JSON.stringify(state));
+  }, [state, hydrated, authenticated]);
   useEffect(() => {
+    if (!authenticated) return;
     const flush = () => { void flushPending(tripId); };
     flush();
     window.addEventListener("online", flush);
