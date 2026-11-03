@@ -473,6 +473,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
               currency: String(item.currency),
               category: String(item.category),
               paymentMethod: item.payment_method ? String(item.payment_method) : undefined,
+              participantIds: Array.isArray(item.participant_ids) ? item.participant_ids.map(String) : [],
               placeId: item.place_id ? String(item.place_id) : undefined,
               payerId: item.payer_id ? String(item.payer_id) : undefined,
               memo: String(item.memo ?? ""),
