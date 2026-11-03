@@ -17,6 +17,7 @@ import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import type { DashboardItem, Reservation, ScheduleItem } from "@/types/trip";
 
 type TripMeta = { title: string; dates: string; startDate: string; endDate: string; status: string; destinationCurrency: string; tripType: "domestic" | "international" };
+type TripMember = { id: string; member_email: string; role: string; user_id?: string | null };
 type QuickReservation = { title: string; type: string; date: string; endDate: string; time: string; location: string; departureLocation: string; arrivalLocation: string; departureTime: string; arrivalTime: string; airline: string; terminal: string; reservationNumber: string; memo: string; link: string };
 const blankQuickReservation: QuickReservation = { title: "", type: "Flight", date: "", endDate: "", time: "", location: "", departureLocation: "", arrivalLocation: "", departureTime: "", arrivalTime: "", airline: "", terminal: "", reservationNumber: "", memo: "", link: "" };
 const localDateIso = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -57,10 +58,30 @@ function TripPageContent() {
   const [packingOpen, setPackingOpen] = useState(false);
   const [packingName, setPackingName] = useState("");
   const [packingCategory, setPackingCategory] = useState("기타");
+  const [members, setMembers] = useState<TripMember[]>([]);
   const compactTitleLength = trip.title.replace(/\s/g, "").length;
-  const addTravelerFromTitle = () => {
-    const name = window.prompt(ko ? "동행자 이름을 입력하세요." : "Enter the traveler's name.");
-    if (name?.trim()) addTraveler(name.trim());
+  useEffect(() => {
+    void authenticatedFetch(`/api/trips/${tripId}/members`)
+      .then((response) => response.ok ? response.json() : { members: [] })
+      .then((result) => setMembers(Array.isArray(result.members) ? result.members : []))
+      .catch(() => setMembers([]));
+  }, [tripId]);
+  const addTravelerFromTitle = async () => {
+    const email = window.prompt(ko ? "초대할 이메일 주소를 입력하세요." : "Enter the email address to invite.");
+    if (!email?.trim()) return;
+    const response = await authenticatedFetch(`/api/trips/${tripId}/members`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), role: "editor" }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      window.alert(result.error || (ko ? "여행자를 추가하지 못했어요." : "Could not add traveler."));
+      return;
+    }
+    setMembers((current) => [...current.filter((member) => member.id !== result.member?.id), result.member].filter(Boolean));
+    addTraveler(email.trim().split("@")[0]);
+    window.alert(result.emailSent ? (ko ? "초대 이메일을 보냈어요." : "Invitation email sent.") : (ko ? `여행자는 추가했지만 이메일은 보내지 못했어요. ${result.emailError || "Supabase 이메일 설정을 확인하세요."}` : `Traveler added, but the email was not sent. ${result.emailError || "Check Supabase email settings."}`));
   };
   useEffect(() => {
     if (packingCategories.length && !packingCategories.some((item) => item.name === packingCategory))
@@ -448,6 +469,7 @@ function TripPageContent() {
               >
                 {trip.title}
               </h1>
+              {members.length > 0 && <div className="flex items-center -space-x-1" aria-label={ko ? "동행 여행자" : "Travel companions"}>{members.map((member, index) => <span key={member.id} title={member.member_email} className="grid size-7 place-items-center rounded-full border-2 border-[var(--color-surface)] bg-[var(--color-primary-soft)] text-sm">{["🧳", "🌿", "🗺️", "☀️", "🎒"][index % 5]}</span>)}</div>}
               <button type="button" onClick={addTravelerFromTitle} className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-xs font-bold text-[var(--color-primary)]">
                 + {ko ? "여행자 추가" : "Add traveler"}
               </button>

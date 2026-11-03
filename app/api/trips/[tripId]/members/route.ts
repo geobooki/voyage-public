@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireRequestUser } from "@/lib/supabase-request";
 import { resolveTripIdForRequest } from "@/lib/trip-id";
+import { supabaseServer } from "@/lib/supabase-server";
 
 export async function GET(request: Request, { params }: { params: Promise<{ tripId: string }> }) {
   const { client, error: authError } = await requireRequestUser(request);
@@ -22,7 +23,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ tri
   if (!email || !email.includes("@")) return NextResponse.json({ error: "초대할 이메일을 입력하세요." }, { status: 400 });
   const { data, error } = await client.from("trip_members").insert({ trip_id: tripId, member_email: email, role, invited_by: user.id }).select("id,trip_id,member_email,role,user_id,created_at").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ member: data }, { status: 201 });
+  let emailSent = false;
+  let emailError = "";
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY && supabaseServer) {
+    const invitation = await supabaseServer.auth.admin.inviteUserByEmail(email, {
+      redirectTo: new URL("/auth/callback", request.url).toString(),
+    });
+    emailSent = !invitation.error;
+    emailError = invitation.error?.message || "";
+  } else {
+    emailError = "SUPABASE_SERVICE_ROLE_KEY가 설정되지 않아 이메일을 보내지 못했습니다.";
+  }
+  return NextResponse.json({ member: data, emailSent, emailError }, { status: 201 });
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ tripId: string }> }) {
