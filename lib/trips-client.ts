@@ -9,6 +9,7 @@ export type TripSummary = {
   start_date?: string;
   end_date?: string;
   status?: string;
+  destination_currency?: string;
 };
 
 let tripsRequest: Promise<TripSummary[]> | null = null;
