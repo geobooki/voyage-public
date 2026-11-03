@@ -16,7 +16,7 @@ import { formatDate } from "@/lib/date";
 import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import type { DashboardItem, Reservation, ScheduleItem } from "@/types/trip";
 
-type TripMeta = { title: string; dates: string; startDate: string; endDate: string; status: string };
+type TripMeta = { title: string; dates: string; startDate: string; endDate: string; status: string; destinationCurrency: string };
 type QuickReservation = { title: string; type: string; date: string; endDate: string; time: string; location: string; departureLocation: string; arrivalLocation: string; departureTime: string; arrivalTime: string; airline: string; terminal: string; reservationNumber: string; memo: string; link: string };
 const blankQuickReservation: QuickReservation = { title: "", type: "Flight", date: "", endDate: "", time: "", location: "", departureLocation: "", arrivalLocation: "", departureTime: "", arrivalTime: "", airline: "", terminal: "", reservationNumber: "", memo: "", link: "" };
 const localDateIso = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -34,6 +34,7 @@ function TripPageContent() {
     status: "planning",
     startDate: "",
     endDate: "",
+    destinationCurrency: "KRW",
   });
   const [showOtherPhases, setShowOtherPhases] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
@@ -73,6 +74,7 @@ function TripPageContent() {
             startDate: local.startDate || "",
             endDate: local.endDate || "",
             status: String(local.status || "planning").toLowerCase(),
+            destinationCurrency: String(local.destinationCurrency || "KRW"),
           });
         const response = await authenticatedFetch(`/api/trips/${tripId}?view=meta`);
         if (response.ok) {
@@ -84,6 +86,7 @@ function TripPageContent() {
               startDate: String(result.trip.start_date ?? ""),
               endDate: String(result.trip.end_date ?? ""),
               status: String(result.trip.status ?? "planning"),
+              destinationCurrency: String(result.trip.destination_currency ?? "KRW"),
             });
         }
       } catch {
@@ -202,7 +205,7 @@ function TripPageContent() {
       key: "budget",
       href: `/trips/${tripId}/before/budget`,
       label: ko ? "예산" : "Budget",
-      title: ko ? "환전과 예산을 정리해요" : "Plan your travel money",
+      title: ko ? (trip.destinationCurrency === "KRW" ? "예산을 정리해요" : "환전과 예산을 정리해요") : "Plan your travel money",
       text: plannedTotal || (ko ? "아직 예산이 없어요" : "No budget items yet"),
       emoji: "₩",
     },
