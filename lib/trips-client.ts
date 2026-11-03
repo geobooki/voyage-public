@@ -10,6 +10,7 @@ export type TripSummary = {
   end_date?: string;
   status?: string;
   destination_currency?: string;
+  trip_type?: "domestic" | "international";
 };
 
 let tripsRequest: Promise<TripSummary[]> | null = null;

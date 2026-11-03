@@ -16,7 +16,7 @@ import { formatDate } from "@/lib/date";
 import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import type { DashboardItem, Reservation, ScheduleItem } from "@/types/trip";
 
-type TripMeta = { title: string; dates: string; startDate: string; endDate: string; status: string; destinationCurrency: string };
+type TripMeta = { title: string; dates: string; startDate: string; endDate: string; status: string; destinationCurrency: string; tripType: "domestic" | "international" };
 type QuickReservation = { title: string; type: string; date: string; endDate: string; time: string; location: string; departureLocation: string; arrivalLocation: string; departureTime: string; arrivalTime: string; airline: string; terminal: string; reservationNumber: string; memo: string; link: string };
 const blankQuickReservation: QuickReservation = { title: "", type: "Flight", date: "", endDate: "", time: "", location: "", departureLocation: "", arrivalLocation: "", departureTime: "", arrivalTime: "", airline: "", terminal: "", reservationNumber: "", memo: "", link: "" };
 const localDateIso = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -35,6 +35,7 @@ function TripPageContent() {
     startDate: "",
     endDate: "",
     destinationCurrency: "KRW",
+    tripType: "domestic",
   });
   const [showOtherPhases, setShowOtherPhases] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
@@ -79,6 +80,7 @@ function TripPageContent() {
             endDate: local.endDate || "",
             status: String(local.status || "planning").toLowerCase(),
             destinationCurrency: String(local.destinationCurrency || "KRW"),
+            tripType: local.tripType === "international" ? "international" : "domestic",
           });
         const response = await authenticatedFetch(`/api/trips/${tripId}?view=meta`);
         if (response.ok) {
@@ -91,6 +93,7 @@ function TripPageContent() {
               endDate: String(result.trip.end_date ?? ""),
               status: String(result.trip.status ?? "planning"),
               destinationCurrency: String(result.trip.destination_currency ?? "KRW"),
+              tripType: result.trip.trip_type === "international" ? "international" : (result.trip.destination_currency === "KRW" ? "domestic" : "international"),
             });
         }
       } catch {
@@ -209,11 +212,11 @@ function TripPageContent() {
       key: "budget",
       href: `/trips/${tripId}/before/budget`,
       label: ko ? "예산" : "Budget",
-      title: ko ? (trip.destinationCurrency === "KRW" ? "예산을 정리해요" : "환전과 예산을 정리해요") : "Plan your travel money",
+      title: ko ? (trip.tripType === "domestic" ? "예산을 정리해요" : "환전과 예산을 정리해요") : "Plan your travel money",
       text: plannedTotal || (ko ? "아직 예산이 없어요" : "No budget items yet"),
       emoji: "₩",
     },
-    {
+    ...(trip.tripType === "international" ? [{
       key: "reservations",
       href: `/trips/${tripId}/before/reservations`,
       label: ko ? "예약" : "Reservations",
@@ -222,7 +225,7 @@ function TripPageContent() {
         ? `${state.reservations.length}건 저장됨`
         : `${state.reservations.length} saved`,
       emoji: "🎫",
-    },
+    }] : []),
   ];
   const flights = state.reservations.filter((item) => {
     const type = item.type.toLowerCase();
@@ -417,7 +420,7 @@ function TripPageContent() {
             <Link href={`/trips/${tripId}/before/budget`} className="muted">
               {ko ? "예산·환전" : "Budget & exchange"}
             </Link>
-            {trip.destinationCurrency !== "KRW" && <Link href={`/trips/${tripId}/before/reservations`} className="muted">
+            {trip.tripType === "international" && <Link href={`/trips/${tripId}/before/reservations`} className="muted">
               {ko ? "예약" : "Reservations"}
             </Link>}
             <Link href={`/trips/${tripId}/before/packing`} className="muted">
@@ -462,7 +465,7 @@ function TripPageContent() {
             <button type="button" onClick={() => setQuickExpenseOpen(true)} className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-2xl font-bold text-[var(--color-primary)]" aria-label={ko ? "지출 빠르게 추가" : "Add quick expense"}>+</button>
           </article>
           <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "현재까지 지출" : "Spent so far"}</p><p className="mt-2 text-xl font-bold">{total || (ko ? "아직 지출 없음" : "No spending yet")}</p><p className="mt-1 text-xs muted">{state.expenses.length}{ko ? "건" : " expenses"}</p></article>
-          <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "남은 환전금액" : "Remaining exchange"}</p><p className="mt-2 text-xl font-bold">{remainingExchange.toLocaleString()} {state.exchange.to || "JPY"}</p><p className="mt-1 text-xs muted">{ko ? "현금 환전 기준" : "Cash exchange balance"}</p></article>
+          {trip.tripType === "international" && <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "남은 환전금액" : "Remaining exchange"}</p><p className="mt-2 text-xl font-bold">{remainingExchange.toLocaleString()} {state.exchange.to || "JPY"}</p><p className="mt-1 text-xs muted">{ko ? "현금 환전 기준" : "Cash exchange balance"}</p></article>}
           <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "여행 날씨" : "Trip weather"}</p>{overviewWeather ? <div className="mt-2 flex items-center gap-2"><span className="text-2xl" aria-hidden="true">{overviewWeather.icon}</span><div><p className="text-sm font-bold">{overviewWeather.condition}</p><p className="text-xs muted">{overviewWeather.date} · {overviewWeather.temperature}°C</p></div></div> : <div className="mt-2"><p className="text-sm font-bold">{ko ? "날씨 정보 없음" : "No weather yet"}</p><Link href={`/trips/${tripId}/during/weather`} className="mt-1 block text-xs font-bold text-[var(--color-primary)]">{ko ? "날씨 추가 →" : "Add weather →"}</Link></div>}</article>
         </section>
         <section data-section="trip-schedule-board" className="card mt-7 p-6 sm:p-8">
@@ -491,7 +494,7 @@ function TripPageContent() {
             </>
           ) : <button type="button" onClick={() => openSchedule(trip.startDate || new Date().toISOString().slice(0, 10))} className="mt-6 w-full rounded-xl border border-dashed border-[var(--color-border)] p-6 text-sm font-bold text-[var(--color-primary)]">+ {ko ? "첫 일정 추가" : "Add your first plan"}</button>}
         </section>
-        {phaseKey === "during" && <section data-section="trip-reservation-summary" className="mt-7 grid gap-4 md:grid-cols-3">
+        {phaseKey === "during" && trip.tripType === "international" && <section data-section="trip-reservation-summary" className="mt-7 grid gap-4 md:grid-cols-3">
           {todayFlights.length > 0 && <article className="card p-5">
             <div className="flex items-start justify-between gap-3"><p className="eyebrow mb-2">{ko ? "오늘의 항공편" : "Today's flight"}</p><button type="button" onClick={() => openQuickReservation("Flight")} className="grid size-7 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold text-[var(--color-primary)]" aria-label={ko ? "항공편 예약 추가" : "Add flight reservation"}>+</button></div>
             {todayFlights.map((item) => <div key={item.id}><h2 className="font-bold">{item.airline || item.title}</h2><p className="mt-2 text-sm muted">{dateLabel(item.date)}{item.terminal ? ` · ${item.terminal}` : ""}</p><p className="mt-2 flex min-w-0 items-center gap-2 text-xs muted"><span className="min-w-0 flex-1 truncate">{item.departureLocation || item.location || "—"}{item.departureTime ? ` · ${item.departureTime}` : ""}</span><span aria-hidden="true">→</span><span className="min-w-0 flex-1 truncate text-right">{item.arrivalLocation || "—"}{item.arrivalTime ? ` · ${item.arrivalTime}` : ""}</span></p><ReservationDocuments tripId={tripId} reservationId={item.id} /></div>)}

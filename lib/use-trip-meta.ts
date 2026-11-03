@@ -11,6 +11,7 @@ export type TripMeta = {
   startDate: string;
   endDate: string;
   destinationCurrency: string;
+  tripType: "domestic" | "international";
 };
 const fallback: TripMeta = {
   title: "Your journey",
@@ -19,6 +20,7 @@ const fallback: TripMeta = {
   startDate: "",
   endDate: "",
   destinationCurrency: "KRW",
+  tripType: "domestic",
 };
 
 export function useTripMeta(tripId: string) {
@@ -39,6 +41,7 @@ export function useTripMeta(tripId: string) {
             startDate: String(local.startDate || ""),
             endDate: String(local.endDate || ""),
             destinationCurrency: String(local.destinationCurrency || "JPY"),
+            tripType: local.tripType === "domestic" || local.tripType === "international" ? local.tripType : (local.destinationCurrency === "KRW" ? "domestic" : "international"),
           });
         const response = await authenticatedFetch(`/api/trips/${tripId}`);
         if (!active || !response.ok) return;
@@ -51,6 +54,7 @@ export function useTripMeta(tripId: string) {
             startDate: String(result.trip.start_date || ""),
             endDate: String(result.trip.end_date || ""),
             destinationCurrency: String(result.trip.destination_currency || "KRW"),
+            tripType: result.trip.trip_type === "domestic" || result.trip.trip_type === "international" ? result.trip.trip_type : (result.trip.destination_currency === "KRW" ? "domestic" : "international"),
           });
       } catch {
         /* keep the current blank/local state */
