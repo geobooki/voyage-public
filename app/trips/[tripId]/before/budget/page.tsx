@@ -19,7 +19,7 @@ export default function BudgetPage() {
   const ko = language === "ko";
   const trip = useTripMeta(tripId);
   const { state, addBudget, updateBudget, removeBudget, addExpense, updateExpense, removeExpense, saveExchange, addBudgetCategory, renameBudgetCategory, removeBudgetCategory, updateBudgetCategoryColor, addPaymentMethod, renamePaymentMethod, removePaymentMethod, updatePaymentMethodColor } = useTripData();
-  const destination = trip.destinationCurrency || state.exchange.to || "JPY";
+  const destination = trip.destinationCurrency || state.exchange.to || "KRW";
   const currencies = useMemo(() => [...new Set(["KRW", destination, "USD"])], [destination]);
   const [rates, setRates] = useState(fallbackRates);
   const [rateLoading, setRateLoading] = useState(true);
