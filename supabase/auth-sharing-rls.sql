@@ -64,11 +64,13 @@ begin
     'budget_items', 'reservations', 'schedule_items', 'reviews', 'souvenirs',
     'exchange_plans', 'weather_days', 'dashboard_items'
   ] loop
-    execute format('alter table public.%I enable row level security', table_name);
-    execute format('drop policy if exists %I on public.%I', 'voyage anon read', table_name);
-    execute format('drop policy if exists %I on public.%I', 'voyage anon insert', table_name);
-    execute format('drop policy if exists %I on public.%I', 'voyage anon update', table_name);
-    execute format('drop policy if exists %I on public.%I', 'voyage anon delete', table_name);
+    if to_regclass(format('public.%I', table_name)) is not null then
+      execute format('alter table public.%I enable row level security', table_name);
+      execute format('drop policy if exists %I on public.%I', 'voyage anon read', table_name);
+      execute format('drop policy if exists %I on public.%I', 'voyage anon insert', table_name);
+      execute format('drop policy if exists %I on public.%I', 'voyage anon update', table_name);
+      execute format('drop policy if exists %I on public.%I', 'voyage anon delete', table_name);
+    end if;
   end loop;
 end $$;
 
@@ -112,14 +114,16 @@ begin
     'budget_items', 'reservations', 'schedule_items', 'reviews', 'souvenirs',
     'exchange_plans', 'weather_days', 'dashboard_items'
   ] loop
-    execute format('drop policy if exists %I on public.%I', 'voyage member read', table_name);
-    execute format('drop policy if exists %I on public.%I', 'voyage member insert', table_name);
-    execute format('drop policy if exists %I on public.%I', 'voyage member update', table_name);
-    execute format('drop policy if exists %I on public.%I', 'voyage member delete', table_name);
-    execute format('create policy %I on public.%I for select to authenticated using (public.voyage_can_access(trip_id, ''viewer''))', 'voyage member read', table_name);
-    execute format('create policy %I on public.%I for insert to authenticated with check (public.voyage_can_access(trip_id, ''editor''))', 'voyage member insert', table_name);
-    execute format('create policy %I on public.%I for update to authenticated using (public.voyage_can_access(trip_id, ''editor'')) with check (public.voyage_can_access(trip_id, ''editor''))', 'voyage member update', table_name);
-    execute format('create policy %I on public.%I for delete to authenticated using (public.voyage_can_access(trip_id, ''editor''))', 'voyage member delete', table_name);
+    if to_regclass(format('public.%I', table_name)) is not null then
+      execute format('drop policy if exists %I on public.%I', 'voyage member read', table_name);
+      execute format('drop policy if exists %I on public.%I', 'voyage member insert', table_name);
+      execute format('drop policy if exists %I on public.%I', 'voyage member update', table_name);
+      execute format('drop policy if exists %I on public.%I', 'voyage member delete', table_name);
+      execute format('create policy %I on public.%I for select to authenticated using (public.voyage_can_access(trip_id, ''viewer''))', 'voyage member read', table_name);
+      execute format('create policy %I on public.%I for insert to authenticated with check (public.voyage_can_access(trip_id, ''editor''))', 'voyage member insert', table_name);
+      execute format('create policy %I on public.%I for update to authenticated using (public.voyage_can_access(trip_id, ''editor'')) with check (public.voyage_can_access(trip_id, ''editor''))', 'voyage member update', table_name);
+      execute format('create policy %I on public.%I for delete to authenticated using (public.voyage_can_access(trip_id, ''editor''))', 'voyage member delete', table_name);
+    end if;
   end loop;
 end $$;
 
@@ -138,10 +142,12 @@ do $$
 declare table_name text;
 begin
   foreach table_name in array array['trips','trip_members','places','expenses','reservations','schedule_items','checklist_items','budget_items','exchange_plans','dashboard_items'] loop
-    begin
-      execute format('alter publication supabase_realtime add table public.%I', table_name);
-    exception when duplicate_object then null;
-    end;
+    if to_regclass(format('public.%I', table_name)) is not null then
+      begin
+        execute format('alter publication supabase_realtime add table public.%I', table_name);
+      exception when duplicate_object then null;
+      end;
+    end if;
   end loop;
 end $$;
 
