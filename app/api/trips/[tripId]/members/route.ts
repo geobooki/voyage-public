@@ -21,7 +21,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ tri
   const email = String(body.email || "").trim().toLowerCase();
   const role = body.role === "editor" ? "editor" : "viewer";
   if (!email || !email.includes("@")) return NextResponse.json({ error: "초대할 이메일을 입력하세요." }, { status: 400 });
-  const { data, error } = await client.from("trip_members").insert({ trip_id: tripId, member_email: email, role, invited_by: user.id }).select("id,trip_id,member_email,role,user_id,created_at").single();
+  const { data: existing, error: existingError } = await client.from("trip_members").select("id,trip_id,member_email,role,user_id,created_at").eq("trip_id", tripId).eq("member_email", email).maybeSingle();
+  if (existingError) return NextResponse.json({ error: existingError.message }, { status: 400 });
+  const { data, error } = existing
+    ? { data: existing, error: null }
+    : await client.from("trip_members").insert({ trip_id: tripId, member_email: email, role, invited_by: user.id }).select("id,trip_id,member_email,role,user_id,created_at").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   let emailSent = false;
   let emailError = "";
