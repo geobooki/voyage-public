@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
 
 export type TripMeta = {
   title: string;
@@ -17,7 +18,7 @@ const fallback: TripMeta = {
   country: "",
   startDate: "",
   endDate: "",
-  destinationCurrency: "JPY",
+  destinationCurrency: "KRW",
 };
 
 export function useTripMeta(tripId: string) {
@@ -39,7 +40,7 @@ export function useTripMeta(tripId: string) {
             endDate: String(local.endDate || ""),
             destinationCurrency: String(local.destinationCurrency || "JPY"),
           });
-        const response = await fetch(`/api/trips/${tripId}`);
+        const response = await authenticatedFetch(`/api/trips/${tripId}`);
         if (!active || !response.ok) return;
         const result = await response.json();
         if (result.trip)
@@ -49,7 +50,7 @@ export function useTripMeta(tripId: string) {
             country: String(result.trip.country || ""),
             startDate: String(result.trip.start_date || ""),
             endDate: String(result.trip.end_date || ""),
-            destinationCurrency: String(result.trip.destination_currency || "JPY"),
+            destinationCurrency: String(result.trip.destination_currency || "KRW"),
           });
       } catch {
         /* keep the current blank/local state */
