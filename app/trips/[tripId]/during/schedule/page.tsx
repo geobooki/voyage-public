@@ -60,8 +60,7 @@ export default function SchedulePage() {
     .sort();
   const save = (event: FormEvent) => {
     event.preventDefault();
-    if (!item.title.trim() || !item.date || (!item.endTime && !item.durationMinutes)) return;
-    if (item.endTime && item.durationMinutes) return;
+    if (!item.title.trim() || !item.date || !item.time) return;
     const current = state.schedule.find((entry) => entry.id === editingId);
     const value = {
       ...item,
@@ -114,83 +113,19 @@ export default function SchedulePage() {
         <p className="mt-2 muted">
           일정을 완료하면 추억 탭에 자동으로 기록됩니다.
         </p>
-        <form
-          onSubmit={save}
-          className="card mt-9 grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-7"
-        >
-          <input
-            required
-            type="date"
-            value={item.date}
-            onChange={(event) => setItem({ ...item, date: event.target.value })}
-            className={control}
-          />
-          <input
-            required
-            value={item.title}
-            onChange={(event) =>
-              setItem({ ...item, title: event.target.value })
-            }
-            placeholder="무엇을 하나요?"
-            className={control}
-          />
-          <input
-            type="time"
-            value={item.time}
-            onChange={(event) => setItem({ ...item, time: event.target.value })}
-            className={control}
-          />
-          <input
-            type="time"
-            value={item.endTime}
-            onChange={(event) => setItem({ ...item, endTime: event.target.value, durationMinutes: "" })}
-            placeholder="종료 시간"
-            aria-label="종료 시간"
-            className={control}
-          />
-          <input
-            type="number"
-            min="1"
-            value={item.durationMinutes}
-            onChange={(event) => setItem({ ...item, durationMinutes: event.target.value, endTime: "" })}
-            placeholder="소요 시간(분)"
-            aria-label="소요 시간(분)"
-            className={control}
-          />
-          <select
-            value={item.type}
-            onChange={(event) => setItem({ ...item, type: event.target.value })}
-            className={control}
-          >
-            <option>관광</option>
-            <option>식사</option>
-            <option>활동</option>
-            <option>숙박</option>
-            <option>교통</option>
-          </select>
-          <select
-            value={item.placeId}
-            onChange={(event) =>
-              setItem({ ...item, placeId: event.target.value })
-            }
-            className={control}
-          >
-            <option value="">장소 없음</option>
-            {state.places.map((place) => (
-              <option key={place.id} value={place.id}>
-                {place.name}
-              </option>
-            ))}
-          </select>
-          <input
-            value={item.note}
-            onChange={(event) => setItem({ ...item, note: event.target.value })}
-            placeholder="메모"
-            className={control}
-          />
-          <button className="rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-bold text-white">
-            {editingId ? "저장" : "추가"}
-          </button>
+        <form onSubmit={save} className="card mt-9 space-y-4 p-5 sm:p-6">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-sm font-bold">날짜<input required type="date" value={item.date} onChange={(event) => setItem({ ...item, date: event.target.value })} className={`mt-2 ${control}`} /></label>
+            <label className="text-sm font-bold">시간<input required type="time" value={item.time} onChange={(event) => setItem({ ...item, time: event.target.value })} className={`mt-2 ${control}`} /></label>
+          </div>
+          <label className="block text-sm font-bold">소요시간 <span className="font-normal muted">(선택)</span><div className="mt-2 flex items-center gap-2"><input type="number" min="1" value={item.durationMinutes} onChange={(event) => setItem({ ...item, durationMinutes: event.target.value, endTime: "" })} placeholder="예: 90" className={`max-w-xs ${control}`} /><span className="text-sm muted">분</span></div></label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-sm font-bold">타입<select value={item.type} onChange={(event) => setItem({ ...item, type: event.target.value })} className={`mt-2 ${control}`}><option>관광</option><option>식사</option><option>활동</option><option>숙박</option><option>교통</option></select></label>
+            <label className="text-sm font-bold">장소<select value={item.placeId} onChange={(event) => setItem({ ...item, placeId: event.target.value })} className={`mt-2 ${control}`}><option value="">장소 없음</option>{state.places.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}</select></label>
+          </div>
+          <label className="block text-sm font-bold">무엇을 하는지<input required value={item.title} onChange={(event) => setItem({ ...item, title: event.target.value })} placeholder="예: 바나힐 케이블카 타기" className={`mt-2 ${control}`} /></label>
+          <label className="block text-sm font-bold">메모 <span className="font-normal muted">(선택)</span><textarea value={item.note} onChange={(event) => setItem({ ...item, note: event.target.value })} placeholder="준비물이나 예약 정보를 적어두세요" rows={3} className={`mt-2 ${control}`} /></label>
+          <button className="w-full rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white sm:w-auto">{editingId ? "저장" : "일정 추가"}</button>
         </form>
         {editingId && (
           <button
