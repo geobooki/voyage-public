@@ -4,6 +4,7 @@ import { AppNav } from "./components/app-nav";
 import { LanguageProvider } from "@/lib/i18n";
 import { AuthProvider } from "@/lib/auth";
 import { LocaleBridge } from "@/lib/locale-bridge";
+import { AuthGuard } from "./components/auth-guard";
 
 export const metadata: Metadata = {
   title: "Voyage — 여행 기록",
@@ -29,9 +30,11 @@ export default function RootLayout({
       <body>
         <LanguageProvider>
           <AuthProvider>
-            <AppNav />
-            <LocaleBridge />
-            <div className="md:pl-24">{children}</div>
+            <AuthGuard>
+              <AppNav />
+              <LocaleBridge />
+              <div className="md:pl-24">{children}</div>
+            </AuthGuard>
           </AuthProvider>
         </LanguageProvider>
       </body>
