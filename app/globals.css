@@ -346,6 +346,10 @@ a[class*="bg-[var(--color-primary)]"]:hover {
 .safe-bottom {
   padding-bottom: max(20px, env(safe-area-inset-bottom));
 }
+/* Keep the native dropdown indicator visually separated from the edge. */
+select:not([multiple]) {
+  padding-right: 2.75rem !important;
+}
 @media (max-width: 767px) {
   main {
     padding-bottom: 96px !important;
