@@ -23,21 +23,6 @@ export function AppNav() {
   const [tripIsInternational, setTripIsInternational] = useState(true);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   useEffect(() => {
-    // AppNav stays mounted while navigating. Re-fetching the whole trip list
-    // on every route change made every click trigger an unnecessary request.
-    const cacheKey = "voyage:nav-trip-status";
-    try {
-      const cached = window.sessionStorage.getItem(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached) as { expiresAt?: number; hasNowTrip?: boolean };
-        if (parsed.expiresAt && parsed.expiresAt > Date.now()) {
-          setHasNowTrip(Boolean(parsed.hasNowTrip));
-          if (!tripId) return;
-        }
-      }
-    } catch {
-      // Fetch below remains the fallback when storage is unavailable.
-    }
     void getTrips()
       .then((trips) => {
         const next = trips.some((trip) => isCurrentOrSoonTrip(trip));
@@ -45,11 +30,6 @@ export function AppNav() {
         if (tripId) {
           const currentTrip = trips.find((trip) => trip.id === tripId || trip.slug === tripId);
           setTripIsInternational(currentTrip ? currentTrip.destination_currency !== "KRW" : true);
-        }
-        try {
-          window.sessionStorage.setItem(cacheKey, JSON.stringify({ hasNowTrip: next, expiresAt: Date.now() + 60_000 }));
-        } catch {
-          // Ignore storage quota/private-mode errors.
         }
       })
       .catch(() => setHasNowTrip(false));
