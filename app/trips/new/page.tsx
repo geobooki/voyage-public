@@ -7,6 +7,7 @@ import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import { useLanguage } from "@/lib/i18n";
 import { DateField } from "@/app/components/date-field";
 import { readPackingDefaults } from "@/lib/packing-defaults";
+import { clearTripsCache } from "@/lib/trips-client";
 
 const control =
   "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3 outline-none focus:border-[var(--color-primary)]";
@@ -38,6 +39,7 @@ export default function NewTripPage() {
       const result = await response.json();
       if (!response.ok)
         throw new Error(result.error || "Could not create trip.");
+      clearTripsCache();
       const local = JSON.parse(
         window.localStorage.getItem("voyage:trips") || "[]",
       );

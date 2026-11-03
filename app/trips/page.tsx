@@ -6,6 +6,7 @@ import { DateField } from "@/app/components/date-field";
 import { useLanguage } from "@/lib/i18n";
 import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import { useAuth } from "@/lib/auth";
+import { clearTripsCache } from "@/lib/trips-client";
 
 type TripCard = {
   id: string;
@@ -63,6 +64,7 @@ export default function TripsPage() {
     const response = await authenticatedFetch(`/api/trips/${editing.slug || editing.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draft) });
     if (!response.ok && !editing.id.startsWith("local-")) { const result = await response.json().catch(() => ({})); setError(result.error || "저장하지 못했습니다."); setSaving(false); return; }
     const updated = { ...editing, ...draft, title: draft.title.trim() };
+    clearTripsCache();
     setTrips((current) => current.map((trip) => trip.id === editing.id ? updated : trip));
     const local = JSON.parse(window.localStorage.getItem("voyage:trips") || "[]");
     window.localStorage.setItem("voyage:trips", JSON.stringify(local.map((item: TripCard) => item.id === editing.id ? { ...item, ...draft, title: draft.title.trim() } : item)));
@@ -75,6 +77,7 @@ export default function TripsPage() {
     const response = await authenticatedFetch(`/api/trips/${editing.slug || editing.id}`, { method: "DELETE" });
     if (!response.ok && !editing.id.startsWith("local-")) { setError("삭제하지 못했습니다."); setSaving(false); return; }
     setTrips((current) => current.filter((trip) => trip.id !== editing.id));
+    clearTripsCache();
     const local = JSON.parse(window.localStorage.getItem("voyage:trips") || "[]");
     window.localStorage.setItem("voyage:trips", JSON.stringify(local.filter((item: TripCard) => item.id !== editing.id)));
     setEditing(null); setSaving(false);
