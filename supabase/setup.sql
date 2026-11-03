@@ -7,6 +7,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.trips (
   id uuid primary key default gen_random_uuid(), title text not null, slug text unique,
   country text, city text, destination_currency text not null default 'JPY',
+  trip_type text not null default 'international' check (trip_type in ('domestic','international')),
   latitude double precision, longitude double precision, start_date date, end_date date,
   status text not null default 'planning' check (status in ('planning','active','completed')),
   cover_image text, owner_id uuid references auth.users(id) on delete set null,
@@ -14,6 +15,7 @@ create table if not exists public.trips (
 );
 alter table public.trips add column if not exists owner_id uuid references auth.users(id) on delete set null;
 alter table public.trips add column if not exists destination_currency text not null default 'JPY';
+alter table public.trips add column if not exists trip_type text not null default 'international';
 create unique index if not exists trips_slug_idx on public.trips(slug) where slug is not null;
 create index if not exists trips_owner_id_idx on public.trips(owner_id);
 

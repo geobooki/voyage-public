@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { formatTotals } from "@/lib/money";
 import { useTripMeta } from "@/lib/use-trip-meta";
 import { useTripData } from "@/lib/trip-context";
@@ -21,7 +21,7 @@ export default function DuringPage() {
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const [expense, setExpense] = useState({
     amount: "",
-    currency: "JPY",
+    currency: "KRW",
     category: "Food",
     date: today,
     time: "12:00",
@@ -44,6 +44,10 @@ export default function DuringPage() {
     .filter((item) => !item.date || item.date === today)
     .sort((a, b) => a.time.localeCompare(b.time));
   const todayExpenses = state.expenses.filter((item) => item.date === today);
+  const expenseCurrency = trip.destinationCurrency || "KRW";
+  useEffect(() => {
+    setExpense((current) => ({ ...current, currency: expenseCurrency }));
+  }, [expenseCurrency]);
   const selectedPlace = state.places.find(
     (item) => item.id === selectedPlaceId,
   );
@@ -134,7 +138,7 @@ export default function DuringPage() {
               }
               className={control}
             >
-              <option>JPY</option>
+              <option>{expenseCurrency}</option>
               <option>KRW</option>
               <option>USD</option>
             </select>
