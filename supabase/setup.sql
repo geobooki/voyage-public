@@ -67,6 +67,12 @@ create table if not exists public.schedule_items (
   title text not null, note text, completed boolean not null default false, sort_order integer not null default 0,
   created_at timestamptz not null default now()
 );
+create table if not exists public.schedule_documents (
+  id uuid primary key default gen_random_uuid(), trip_id uuid not null references public.trips(id) on delete cascade,
+  schedule_id uuid not null references public.schedule_items(id) on delete cascade,
+  file_name text not null, storage_path text not null, mime_type text not null, size bigint not null default 0,
+  created_at timestamptz not null default now()
+);
 create table if not exists public.souvenirs (
   id uuid primary key default gen_random_uuid(), trip_id uuid not null references public.trips(id) on delete cascade,
   name text not null, estimated_price numeric(12,2) not null default 0, purchased boolean not null default false,
@@ -130,7 +136,7 @@ $$;
 grant execute on function public.voyage_claim_memberships() to authenticated;
 
 do $$ declare t text; begin
-  foreach t in array array['trips','places','expenses','travelers','checklist_items','checklist_categories','budget_items','reservations','schedule_items','reviews','souvenirs','exchange_plans','weather_days','dashboard_items','trip_members','trip_shares'] loop
+  foreach t in array array['trips','places','expenses','travelers','checklist_items','checklist_categories','budget_items','reservations','schedule_items','schedule_documents','reviews','souvenirs','exchange_plans','weather_days','dashboard_items','trip_members','trip_shares'] loop
     execute format('alter table public.%I enable row level security',t);
     execute format('drop policy if exists %I on public.%I','voyage anon read',t);
     execute format('drop policy if exists %I on public.%I','voyage anon insert',t);
@@ -153,7 +159,7 @@ create policy "voyage trips update" on public.trips for update to authenticated 
 create policy "voyage trips delete" on public.trips for delete to authenticated using (owner_id=auth.uid());
 
 do $$ declare t text; begin
-  foreach t in array array['places','expenses','travelers','checklist_items','checklist_categories','budget_items','reservations','schedule_items','reviews','souvenirs','exchange_plans','weather_days','dashboard_items'] loop
+  foreach t in array array['places','expenses','travelers','checklist_items','checklist_categories','budget_items','reservations','schedule_items','schedule_documents','reviews','souvenirs','exchange_plans','weather_days','dashboard_items'] loop
     execute format('drop policy if exists %I on public.%I','voyage member read',t);
     execute format('drop policy if exists %I on public.%I','voyage member insert',t);
     execute format('drop policy if exists %I on public.%I','voyage member update',t);
@@ -182,7 +188,7 @@ create policy "voyage shares owner insert" on public.trip_shares for insert to a
 create policy "voyage shares owner update" on public.trip_shares for update to authenticated using (exists(select 1 from public.trips where id=trip_id and owner_id=auth.uid()));
 
 do $$ declare t text; begin
-  foreach t in array array['trips','trip_members','places','expenses','reservations','schedule_items','checklist_items','budget_items','exchange_plans','dashboard_items'] loop
+  foreach t in array array['trips','trip_members','places','expenses','reservations','schedule_items','schedule_documents','checklist_items','budget_items','exchange_plans','dashboard_items'] loop
     begin execute format('alter publication supabase_realtime add table public.%I',t); exception when duplicate_object then null; end;
   end loop;
 end $$;

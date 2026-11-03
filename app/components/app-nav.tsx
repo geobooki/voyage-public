@@ -20,6 +20,7 @@ export function AppNav() {
   const tripId = pathname.match(/^\/trips\/([^/]+)/)?.[1];
   const inTrip = Boolean(tripId && tripId !== "new");
   const [hasNowTrip, setHasNowTrip] = useState(false);
+  const [tripIsInternational, setTripIsInternational] = useState(true);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   useEffect(() => {
     // AppNav stays mounted while navigating. Re-fetching the whole trip list
@@ -31,7 +32,7 @@ export function AppNav() {
         const parsed = JSON.parse(cached) as { expiresAt?: number; hasNowTrip?: boolean };
         if (parsed.expiresAt && parsed.expiresAt > Date.now()) {
           setHasNowTrip(Boolean(parsed.hasNowTrip));
-          return;
+          if (!tripId) return;
         }
       }
     } catch {
@@ -41,6 +42,10 @@ export function AppNav() {
       .then((trips) => {
         const next = trips.some((trip) => isCurrentOrSoonTrip(trip));
         setHasNowTrip(next);
+        if (tripId) {
+          const currentTrip = trips.find((trip) => trip.id === tripId || trip.slug === tripId);
+          setTripIsInternational(currentTrip ? currentTrip.destination_currency !== "KRW" : true);
+        }
         try {
           window.sessionStorage.setItem(cacheKey, JSON.stringify({ hasNowTrip: next, expiresAt: Date.now() + 60_000 }));
         } catch {
@@ -48,7 +53,7 @@ export function AppNav() {
         }
       })
       .catch(() => setHasNowTrip(false));
-  }, []);
+  }, [tripId]);
   useEffect(() => {
     const viewport = window.visualViewport;
     if (!viewport) return;
@@ -67,7 +72,7 @@ export function AppNav() {
   const tripItems = tripId
     ? [
         { href: `/trips/${tripId}/before/budget`, label: language === "ko" ? "예산" : "Budget", icon: "₩" },
-        { href: `/trips/${tripId}/before/reservations`, label: language === "ko" ? "예약" : "Bookings", icon: "🎫" },
+        ...(tripIsInternational ? [{ href: `/trips/${tripId}/before/reservations`, label: language === "ko" ? "예약" : "Bookings", icon: "🎫" }] : []),
         { href: `/trips/${tripId}/during/schedule`, label: language === "ko" ? "일정" : "Schedule", icon: "🗓️" },
           { href: `/trips/${tripId}/after`, label: language === "ko" ? "정산" : "Settlement", icon: "🧾" },
       ]

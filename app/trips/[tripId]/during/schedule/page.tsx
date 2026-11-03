@@ -6,6 +6,8 @@ import { FormEvent, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
 import { useLanguage } from "@/lib/i18n";
 import { TripScheduleCalendar } from "@/app/components/trip-schedule-calendar";
+import { ReservationDocuments } from "@/app/components/reservation-documents";
+import { useTripMeta } from "@/lib/use-trip-meta";
 import type { Reservation, ScheduleItem } from "@/types/trip";
 
 type ScheduleForm = {
@@ -25,6 +27,8 @@ export default function SchedulePage() {
   const { tripId } = useParams<{ tripId: string }>();
   const { language } = useLanguage();
   const ko = language === "ko";
+  const trip = useTripMeta(tripId);
+  const isDomestic = trip.destinationCurrency === "KRW";
   const {
     state,
     addSchedule,
@@ -145,6 +149,7 @@ export default function SchedulePage() {
           </div>
           <div className="hidden md:block"><TripScheduleCalendar dates={visibleDesktopDates} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openAt} onReservationClick={(_reservation: Reservation) => undefined} onScheduleClick={edit} /></div>
           <div className="md:hidden"><TripScheduleCalendar dates={[dates[dayIndex]]} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openAt} onReservationClick={(_reservation: Reservation) => undefined} onScheduleClick={edit} /></div>
+          {isDomestic && state.schedule.length > 0 && <section className="mt-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4"><p className="text-sm font-bold">일정별 첨부파일</p><p className="mt-1 text-xs muted">국내 여행은 예약 탭 대신 각 일정에 사진이나 PDF를 선택적으로 추가할 수 있어요.</p><div className="mt-3 space-y-3">{state.schedule.map((entry) => <div key={entry.id} className="rounded-xl bg-[var(--color-surface)] px-3"><p className="pt-3 text-sm font-bold">{entry.date} · {entry.title}</p><ReservationDocuments tripId={tripId} itemId={entry.id} resource="schedule" /></div>)}</div></section>}
         </section>}
         <div className="hidden">
           <button type="button" onClick={() => moveDay(-1)} disabled={dayIndex === 0} className="grid size-10 place-items-center rounded-full border border-[var(--color-border)] text-xl font-bold disabled:opacity-30" aria-label="이전 날짜">‹</button>
