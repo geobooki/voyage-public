@@ -514,7 +514,7 @@ function TripPageContent() {
                 <TripScheduleCalendar dates={[scheduleDates[mobileSchedulePage]]} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openSchedule} onReservationClick={editQuickReservation} onScheduleClick={editSchedule} />
               </div>
             </>
-          ) : <button type="button" onClick={() => openSchedule(trip.startDate || new Date().toISOString().slice(0, 10))} className="mt-6 w-full rounded-xl border border-dashed border-[var(--color-border)] p-6 text-sm font-bold text-[var(--color-primary)]">+ {ko ? "첫 일정 추가" : "Add your first plan"}</button>}
+          ) : <p className="mt-6 rounded-xl border border-dashed border-[var(--color-border)] p-6 text-center text-sm muted">{ko ? "아직 등록된 일정이 없어요." : "No schedule has been added yet."}</p>}
         </section>
         {phaseKey === "during" && trip.tripType === "international" && <section data-section="trip-reservation-summary" className="mt-7 grid gap-4 md:grid-cols-3">
           {todayFlights.length > 0 && <article className="card p-5">
