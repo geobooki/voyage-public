@@ -61,6 +61,19 @@ export default function AfterPage() {
     }))
     .filter((place) => place.count > 0)
     .sort((a, b) => b.count - a.count);
+  const expenseViews = state.expenses.map((expense) => {
+    const participants = expense.participantIds?.length
+      ? state.travelers.filter((traveler) => expense.participantIds?.includes(traveler.id))
+      : state.travelers;
+    return {
+      expense,
+      participants,
+      payer: state.travelers.find((traveler) => traveler.id === expense.payerId)?.name,
+      shared: participants.length > 1,
+    };
+  });
+  const sharedExpenses = expenseViews.filter((item) => item.shared);
+  const personalExpenses = expenseViews.filter((item) => !item.shared);
   const settlementByCurrency = Object.entries(currencyTotals).map(
     ([currency, total]) => {
       const owedByTraveler = new Map(state.travelers.map((traveler) => [traveler.id, 0]));
@@ -151,6 +164,25 @@ export default function AfterPage() {
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-[var(--color-background)] p-4"><p className="text-xs muted">예상 총액</p><p className="mt-1 font-bold">{plannedLabel || "—"}</p></div><div className="rounded-xl bg-[var(--color-background)] p-4"><p className="text-xs muted">실제 사용액</p><p className="mt-1 font-bold">{totalLabel || "—"}</p></div></div>
           <div className="mt-4 space-y-2">{state.budget.length ? state.budget.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--color-background)] px-4 py-3 text-sm"><span className="min-w-0 truncate">{item.name || item.category}</span><strong className="shrink-0">{item.currency || "KRW"} {item.amount.toLocaleString()}</strong></div>) : <p className="text-sm muted">저장된 예산 항목이 없습니다.</p>}</div>
+        </section>
+        <section className="card mt-5 p-7">
+          <p className="eyebrow mb-2">동행자별 지출</p>
+          <h2 className="text-xl font-bold">같이 쓴 돈과 개인 지출</h2>
+          <p className="mt-2 text-sm muted">분담자에 여러 명이 선택된 지출은 공동 지출로, 한 명만 부담하는 지출은 개인 지출로 정리했어요.</p>
+          <div className="mt-6 grid gap-5 lg:grid-cols-2">
+            <div>
+              <h3 className="text-sm font-bold text-[var(--color-primary)]">공동 지출 {sharedExpenses.length}건</h3>
+              <div className="mt-3 space-y-2">
+                {sharedExpenses.length ? sharedExpenses.map(({ expense, participants, payer }) => <div key={expense.id} className="rounded-xl bg-[var(--color-background)] px-4 py-3 text-sm"><div className="flex items-start justify-between gap-3"><span className="min-w-0 font-bold">{expense.name || expense.category}</span><strong className="shrink-0">{expense.currency} {expense.amount.toLocaleString()}</strong></div><p className="mt-1 text-xs muted">참여: {participants.map((traveler) => traveler.name).join(", ")} · 1인 약 {expense.currency} {Math.round(expense.amount / participants.length).toLocaleString()}{payer ? ` · 결제자 ${payer}` : ""}</p></div>) : <p className="text-sm muted">공동 지출이 없습니다.</p>}
+              </div>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[var(--color-primary)]">개인 지출 {personalExpenses.length}건</h3>
+              <div className="mt-3 space-y-2">
+                {personalExpenses.length ? personalExpenses.map(({ expense, participants, payer }) => <div key={expense.id} className="rounded-xl bg-[var(--color-background)] px-4 py-3 text-sm"><div className="flex items-start justify-between gap-3"><span className="min-w-0 font-bold">{expense.name || expense.category}</span><strong className="shrink-0">{expense.currency} {expense.amount.toLocaleString()}</strong></div><p className="mt-1 text-xs muted">대상: {participants[0]?.name || payer || "개인"}{payer && participants[0]?.id !== expense.payerId ? ` · 결제자 ${payer}` : ""}</p></div>) : <p className="text-sm muted">개인 지출이 없습니다.</p>}
+              </div>
+            </div>
+          </div>
         </section>
         <section className="card mt-5 p-7">
           <p className="eyebrow mb-2">전체 지출</p>
