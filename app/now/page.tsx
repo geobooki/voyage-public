@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { selectCurrentOrSoonTrip } from "@/lib/trip-selection";
 import { useLanguage } from "@/lib/i18n";
 import { authenticatedFetch } from "@/lib/authenticated-fetch";
+import { useAuth } from "@/lib/auth";
 
 type Trip = { id: string; slug?: string; title: string; city?: string; start_date?: string; end_date?: string; status?: string };
 type Detail = { checklist?: { checked?: boolean }[]; schedule?: { id: string; date: string; time?: string; title: string; completed?: boolean }[]; reservations?: { id: string; type: string; title: string; date?: string; end_date?: string; time?: string; airline?: string; terminal?: string; reservation_number?: string; location?: string }[] };
@@ -14,11 +15,14 @@ const isStay = (type: string) => ["stay", "hotel", "accommodation"].some((name) 
 
 export default function NowPage() {
   const { language } = useLanguage();
+  const { user, loading: authLoading } = useAuth();
   const ko = language === "ko";
   const [trip, setTrip] = useState<Trip>();
   const [detail, setDetail] = useState<Detail>({});
   const [loading, setLoading] = useState(true);
   useEffect(() => {
+    if (authLoading) return;
+    if (!user) { setLoading(false); return; }
     void authenticatedFetch("/api/trips")
       .then((response) => (response.ok ? response.json() : { trips: [] }))
       .then(async (result) => {
@@ -32,7 +36,8 @@ export default function NowPage() {
       })
       .catch(() => setTrip(undefined))
       .finally(() => setLoading(false));
-  }, []);
+  }, [authLoading, user]);
+  if (authLoading) return <main className="grid min-h-screen place-items-center px-6"><p className="muted">{ko ? "로그인 정보를 확인하는 중이에요." : "Checking your session…"}</p></main>;
   if (loading) return <main className="grid min-h-screen place-items-center px-6"><p className="muted">{ko ? "여행을 불러오는 중이에요." : "Loading your trip…"}</p></main>;
   if (!trip) return <main className="grid min-h-screen place-items-center px-6"><div className="card max-w-md p-8 text-center"><p className="eyebrow mb-3">{ko ? "지금 여행" : "Now"}</p><h1 className="text-2xl font-bold">{ko ? "지금 진행 중인 여행이 없어요." : "No current trip yet."}</h1><p className="mt-2 text-sm muted">{ko ? "7일 이내 시작하는 여행을 추가하면 여기에 보여요." : "Add a trip starting within seven days to see it here."}</p><Link href="/trips/new" className="mt-6 inline-flex rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white">{ko ? "여행 추가" : "Add a trip"}</Link></div></main>;
   const checked = detail.checklist?.filter((item) => item.checked).length || 0;
