@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import { useLanguage } from "@/lib/i18n";
 import { DateField } from "@/app/components/date-field";
 import { readPackingDefaults } from "@/lib/packing-defaults";
@@ -29,7 +30,7 @@ export default function NewTripPage() {
     setSaving(true);
     setError("");
     try {
-      const response = await fetch("/api/trips", {
+      const response = await authenticatedFetch("/api/trips", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -59,8 +60,8 @@ export default function NewTripPage() {
       if (tripId) {
         window.localStorage.setItem(`voyage:trip:${tripId}`, JSON.stringify({ packingCategories: [{ id: `default-${form.tripType}`, name: category, color: "#FEF3C7" }], packing: defaults.map((name, index) => ({ id: `default-${index}`, name, category, checked: false })) }));
         if (result.configured) {
-          await fetch(`/api/trips/${tripId}/checklist-categories`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: category, color: "#FEF3C7", kind: "packing" }) });
-          await Promise.all(defaults.map((name) => fetch(`/api/trips/${tripId}/checklist`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, category, kind: "packing", checked: false }) })));
+          await authenticatedFetch(`/api/trips/${tripId}/checklist-categories`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: category, color: "#FEF3C7", kind: "packing" }) });
+          await Promise.all(defaults.map((name) => authenticatedFetch(`/api/trips/${tripId}/checklist`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, category, kind: "packing", checked: false }) })));
         }
       }
       router.push("/trips");

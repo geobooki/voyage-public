@@ -12,6 +12,7 @@ import { AirportSelect } from "@/app/components/airport-select";
 import { ReservationDocuments } from "@/app/components/reservation-documents";
 import { TripScheduleCalendar } from "@/app/components/trip-schedule-calendar";
 import { formatDate } from "@/lib/date";
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import type { DashboardItem, Reservation, ScheduleItem } from "@/types/trip";
 
 type TripMeta = { title: string; dates: string; startDate: string; endDate: string; status: string };
@@ -71,7 +72,7 @@ function TripPageContent() {
             endDate: local.endDate || "",
             status: String(local.status || "planning").toLowerCase(),
           });
-        const response = await fetch(`/api/trips/${tripId}?view=meta`);
+        const response = await authenticatedFetch(`/api/trips/${tripId}?view=meta`);
         if (response.ok) {
           const result = await response.json();
           if (result.trip)
@@ -104,7 +105,7 @@ function TripPageContent() {
           ),
         ),
       );
-      await fetch(`/api/trips/${tripId}`, {
+      await authenticatedFetch(`/api/trips/${tripId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "completed" }),

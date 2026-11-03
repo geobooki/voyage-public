@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { requireRequestUser } from "@/lib/supabase-request";
 import { resolveTripIdForRequest } from "@/lib/trip-id";
 
 const tableByResource: Record<string, string> = {
@@ -39,11 +39,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ tri
   const { tripId: rawTripId, resource } = await params;
   const table = tableByResource[resource];
   if (!table) return NextResponse.json({ error: "Unsupported resource." }, { status: 404 });
-  if (!supabase) return NextResponse.json({ configured: false }, { status: 503 });
-  const tripId = await resolveTripIdForRequest(rawTripId, supabase);
+  const { client, error: authError } = await requireRequestUser(request);
+  if (authError || !client) return NextResponse.json({ error: authError || "로그인이 필요합니다." }, { status: 401 });
+  const tripId = await resolveTripIdForRequest(rawTripId, client);
   const row = toRow(resource, tripId, await request.json());
-  const client = supabase.from(table) as any;
-  const query = resource === "review" || resource === "exchange" ? client.upsert(row, { onConflict: "trip_id" }) : resource === "expenses" ? client.upsert(row, { onConflict: "id" }) : client.insert(row);
+  const tableClient = client.from(table) as any;
+  const query = resource === "review" || resource === "exchange" ? tableClient.upsert(row, { onConflict: "trip_id" }) : resource === "expenses" ? tableClient.upsert(row, { onConflict: "id" }) : tableClient.insert(row);
   const { data, error } = await query.select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json(data, { status: 201 });
@@ -53,13 +54,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ tr
   const { tripId: rawTripId, resource } = await params;
   const table = tableByResource[resource];
   if (!table) return NextResponse.json({ error: "Unsupported resource." }, { status: 404 });
-  if (!supabase) return NextResponse.json({ configured: false }, { status: 503 });
-  const tripId = await resolveTripIdForRequest(rawTripId, supabase);
+  const { client, error: authError } = await requireRequestUser(request);
+  if (authError || !client) return NextResponse.json({ error: authError || "로그인이 필요합니다." }, { status: 401 });
+  const tripId = await resolveTripIdForRequest(rawTripId, client);
   const body = await request.json();
   const row = toRow(resource, tripId, body);
   delete (row as Record<string, unknown>).trip_id;
-  const client = supabase.from(table) as any;
-  const query = resource === "review" || resource === "exchange" ? client.update(row).eq("trip_id", tripId) : client.update(row).eq("id", body.id);
+  const tableClient = client.from(table) as any;
+  const query = resource === "review" || resource === "exchange" ? tableClient.update(row).eq("trip_id", tripId) : tableClient.update(row).eq("id", body.id);
   const { data, error } = await query.select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json(data);
@@ -69,12 +71,12 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ t
   const { tripId: rawTripId, resource } = await params;
   const table = tableByResource[resource];
   if (!table) return NextResponse.json({ error: "Unsupported resource." }, { status: 404 });
-  if (!supabase) return NextResponse.json({ configured: false }, { status: 503 });
-  const tripId = await resolveTripIdForRequest(rawTripId, supabase);
+  const { client, error: authError } = await requireRequestUser(request);
+  if (authError || !client) return NextResponse.json({ error: authError || "로그인이 필요합니다." }, { status: 401 });
+  const tripId = await resolveTripIdForRequest(rawTripId, client);
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Resource id is required." }, { status: 400 });
-  const client = supabase.from(table) as any;
-  const { error } = await client.delete().eq("id", id).eq("trip_id", tripId);
+  const { error } = await client.from(table).delete().eq("id", id).eq("trip_id", tripId);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ deleted: true });
 }

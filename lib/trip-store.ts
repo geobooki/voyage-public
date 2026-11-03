@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import type {
   BudgetItem,
   ChecklistItem,
@@ -31,7 +33,7 @@ const writePending = (tripId: string, items: PendingMutation[]) => {
 const mutationKey = (resource: string, method: string, payload: Record<string, unknown>) => `${method}:${resource}:${String(payload.id || "new")}`;
 const sendMutation = async (tripId: string, mutation: PendingMutation) => {
   const query = mutation.method === "DELETE" && mutation.payload.id ? `?id=${encodeURIComponent(String(mutation.payload.id))}` : "";
-  const response = await fetch(`/api/trips/${tripId}/${mutation.resource}${query}`, {
+  const response = await authenticatedFetch(`/api/trips/${tripId}/${mutation.resource}${query}`, {
     method: mutation.method,
     headers: mutation.method === "DELETE" ? undefined : { "Content-Type": "application/json" },
     body: mutation.method === "DELETE" ? undefined : JSON.stringify(mutation.payload),
@@ -331,6 +333,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
   const key = `voyage:trip:${tripId}`;
   const [state, setState] = useState<TripState>(blankState());
   const [hydrated, setHydrated] = useState(false);
+  const [reloadNonce, setReloadNonce] = useState(0);
   const hasExchangeAmount = (value: ExchangePlan) => value.expectedCash > 0 || value.cardEstimate > 0 || value.plannedExchange > 0 || value.actualExchange > 0;
   useEffect(() => {
     setState(blankState());
@@ -376,7 +379,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     } catch {
       /* demo fallback */
     }
-    fetch(`/api/trips/${tripId}${view === "full" ? "" : `?view=${view}`}`)
+    authenticatedFetch(`/api/trips/${tripId}${view === "full" ? "" : `?view=${view}`}`)
       .then(async (response) => {
         if (!response.ok) return null;
         return response.json();
@@ -583,7 +586,19 @@ export function useTripStore(tripId = "tokyo", view = "full") {
       })
       .catch(() => undefined)
       .finally(() => setHydrated(true));
-  }, [tripId, view]);
+  }, [tripId, view, reloadNonce]);
+
+  useEffect(() => {
+    if (!supabaseBrowser || !tripId) return;
+    const realtimeClient = supabaseBrowser;
+    const tables = ["trips", "places", "expenses", "travelers", "checklist_items", "checklist_categories", "budget_items", "reservations", "schedule_items", "exchange_plans", "dashboard_items", "souvenirs"];
+    const channel = realtimeClient.channel(`voyage-trip-${tripId}`);
+    tables.forEach((table) => {
+      channel.on("postgres_changes", { event: "*", schema: "public", table }, () => setReloadNonce((value) => value + 1));
+    });
+    channel.subscribe();
+    return () => { void realtimeClient.removeChannel(channel); };
+  }, [tripId]);
   useEffect(() => {
     if (hydrated) window.localStorage.setItem(key, JSON.stringify(state));
   }, [state, hydrated]);

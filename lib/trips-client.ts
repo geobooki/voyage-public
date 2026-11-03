@@ -1,3 +1,5 @@
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
+
 export type TripSummary = {
   id: string;
   slug?: string;
@@ -13,7 +15,7 @@ let tripsRequest: Promise<TripSummary[]> | null = null;
 
 export function getTrips(): Promise<TripSummary[]> {
   if (!tripsRequest) {
-    tripsRequest = fetch("/api/trips")
+    tripsRequest = authenticatedFetch("/api/trips")
       .then((response) => (response.ok ? response.json() : { trips: [] }))
       .then((result) => (Array.isArray(result.trips) ? result.trips : []))
       .catch(() => {
