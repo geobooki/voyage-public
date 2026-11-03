@@ -10,7 +10,6 @@ import { useEffect, useState } from "react";
 const items = [
   { href: "/", label: "Overview", icon: "⌂" },
   { href: "/trips", label: "Trips", icon: "🧳" },
-  { href: "/my-trips", label: "My archive", icon: "▣" },
   // 지도 기능은 보류 중입니다. 대시보드와 여행 관리에 집중하기 위해 메뉴에서 숨깁니다.
   // { href: "/map", label: "World map", icon: "◎" },
 ];
@@ -64,7 +63,6 @@ export function AppNav() {
   const labels = {
     "/": t("overview"),
     "/trips": t("trips"),
-    "/my-trips": language === "ko" ? "내 여행 기록" : "My archive",
   };
   const tripItems = tripId
     ? [
