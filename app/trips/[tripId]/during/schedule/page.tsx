@@ -34,7 +34,6 @@ export default function SchedulePage() {
     addSchedule,
     updateSchedule,
     removeSchedule,
-    toggleScheduleComplete,
   } = useTripData();
   const tripDates = useMemo(() => {
     if (!trip.startDate || !trip.endDate) return [];
@@ -60,8 +59,6 @@ export default function SchedulePage() {
   });
   const [item, setItem] = useState<ScheduleForm>(() => empty());
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [dayIndex, setDayIndex] = useState(0);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
   const [schedulePage, setSchedulePage] = useState(0);
   const dates = tripDates.length ? tripDates : Array.from(
     new Set([
@@ -100,14 +97,12 @@ export default function SchedulePage() {
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const visibleDates = dates.slice(dayIndex, dayIndex + 1);
   const schedulePageCount = Math.max(1, Math.ceil(dates.length / 3));
   const visibleDesktopDates = dates.slice(schedulePage * 3, schedulePage * 3 + 3);
   const openAt = (date: string, time: string) => {
     setItem((current) => ({ ...current, date, time }));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const moveDay = (direction: number) => setDayIndex((current) => Math.max(0, Math.min(Math.max(0, dates.length - 1), current + direction)));
   return (
     <main
       data-section="schedule-board"
@@ -137,7 +132,10 @@ export default function SchedulePage() {
           </div>
           <label className="block text-sm font-bold">무엇을 하는지<input required value={item.title} onChange={(event) => setItem({ ...item, title: event.target.value })} placeholder="예: 바나힐 케이블카 타기" className={`mt-2 ${control}`} /></label>
           <label className="block text-sm font-bold">메모 <span className="font-normal muted">(선택)</span><textarea value={item.note} onChange={(event) => setItem({ ...item, note: event.target.value })} placeholder="준비물이나 예약 정보를 적어두세요" rows={3} className={`mt-2 ${control}`} /></label>
-          <button className="w-full rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white sm:w-auto">{editingId ? "저장" : "일정 추가"}</button>
+          <div className="flex flex-wrap gap-2">
+            <button className="w-full rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white sm:w-auto">{editingId ? "저장" : "일정 추가"}</button>
+            {editingId && <button type="button" onClick={() => { if (window.confirm("이 일정을 삭제할까요?")) { removeSchedule(editingId); setEditingId(null); setItem(empty()); } }} className="rounded-xl border border-[var(--color-danger)] px-4 py-3 text-sm font-bold text-[var(--color-danger)]">삭제</button>}
+          </div>
         </form>
         {editingId && (
           <button
@@ -156,104 +154,9 @@ export default function SchedulePage() {
             <div className="hidden items-center gap-2 md:flex"><button type="button" onClick={() => setSchedulePage((current) => Math.max(0, current - 1))} disabled={schedulePage === 0} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "이전 3일" : "Previous three days"}>‹</button><span className="text-xs font-bold muted">{schedulePage * 3 + 1}–{Math.min((schedulePage + 1) * 3, dates.length)} / {dates.length}{ko ? "일" : " days"}</span><button type="button" onClick={() => setSchedulePage((current) => Math.min(schedulePageCount - 1, current + 1))} disabled={schedulePage >= schedulePageCount - 1} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "다음 3일" : "Next three days"}>›</button></div>
           </div>
           <div className="hidden md:block"><TripScheduleCalendar dates={visibleDesktopDates} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openAt} onReservationClick={(_reservation: Reservation) => undefined} onScheduleClick={edit} /></div>
-          <div className="md:hidden"><TripScheduleCalendar dates={[dates[dayIndex]]} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openAt} onReservationClick={(_reservation: Reservation) => undefined} onScheduleClick={edit} /></div>
+          <div className="md:hidden"><TripScheduleCalendar dates={[dates[0]]} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openAt} onReservationClick={(_reservation: Reservation) => undefined} onScheduleClick={edit} /></div>
           {isDomestic && state.schedule.length > 0 && <section className="mt-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4"><p className="text-sm font-bold">일정별 첨부파일</p><p className="mt-1 text-xs muted">국내 여행은 예약 탭 대신 각 일정에 사진이나 PDF를 선택적으로 추가할 수 있어요.</p><div className="mt-3 space-y-3">{state.schedule.map((entry) => <div key={entry.id} className="rounded-xl bg-[var(--color-surface)] px-3"><p className="pt-3 text-sm font-bold">{entry.date} · {entry.title}</p><ReservationDocuments tripId={tripId} itemId={entry.id} resource="schedule" /></div>)}</div></section>}
         </section>}
-        <div className="hidden">
-          <button type="button" onClick={() => moveDay(-1)} disabled={dayIndex === 0} className="grid size-10 place-items-center rounded-full border border-[var(--color-border)] text-xl font-bold disabled:opacity-30" aria-label="이전 날짜">‹</button>
-          <p className="text-sm font-bold text-[var(--color-primary)]">{dates.length ? `${dayIndex + 1} / ${dates.length}` : "일정 없음"}</p>
-          <button type="button" onClick={() => moveDay(1)} disabled={dayIndex >= dates.length - 1} className="grid size-10 place-items-center rounded-full border border-[var(--color-border)] text-xl font-bold disabled:opacity-30" aria-label="다음 날짜">›</button>
-        </div>
-        <div className="hidden" onTouchStart={(event) => setTouchStart(event.touches[0]?.clientX ?? null)} onTouchEnd={(event) => { if (touchStart == null) return; const delta = (event.changedTouches[0]?.clientX ?? touchStart) - touchStart; if (Math.abs(delta) > 45) moveDay(delta < 0 ? 1 : -1); setTouchStart(null); }}>
-          {visibleDates.map((date) => (
-            <section
-              data-section={`schedule-day-${date}`}
-              className="min-h-56 rounded-[20px] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4"
-              key={date}
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-[var(--color-primary)]">
-                  {date}
-                </p>
-                <span className="text-xs muted">
-                  {state.schedule.filter((entry) => entry.date === date).length + state.reservations.filter((reservation) => reservation.date === date || reservation.endDate === date).length}
-                  개
-                </span>
-              </div>
-              {state.reservations
-                .filter((reservation) => reservation.date === date || reservation.endDate === date)
-                .sort((a, b) => (a.date === date ? a.time || a.departureTime || "00:00" : a.arrivalTime || "23:59").localeCompare(b.date === date ? b.time || b.departureTime || "00:00" : b.arrivalTime || "23:59"))
-                .map((reservation) => (
-                  <div
-                    data-section="schedule-reservation"
-                    className="mt-4 rounded-2xl border-l-4 border-[var(--color-accent)] bg-[var(--color-surface)] p-4 shadow-sm"
-                    key={`${date}-${reservation.id}`}
-                  >
-                    <p className="text-xs font-bold text-[var(--color-accent)]">
-                      {reservation.type} · {reservation.date === date ? (reservation.time || reservation.departureTime || "시간 미정") : (reservation.arrivalTime || "도착")}
-                    </p>
-                    <p className="mt-2 text-sm font-bold">{reservation.title}</p>
-                    <p className="mt-2 text-xs muted">
-                      {reservation.departureLocation && reservation.arrivalLocation
-                        ? `${reservation.departureLocation} → ${reservation.arrivalLocation}`
-                        : reservation.location || "예약 장소 미정"}
-                    </p>
-                  </div>
-                ))}
-              {state.schedule
-                .filter((entry) => entry.date === date)
-                .sort((a, b) => a.time.localeCompare(b.time))
-                .map((entry) => (
-                  <div
-                    data-section="schedule-item"
-                    className={`mt-4 rounded-2xl bg-[var(--color-surface)] p-4 shadow-sm ${entry.completed ? "opacity-60" : ""}`}
-                    key={entry.id}
-                  >
-                    <div className="flex items-start gap-3">
-                  <input
-                        type="checkbox"
-                        checked={entry.completed}
-                        onChange={() => toggleScheduleComplete(entry.id)}
-                        aria-label={`${entry.title} 완료`}
-                        className="mt-1 size-4 accent-[var(--color-primary)]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => edit(entry)}
-                        className="block flex-1 text-left"
-                      >
-                        <p className="text-xs font-bold text-[var(--color-primary)]">
-                          {entry.time || "시간 미정"}{entry.endTime ? ` – ${entry.endTime}` : entry.durationMinutes ? ` · ${entry.durationMinutes}분` : ""}
-                        </p>
-                        <p
-                          className={`mt-2 text-sm font-bold ${entry.completed ? "line-through" : ""}`}
-                        >
-                          {entry.title}
-                        </p>
-                        <p className="mt-2 text-xs muted">
-                          {entry.type} ·{" "}
-                          {state.places.find(
-                            (place) => place.id === entry.placeId,
-                          )?.name || "장소 없음"}
-                        </p>
-                        {entry.note && (
-                          <p className="mt-2 text-xs muted">{entry.note}</p>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeSchedule(entry.id)}
-                        aria-label={`${entry.title} 삭제`}
-                        className="text-lg font-bold text-[var(--color-danger)]"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </section>
-          ))}
-        </div>
         {!dates.length && (
           <div className="card mt-6 p-6 text-sm muted">
             아직 일정이 없습니다. 위에서 첫 일정을 추가하세요.
