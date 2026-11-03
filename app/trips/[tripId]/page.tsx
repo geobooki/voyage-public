@@ -26,7 +26,7 @@ function TripPageContent() {
   const { language } = useLanguage();
   const { user } = useAuth();
   const ko = language === "ko";
-  const { state, addExpense, addReservation, updateReservation, addSchedule, updateSchedule, addDashboardItem, updateDashboardItem, removeDashboardItem } = useTripData();
+  const { state, addExpense, addTraveler, addReservation, updateReservation, addSchedule, updateSchedule, addDashboardItem, updateDashboardItem, removeDashboardItem } = useTripData();
   const { items: packingItems, categories: packingCategories, addItem } = usePacking();
   const [trip, setTrip] = useState<TripMeta>({
     title: "여행 정보를 불러오는 중…",
@@ -57,6 +57,10 @@ function TripPageContent() {
   const [packingName, setPackingName] = useState("");
   const [packingCategory, setPackingCategory] = useState("기타");
   const compactTitleLength = trip.title.replace(/\s/g, "").length;
+  const addTravelerFromTitle = () => {
+    const name = window.prompt(ko ? "동행자 이름을 입력하세요." : "Enter the traveler's name.");
+    if (name?.trim()) addTraveler(name.trim());
+  };
   useEffect(() => {
     if (packingCategories.length && !packingCategories.some((item) => item.name === packingCategory))
       setPackingCategory(packingCategories[0].name);
@@ -435,11 +439,16 @@ function TripPageContent() {
                   ? "다음 여행"
                   : "Your next adventure"}
             </p>
-            <h1
-              className={`text-3xl font-bold sm:text-4xl ${compactTitleLength <= 6 ? "whitespace-nowrap" : "break-words"}`}
-            >
-              {trip.title}
-            </h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1
+                className={`text-3xl font-bold sm:text-4xl ${compactTitleLength <= 6 ? "whitespace-nowrap" : "break-words"}`}
+              >
+                {trip.title}
+              </h1>
+              <button type="button" onClick={addTravelerFromTitle} className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-xs font-bold text-[var(--color-primary)]">
+                + {ko ? "여행자 추가" : "Add traveler"}
+              </button>
+            </div>
             <p className="mt-2 muted">{trip.dates}</p>
           </div>
           <div className="flex items-center gap-2">
