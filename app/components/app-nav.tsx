@@ -51,7 +51,7 @@ export function AppNav() {
   };
   const tripItems = tripId
     ? [
-        { href: `/trips/${tripId}/before/budget`, label: language === "ko" ? "예산" : "Budget", icon: "₩" },
+        { href: `/trips/${tripId}/before/budget`, label: language === "ko" ? (tripIsInternational ? "예산·환전" : "지출") : (tripIsInternational ? "Budget & exchange" : "Expenses"), icon: "₩" },
         ...(tripIsInternational ? [{ href: `/trips/${tripId}/before/reservations`, label: language === "ko" ? "예약" : "Bookings", icon: "🎫" }] : []),
         { href: `/trips/${tripId}/during/schedule`, label: language === "ko" ? "일정" : "Schedule", icon: "🗓️" },
           { href: `/trips/${tripId}/after`, label: language === "ko" ? "정산" : "Settlement", icon: "🧾" },

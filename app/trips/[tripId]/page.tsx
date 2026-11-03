@@ -439,7 +439,7 @@ function TripPageContent() {
               {ko ? "개요" : "Overview"}
             </Link>
             <Link href={`/trips/${tripId}/before/budget`} className="muted">
-              {ko ? "예산·환전" : "Budget & exchange"}
+              {ko ? (trip.tripType === "international" ? "예산·환전" : "지출") : (trip.tripType === "international" ? "Budget & exchange" : "Expenses")}
             </Link>
             {trip.tripType === "international" && <Link href={`/trips/${tripId}/before/reservations`} className="muted">
               {ko ? "예약" : "Reservations"}
