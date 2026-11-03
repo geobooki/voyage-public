@@ -19,6 +19,22 @@ alter table public.trip_members enable row level security;
 create index if not exists trip_members_trip_id_idx on public.trip_members(trip_id);
 create index if not exists trip_members_email_idx on public.trip_members(lower(member_email));
 
+-- 기존 share-links.sql을 실행하지 않은 환경도 중단되지 않도록 함께 준비합니다.
+create table if not exists public.trip_shares (
+  id uuid primary key default gen_random_uuid(),
+  trip_id uuid not null references public.trips(id) on delete cascade,
+  token text not null unique,
+  permission text not null default 'view' check (permission in ('view', 'edit')),
+  invite_email text,
+  invited_by text,
+  accepted_at timestamptz,
+  created_at timestamptz not null default now(),
+  revoked_at timestamptz
+);
+alter table public.trip_shares enable row level security;
+create index if not exists trip_shares_token_idx on public.trip_shares(token);
+create index if not exists trip_shares_trip_id_idx on public.trip_shares(trip_id);
+
 create or replace function public.voyage_can_access(target_trip uuid, required_role text default 'viewer')
 returns boolean
 language sql
