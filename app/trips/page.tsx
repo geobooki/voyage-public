@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { DateField } from "@/app/components/date-field";
 import { useLanguage } from "@/lib/i18n";
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
 
 type TripCard = {
   id: string;
@@ -38,7 +39,7 @@ export default function TripsPage() {
       try {
         const saved = JSON.parse(window.localStorage.getItem("voyage:trips") || "[]");
         const localTrips = saved.map((item: TripCard) => ({ ...item, title: item.title || `${item.city}, ${item.country}`, color: "bg-[var(--color-surface-muted)]", emoji: "✦" }));
-        const response = await fetch("/api/trips");
+        const response = await authenticatedFetch("/api/trips");
         const result = response.ok ? await response.json() : null;
         const remoteTrips = result?.trips?.map((item: Record<string, unknown>) => ({ id: String(item.id), slug: item.slug ? String(item.slug) : undefined, title: String(item.title), country: String(item.country ?? ""), city: String(item.city ?? ""), startDate: String(item.start_date ?? ""), endDate: String(item.end_date ?? ""), destinationCurrency: String(item.destination_currency ?? "JPY"), status: String(item.status ?? "planning"), color: "bg-[var(--color-surface-muted)]", emoji: "✦" })) ?? [];
         setTrips([...remoteTrips, ...localTrips].filter((trip, index, list) => list.findIndex((item) => item.id === trip.id) === index));
@@ -57,7 +58,7 @@ export default function TripsPage() {
     event.preventDefault();
     if (!editing || !draft.title.trim()) return;
     setSaving(true); setError("");
-    const response = await fetch(`/api/trips/${editing.slug || editing.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draft) });
+    const response = await authenticatedFetch(`/api/trips/${editing.slug || editing.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draft) });
     if (!response.ok && !editing.id.startsWith("local-")) { const result = await response.json().catch(() => ({})); setError(result.error || "저장하지 못했습니다."); setSaving(false); return; }
     const updated = { ...editing, ...draft, title: draft.title.trim() };
     setTrips((current) => current.map((trip) => trip.id === editing.id ? updated : trip));
@@ -69,7 +70,7 @@ export default function TripsPage() {
     if (!editing) return;
     if (!window.confirm(ko ? "이 여행을 삭제할까요? 일정과 기록도 함께 삭제됩니다." : "Delete this trip? Its plans and records will also be deleted.")) return;
     setSaving(true); setError("");
-    const response = await fetch(`/api/trips/${editing.slug || editing.id}`, { method: "DELETE" });
+    const response = await authenticatedFetch(`/api/trips/${editing.slug || editing.id}`, { method: "DELETE" });
     if (!response.ok && !editing.id.startsWith("local-")) { setError("삭제하지 못했습니다."); setSaving(false); return; }
     setTrips((current) => current.filter((trip) => trip.id !== editing.id));
     const local = JSON.parse(window.localStorage.getItem("voyage:trips") || "[]");
