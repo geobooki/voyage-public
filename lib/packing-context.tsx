@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ChecklistCategory, ChecklistItem } from "@/types/trip";
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
 
 type PackingState = {
   items: ChecklistItem[];
@@ -63,6 +64,7 @@ export function PackingProvider({
       try {
         const saved = window.localStorage.getItem(storageKey);
         const legacy = window.localStorage.getItem(`voyage:trip:${tripId}`);
+        const hasLocalData = Boolean(saved || legacy);
         if (saved) {
           const parsed = JSON.parse(saved) as Partial<PackingState>;
           if (active) {
@@ -88,7 +90,7 @@ export function PackingProvider({
             persist(nextItems, nextCategories);
           }
         }
-        const response = await fetch(`/api/trips/${tripId}/packing`);
+        const response = await authenticatedFetch(`/api/trips/${tripId}/packing`);
         if (!response.ok) return;
         const data = await response.json();
         if (!active) return;
@@ -98,7 +100,7 @@ export function PackingProvider({
           : [defaultCategory];
         // Do not replace an existing local list with an empty remote response
         // while the Supabase checklist tables are still empty or unavailable.
-        if (saved && nextItems.length === 0 && nextCategories.length === 1 && nextCategories[0].id === defaultCategory.id) return;
+        if (hasLocalData && nextItems.length === 0 && nextCategories.length === 1 && nextCategories[0].id === defaultCategory.id) return;
         setItems(nextItems);
         setCategories(nextCategories);
         persist(nextItems, nextCategories);
@@ -115,7 +117,7 @@ export function PackingProvider({
   }, [storageKey, tripId]);
 
   const sync = (resource: string, body: Record<string, unknown>, method = "POST") => {
-    void fetch(`/api/trips/${tripId}/${resource}`, {
+    void authenticatedFetch(`/api/trips/${tripId}/${resource}`, {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -147,7 +149,7 @@ export function PackingProvider({
       const nextItems = items.filter((item) => item.id !== itemId);
       setItems(nextItems);
       persist(nextItems, categories);
-      void fetch(`/api/trips/${tripId}/checklist?id=${encodeURIComponent(itemId)}`, { method: "DELETE" }).catch(() => undefined);
+      void authenticatedFetch(`/api/trips/${tripId}/checklist?id=${encodeURIComponent(itemId)}`, { method: "DELETE" }).catch(() => undefined);
     },
     addCategory: (category) => {
       const next = { ...category, color: category.color || randomCategoryColor(), id: makeId() };
@@ -198,7 +200,7 @@ export function PackingProvider({
       setCategories(nextCategories);
       setItems(nextItems);
       persist(nextItems, nextCategories);
-      void fetch(`/api/trips/${tripId}/checklist-categories?id=${encodeURIComponent(categoryId)}`, { method: "DELETE" }).catch(() => undefined);
+      void authenticatedFetch(`/api/trips/${tripId}/checklist-categories?id=${encodeURIComponent(categoryId)}`, { method: "DELETE" }).catch(() => undefined);
     },
   }), [categories, items, loading, tripId]);
 
