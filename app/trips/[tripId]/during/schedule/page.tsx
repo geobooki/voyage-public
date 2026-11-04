@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { scheduleTimes, fiveMinuteTime } from "@/lib/schedule-time";
 import { useParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
@@ -73,9 +74,10 @@ export default function SchedulePage() {
     const current = state.schedule.find((entry) => entry.id === editingId);
     const value = {
       ...item,
+      time: fiveMinuteTime(item.time),
       title: item.title.trim(),
       note: item.note.trim(),
-      durationMinutes: item.durationMinutes ? Number(item.durationMinutes) : undefined,
+      durationMinutes: item.durationMinutes ? Math.max(5, Math.round(Number(item.durationMinutes) / 5) * 5) : undefined,
       completed: current?.completed ?? false,
     };
     if (editingId) updateSchedule(editingId, value);
@@ -88,9 +90,9 @@ export default function SchedulePage() {
     setItem({
       date: entry.date,
       title: entry.title,
-      time: entry.time,
+      time: fiveMinuteTime(entry.time),
       endTime: entry.endTime ?? "",
-      durationMinutes: entry.durationMinutes ? String(entry.durationMinutes) : "",
+      durationMinutes: entry.durationMinutes ? String(Math.max(5, Math.round(entry.durationMinutes / 5) * 5)) : "",
       type: entry.type,
       placeId: entry.placeId ?? "",
       note: entry.note,
@@ -123,9 +125,9 @@ export default function SchedulePage() {
         <form onSubmit={save} className="card mt-9 space-y-4 p-5 sm:p-6">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm font-bold">날짜<input required type="date" value={item.date} onChange={(event) => setItem({ ...item, date: event.target.value })} className={`mt-2 ${control}`} /></label>
-            <label className="text-sm font-bold">시간<input required type="time" value={item.time} onChange={(event) => setItem({ ...item, time: event.target.value })} className={`mt-2 ${control}`} /></label>
+            <label className="text-sm font-bold">시간<select required aria-label="시간 (5분 단위)" value={item.time} onChange={(event) => setItem({ ...item, time: event.target.value })} className={`mt-2 ${control}`}>{scheduleTimes.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>
           </div>
-          <label className="block text-sm font-bold">소요시간 <span className="font-normal muted">(선택)</span><div className="mt-2 flex items-center gap-2"><input type="number" min="1" value={item.durationMinutes} onChange={(event) => setItem({ ...item, durationMinutes: event.target.value, endTime: "" })} placeholder="예: 90" className={`max-w-xs ${control}`} /><span className="text-sm muted">분</span></div></label>
+          <label className="block text-sm font-bold">소요시간 <span className="font-normal muted">(선택)</span><div className="mt-2 flex items-center gap-2"><input type="number" min="5" step="5" value={item.durationMinutes} onChange={(event) => setItem({ ...item, durationMinutes: event.target.value, endTime: "" })} placeholder="예: 90" className={`max-w-xs ${control}`} /><span className="text-sm muted">분</span></div></label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm font-bold">타입<select value={item.type} onChange={(event) => setItem({ ...item, type: event.target.value })} className={`mt-2 ${control}`}><option>관광</option><option>식사</option><option>활동</option><option>숙박</option><option>교통</option></select></label>
             <label className="text-sm font-bold">장소<select value={item.placeId} onChange={(event) => setItem({ ...item, placeId: event.target.value })} className={`mt-2 ${control}`}><option value="">장소 없음</option>{state.places.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}</select></label>
