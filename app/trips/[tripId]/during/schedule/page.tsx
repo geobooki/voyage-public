@@ -52,8 +52,8 @@ export default function SchedulePage() {
     date: defaultDate,
     title: "",
     time: "09:00",
-    endTime: "",
-    durationMinutes: "",
+    endTime: "10:00",
+    durationMinutes: "60",
     type: "Sightseeing",
     placeId: "",
     note: "",
@@ -77,8 +77,8 @@ export default function SchedulePage() {
       time: fiveMinuteTime(item.time),
       title: item.title.trim(),
       note: item.note.trim(),
-      endTime: usesScheduleDuration(item.type) ? item.endTime || undefined : undefined,
-      durationMinutes: usesScheduleDuration(item.type) && item.durationMinutes ? Math.max(5, Math.round(Number(item.durationMinutes) / 5) * 5) : undefined,
+      endTime: usesScheduleDuration(item.type) ? timingFromDuration(item.time, item.durationMinutes || "60").endTime : undefined,
+      durationMinutes: usesScheduleDuration(item.type) ? Math.max(5, Math.round(Number(item.durationMinutes || 60) / 5) * 5) : undefined,
       completed: current?.completed ?? false,
     };
     if (editingId) updateSchedule(editingId, value);
@@ -92,7 +92,7 @@ export default function SchedulePage() {
       date: entry.date,
       title: entry.title,
       time: fiveMinuteTime(entry.time),
-      ...timingFromDuration(fiveMinuteTime(entry.time), entry.durationMinutes ? String(entry.durationMinutes) : ""),
+      ...timingFromDuration(fiveMinuteTime(entry.time), entry.durationMinutes ? String(entry.durationMinutes) : "60"),
       ...(entry.endTime ? timingFromEnd(fiveMinuteTime(entry.time), entry.endTime) : {}),
       type: entry.type,
       placeId: entry.placeId ?? "",
@@ -104,7 +104,7 @@ export default function SchedulePage() {
   const visibleDesktopDates = dates.slice(schedulePage * 3, schedulePage * 3 + 3);
   const openAt = (date: string, time: string) => {
     setEditingId(null);
-    setItem({ ...empty(), date, time });
+    setItem({ ...empty(), date, time, ...timingFromDuration(time, "60") });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   return (
