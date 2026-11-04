@@ -42,3 +42,12 @@ export function layoutIntervals<T extends { start: number; end: number }>(entrie
   finish();
   return result;
 }
+
+export function usesScheduleDuration(type: string) {
+  const normalized = type.trim().toLowerCase();
+  return [
+    "관광", "교통", "활동", "항공", "기차", "버스", "택시", "도보",
+    "sightseeing", "tour", "transport", "flight", "train", "bus", "taxi",
+    "activity", "activities", "ferry", "car rental",
+  ].some((category) => normalized.includes(category));
+}

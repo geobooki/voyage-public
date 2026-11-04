@@ -2,7 +2,7 @@
 
 import type { Reservation, ScheduleItem } from "@/types/trip";
 import { formatDate } from "@/lib/date";
-import { timeMinutes, durationBetween, timingFromDuration, layoutIntervals } from "@/lib/schedule-time";
+import { timeMinutes, durationBetween, timingFromDuration, layoutIntervals, usesScheduleDuration } from "@/lib/schedule-time";
 
 // Keep the original compact two-hour spacing; expand only occupied intervals.
 function compactTimeline(events: { start: number; end: number }[]) {
@@ -43,22 +43,22 @@ export function TripScheduleCalendar({ dates, schedule, reservations, ko, onAdd,
 }) {
   return <div className="mt-6 grid items-start gap-3 md:grid-cols-3">{dates.map((date) => {
     const dayStays = reservations.filter((item) => isStay(item.type) && item.date <= date && date <= (item.endDate || item.date));
-    const untimedSchedule = schedule.filter((item) => item.date === date && !item.time);
-    const untimedReservations = reservations.filter((item) => item.date === date && !isStay(item.type) && !item.time && !item.departureTime);
+    const untimedSchedule = schedule.filter((item) => item.date === date && (!item.time || !usesScheduleDuration(item.type)));
+    const untimedReservations = reservations.filter((item) => item.date === date && !isStay(item.type) && ((!item.time && !item.departureTime) || !usesScheduleDuration(item.type)));
     const entries: CalendarEvent[] = [];
     const clip = (entry: CalendarEvent) => {
       if (Number.isFinite(entry.start) && Number.isFinite(entry.end) && entry.end > 0 && entry.start < 1440)
         entries.push({ ...entry, start: Math.max(0, entry.start), end: Math.min(1440, entry.end) });
     };
     for (const item of schedule) {
-      if (!item.time) continue;
+      if (!item.time || !usesScheduleDuration(item.type)) continue;
       const start = (dayNumber(item.date) - dayNumber(date)) * 1440 + timeMinutes(item.time);
       const duration = item.endTime ? durationBetween(item.time, item.endTime) : item.durationMinutes || 30;
       clip({ kind: "schedule", item, start, end: start + Math.max(5, duration), color: "var(--color-accent)" });
     }
     for (const item of reservations) {
       const time = item.departureTime || item.time;
-      if (!time || isStay(item.type)) continue;
+      if (!time || isStay(item.type) || !usesScheduleDuration(item.type)) continue;
       const start = (dayNumber(item.date) - dayNumber(date)) * 1440 + timeMinutes(time);
       const endOffset = item.endDate ? (dayNumber(item.endDate) - dayNumber(item.date)) * 1440 : 0;
       const duration = item.arrivalTime ? (endOffset > 0 ? endOffset + timeMinutes(item.arrivalTime) - timeMinutes(time) : durationBetween(time, item.arrivalTime)) : 30;
@@ -69,8 +69,8 @@ export function TripScheduleCalendar({ dates, schedule, reservations, ko, onAdd,
     return <section key={date} className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)]">
       <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-3"><p className="text-sm font-bold text-[var(--color-primary)]">{formatDate(date)} · {new Date(date + "T00:00:00").toLocaleDateString(ko ? "ko-KR" : "en-US", { weekday: "short" })}</p><p className="mt-1 text-xs muted">{events.length + untimedSchedule.length + untimedReservations.length}{ko ? "개 일정·예약 · 5분 단위" : " plans & bookings · 5-minute intervals"}</p></header>
       {dayStays.map((item) => <button key={item.id} type="button" onClick={() => onReservationClick(item)} className="block w-full border-b border-[var(--color-border)] px-3 py-2 text-left text-xs font-bold">⌂ {item.title}</button>)}
-      {untimedReservations.map((item) => <button key={item.id} type="button" onClick={() => onReservationClick(item)} className="block w-full border-b border-[var(--color-border)] px-3 py-2 text-left text-xs">{ko ? "시간 미정" : "No time"} · {item.title}</button>)}
-      {untimedSchedule.map((item) => <button key={item.id} type="button" onClick={() => onScheduleClick(item)} className="block w-full border-b border-[var(--color-border)] px-3 py-2 text-left text-xs">{ko ? "시간 미정" : "No time"} · {item.title}</button>)}
+      {untimedReservations.map((item) => <button key={item.id} type="button" onClick={() => onReservationClick(item)} title={[item.title, item.memo].filter(Boolean).join("\n")} className="flex w-full items-center gap-2 border-b border-[var(--color-border)] px-3 py-2 text-left text-xs"><span className="shrink-0 muted">{item.departureTime || item.time || (ko ? "시간 미정" : "No time")}</span><span className="min-w-0 truncate font-bold">{item.title}</span></button>)}
+      {untimedSchedule.map((item) => <button key={item.id} type="button" onClick={() => onScheduleClick(item)} title={[item.title, item.note].filter(Boolean).join("\n")} className={`flex w-full items-center gap-2 border-b border-[var(--color-border)] px-3 py-2 text-left text-xs ${item.completed ? "opacity-60" : ""}`}><span className="shrink-0 muted">{item.time || (ko ? "시간 미정" : "No time")}</span><span className={`min-w-0 truncate font-bold ${item.completed ? "line-through" : ""}`}>{item.title}</span></button>)}
       <div className="max-h-[640px] overflow-y-auto" aria-label={ko ? "여행 일정 시간표" : "Trip timeline"}>
         <div className="relative" style={{ height: timeline.height }}>
           {timeline.segments.map((segment) => {
