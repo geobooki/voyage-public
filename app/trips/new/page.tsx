@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { DestinationSelect } from "@/app/components/destination-select";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authenticatedFetch } from "@/lib/authenticated-fetch";
@@ -103,33 +104,8 @@ export default function NewTripPage() {
                 className={control}
               />
             </label>
-            <fieldset><legend className="mb-2 block text-sm font-bold">여행 유형</legend><div className="grid grid-cols-2 gap-3"><label className={`rounded-xl border px-4 py-3 text-sm font-bold ${form.tripType === "domestic" ? "border-[var(--color-primary)] bg-[var(--color-surface-muted)]" : "border-[var(--color-border)]"}`}><input type="radio" name="tripType" value="domestic" checked={form.tripType === "domestic"} onChange={() => setForm({ ...form, tripType: "domestic", destinationCurrency: "KRW" })} className="mr-2"/>국내</label><label className={`rounded-xl border px-4 py-3 text-sm font-bold ${form.tripType === "international" ? "border-[var(--color-primary)] bg-[var(--color-surface-muted)]" : "border-[var(--color-border)]"}`}><input type="radio" name="tripType" value="international" checked={form.tripType === "international"} onChange={() => setForm({ ...form, tripType: "international", destinationCurrency: form.destinationCurrency === "KRW" ? "JPY" : form.destinationCurrency })} className="mr-2"/>국외</label></div><p className="mt-1 text-xs muted">기본 준비물 목록과 도착 통화를 여행 유형에 맞춰 설정합니다.</p></fieldset>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <label>
-                <span className="mb-2 block text-sm font-bold">
-                  {t("country")}
-                </span>
-                <input
-                  value={form.country}
-                  onChange={(e) =>
-                    setForm({ ...form, country: e.target.value })
-                  }
-                  placeholder="대한민국"
-                  className={control}
-                />
-              </label>
-              <label>
-                <span className="mb-2 block text-sm font-bold">
-                  {t("city")}
-                </span>
-                <input
-                  value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  placeholder="서울"
-                  className={control}
-                />
-              </label>
-            </div>
+            <fieldset><legend className="mb-2 block text-sm font-bold">여행 유형</legend><div className="grid grid-cols-2 gap-3"><label className={`rounded-xl border px-4 py-3 text-sm font-bold ${form.tripType === "domestic" ? "border-[var(--color-primary)] bg-[var(--color-surface-muted)]" : "border-[var(--color-border)]"}`}><input type="radio" name="tripType" value="domestic" checked={form.tripType === "domestic"} onChange={() => setForm({ ...form, tripType: "domestic", country: "대한민국", city: form.country === "대한민국" ? form.city : "", destinationCurrency: "KRW" })} className="mr-2"/>국내</label><label className={`rounded-xl border px-4 py-3 text-sm font-bold ${form.tripType === "international" ? "border-[var(--color-primary)] bg-[var(--color-surface-muted)]" : "border-[var(--color-border)]"}`}><input type="radio" name="tripType" value="international" checked={form.tripType === "international"} onChange={() => setForm({ ...form, tripType: "international", destinationCurrency: form.destinationCurrency === "KRW" ? "JPY" : form.destinationCurrency })} className="mr-2"/>국외</label></div><p className="mt-1 text-xs muted">기본 준비물 목록과 도착 통화를 여행 유형에 맞춰 설정합니다.</p></fieldset>
+            <DestinationSelect required country={form.country} city={form.city} domestic={form.tripType === "domestic"} onChange={(destination) => setForm({ ...form, ...destination })}/>
             <label className="block">
               <span className="mb-2 block text-sm font-bold">도착 통화</span>
               {form.tripType === "international" && <select value={form.destinationCurrency} onChange={(e) => setForm({ ...form, destinationCurrency: e.target.value })} className={control}>

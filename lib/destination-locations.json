@@ -1,0 +1,920 @@
+{
+  "KR:서울": {
+    "latitude": 37.566,
+    "longitude": 126.9784,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:부산": {
+    "latitude": 35.10168,
+    "longitude": 129.03004,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:인천": {
+    "latitude": 37.45646,
+    "longitude": 126.70515,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:대구": {
+    "latitude": 35.87102,
+    "longitude": 128.60121,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:대전": {
+    "latitude": 36.35022,
+    "longitude": 127.3848,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:광주": {
+    "latitude": 35.15472,
+    "longitude": 126.91556,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:울산": {
+    "latitude": 35.53917,
+    "longitude": 129.3124,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:세종": {
+    "latitude": 36.59245,
+    "longitude": 127.29223,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:수원": {
+    "latitude": 37.27818,
+    "longitude": 127.03164,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:성남": {
+    "latitude": 37.43861,
+    "longitude": 127.13778,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:고양": {
+    "latitude": 37.65639,
+    "longitude": 126.835,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:용인": {
+    "latitude": 34.53333,
+    "longitude": 126.28333,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:화성": {
+    "latitude": 37.20682,
+    "longitude": 126.8169,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:부천": {
+    "latitude": 37.49889,
+    "longitude": 126.78306,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:안산": {
+    "latitude": 37.32361,
+    "longitude": 126.82194,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:안양": {
+    "latitude": 37.3925,
+    "longitude": 126.92694,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:남양주": {
+    "latitude": 37.63667,
+    "longitude": 127.21417,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:평택": {
+    "latitude": 36.99472,
+    "longitude": 127.08889,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:시흥": {
+    "latitude": 37.45177,
+    "longitude": 126.91079,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:파주": {
+    "latitude": 37.761,
+    "longitude": 126.77272,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:의정부": {
+    "latitude": 37.7415,
+    "longitude": 127.0474,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:김포": {
+    "latitude": 37.62361,
+    "longitude": 126.71417,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:광주, 경기도": {
+    "latitude": 37.41,
+    "longitude": 127.25722,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:광명": {
+    "latitude": 37.47722,
+    "longitude": 126.86639,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:군포": {
+    "latitude": 37.3675,
+    "longitude": 126.94694,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:하남": {
+    "latitude": 37.54,
+    "longitude": 127.20556,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:오산": {
+    "latitude": 37.15222,
+    "longitude": 127.07056,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:양주": {
+    "latitude": 37.83311,
+    "longitude": 127.06169,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:이천": {
+    "latitude": 37.27917,
+    "longitude": 127.4425,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:구리": {
+    "latitude": 37.5986,
+    "longitude": 127.1394,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:안성": {
+    "latitude": 37.01083,
+    "longitude": 127.27028,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:포천": {
+    "latitude": 35.23468,
+    "longitude": 126.45359,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:의왕": {
+    "latitude": 37.36528,
+    "longitude": 126.94778,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:여주": {
+    "latitude": 37.29583,
+    "longitude": 127.63389,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:동두천": {
+    "latitude": 37.911,
+    "longitude": 127.0568,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:과천": {
+    "latitude": 37.42889,
+    "longitude": 126.98917,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:춘천": {
+    "latitude": 37.88302,
+    "longitude": 127.7289,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:원주": {
+    "latitude": 37.35139,
+    "longitude": 127.94528,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:강릉": {
+    "latitude": 37.75266,
+    "longitude": 128.87239,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:동해": {
+    "latitude": 37.54389,
+    "longitude": 129.10693,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:태백": {
+    "latitude": 37.84014,
+    "longitude": 127.76642,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:속초": {
+    "latitude": 38.20701,
+    "longitude": 128.59181,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:삼척": {
+    "latitude": 37.44056,
+    "longitude": 129.17084,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:청주": {
+    "latitude": 36.63722,
+    "longitude": 127.48972,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:충주": {
+    "latitude": 36.97666,
+    "longitude": 127.9287,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:제천": {
+    "latitude": 35.37031,
+    "longitude": 127.3123,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:천안": {
+    "latitude": 36.8065,
+    "longitude": 127.1522,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:공주": {
+    "latitude": 36.45556,
+    "longitude": 127.12472,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:보령": {
+    "latitude": 36.34931,
+    "longitude": 126.59772,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:아산": {
+    "latitude": 36.78361,
+    "longitude": 127.00417,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:서산": {
+    "latitude": 36.78167,
+    "longitude": 126.45222,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:논산": {
+    "latitude": 36.20389,
+    "longitude": 127.08472,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:계룡": {
+    "latitude": 35.45303,
+    "longitude": 126.58207,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:당진": {
+    "latitude": 37.02613,
+    "longitude": 127.43997,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:전주": {
+    "latitude": 35.82483,
+    "longitude": 127.14796,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:군산": {
+    "latitude": 35.97861,
+    "longitude": 126.71139,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:익산": {
+    "latitude": 35.94389,
+    "longitude": 126.95444,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:정읍": {
+    "latitude": 35.60004,
+    "longitude": 126.91699,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:남원": {
+    "latitude": 35.41,
+    "longitude": 127.38583,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:김제": {
+    "latitude": 36.47397,
+    "longitude": 128.3857,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:목포": {
+    "latitude": 34.81282,
+    "longitude": 126.39181,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:여수": {
+    "latitude": 34.76062,
+    "longitude": 127.66215,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:순천": {
+    "latitude": 34.9505,
+    "longitude": 127.48784,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:나주": {
+    "latitude": 35.0292,
+    "longitude": 126.7175,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:광양": {
+    "latitude": 34.9414,
+    "longitude": 127.69569,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:포항": {
+    "latitude": 36.02917,
+    "longitude": 129.3648,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:경주": {
+    "latitude": 35.84278,
+    "longitude": 129.21167,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:김천": {
+    "latitude": 36.12176,
+    "longitude": 128.11981,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:안동": {
+    "latitude": 36.56798,
+    "longitude": 128.72972,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:구미": {
+    "latitude": 36.1136,
+    "longitude": 128.336,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:영주": {
+    "latitude": 36.82167,
+    "longitude": 128.63083,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:영천": {
+    "latitude": 35.30535,
+    "longitude": 126.7963,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:상주": {
+    "latitude": 36.41528,
+    "longitude": 128.16055,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:문경": {
+    "latitude": 36.59458,
+    "longitude": 128.19946,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:경산": {
+    "latitude": 35.82333,
+    "longitude": 128.73778,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:창원": {
+    "latitude": 35.22806,
+    "longitude": 128.6811,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:진주": {
+    "latitude": 35.19278,
+    "longitude": 128.08472,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:통영": {
+    "latitude": 34.84957,
+    "longitude": 128.4278,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:사천": {
+    "latitude": 36.23315,
+    "longitude": 126.58873,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:김해": {
+    "latitude": 35.23417,
+    "longitude": 128.8811,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:밀양": {
+    "latitude": 35.49333,
+    "longitude": 128.74889,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:거제": {
+    "latitude": 34.81379,
+    "longitude": 128.70557,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:양산": {
+    "latitude": 35.34199,
+    "longitude": 129.03358,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:제주": {
+    "latitude": 33.40167,
+    "longitude": 126.54611,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:서귀포": {
+    "latitude": 33.25333,
+    "longitude": 126.56181,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:양양": {
+    "latitude": 38.0776,
+    "longitude": 128.6179,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:평창": {
+    "latitude": 37.37028,
+    "longitude": 128.39307,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:가평": {
+    "latitude": 37.83101,
+    "longitude": 127.51059,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:양평": {
+    "latitude": 37.48972,
+    "longitude": 127.49056,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:담양": {
+    "latitude": 35.31889,
+    "longitude": 126.98389,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:해남": {
+    "latitude": 34.57111,
+    "longitude": 126.59889,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:완도": {
+    "latitude": 34.34905,
+    "longitude": 126.6949,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "KR:울릉": {
+    "latitude": 37.5006,
+    "longitude": 130.8606,
+    "timezone": "Asia/Seoul",
+    "country_code": "KR"
+  },
+  "JP:도쿄": {
+    "latitude": 35.6895,
+    "longitude": 139.69171,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:오사카": {
+    "latitude": 34.69379,
+    "longitude": 135.50107,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:교토": {
+    "latitude": 35.02107,
+    "longitude": 135.75385,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:후쿠오카": {
+    "latitude": 33.6,
+    "longitude": 130.41667,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:삿포로": {
+    "latitude": 43.06667,
+    "longitude": 141.35,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:나고야": {
+    "latitude": 35.18147,
+    "longitude": 136.9064,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:요코하마": {
+    "latitude": 35.43333,
+    "longitude": 139.65,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:고베": {
+    "latitude": 34.6913,
+    "longitude": 135.183,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:나라": {
+    "latitude": 34.68505,
+    "longitude": 135.80486,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:히로시마": {
+    "latitude": 34.4,
+    "longitude": 132.45,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:나가사키": {
+    "latitude": 32.75,
+    "longitude": 129.88333,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:가고시마": {
+    "latitude": 31.56667,
+    "longitude": 130.55,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:가나자와": {
+    "latitude": 36.6,
+    "longitude": 136.61667,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:나하": {
+    "latitude": 26.213,
+    "longitude": 127.67851,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:하코다테": {
+    "latitude": 41.77583,
+    "longitude": 140.73666,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:오타루": {
+    "latitude": 43.18944,
+    "longitude": 141.00221,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "JP:벳푸": {
+    "latitude": 33.27945,
+    "longitude": 131.49751,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  },
+  "VN:다낭": {
+    "latitude": 16.06778,
+    "longitude": 108.22083,
+    "timezone": "Asia/Ho_Chi_Minh",
+    "country_code": "VN"
+  },
+  "VN:하노이": {
+    "latitude": 21.0245,
+    "longitude": 105.84117,
+    "timezone": "Asia/Bangkok",
+    "country_code": "VN"
+  },
+  "VN:호찌민": {
+    "latitude": 10.82302,
+    "longitude": 106.62965,
+    "timezone": "Asia/Ho_Chi_Minh",
+    "country_code": "VN"
+  },
+  "VN:나트랑": {
+    "latitude": 12.24507,
+    "longitude": 109.19432,
+    "timezone": "Asia/Ho_Chi_Minh",
+    "country_code": "VN"
+  },
+  "VN:호이안": {
+    "latitude": 15.87944,
+    "longitude": 108.335,
+    "timezone": "Asia/Ho_Chi_Minh",
+    "country_code": "VN"
+  },
+  "VN:후에": {
+    "latitude": 16.4619,
+    "longitude": 107.59546,
+    "timezone": "Asia/Bangkok",
+    "country_code": "VN"
+  },
+  "VN:달랏": {
+    "latitude": 11.94646,
+    "longitude": 108.44193,
+    "timezone": "Asia/Ho_Chi_Minh",
+    "country_code": "VN"
+  },
+  "VN:푸꾸옥": {
+    "latitude": 10.22409,
+    "longitude": 103.97156,
+    "timezone": "Asia/Ho_Chi_Minh",
+    "country_code": "VN"
+  },
+  "TH:방콕": {
+    "latitude": 13.75398,
+    "longitude": 100.50144,
+    "timezone": "Asia/Bangkok",
+    "country_code": "TH"
+  },
+  "TH:치앙마이": {
+    "latitude": 18.79038,
+    "longitude": 98.98468,
+    "timezone": "Asia/Bangkok",
+    "country_code": "TH"
+  },
+  "TH:치앙라이": {
+    "latitude": 19.90858,
+    "longitude": 99.8325,
+    "timezone": "Asia/Bangkok",
+    "country_code": "TH"
+  },
+  "TH:푸껫": {
+    "latitude": 7.95793,
+    "longitude": 98.34089,
+    "timezone": "Asia/Bangkok",
+    "country_code": "TH"
+  },
+  "TH:파타야": {
+    "latitude": 12.93333,
+    "longitude": 100.88333,
+    "timezone": "Asia/Bangkok",
+    "country_code": "TH"
+  },
+  "TH:끄라비": {
+    "latitude": 8.07257,
+    "longitude": 98.91052,
+    "timezone": "Asia/Bangkok",
+    "country_code": "TH"
+  },
+  "TW:타이베이": {
+    "latitude": 25.05306,
+    "longitude": 121.52639,
+    "timezone": "Asia/Taipei",
+    "country_code": "TW"
+  },
+  "TW:가오슝": {
+    "latitude": 22.61626,
+    "longitude": 120.31333,
+    "timezone": "Asia/Taipei",
+    "country_code": "TW"
+  },
+  "TW:타이중": {
+    "latitude": 24.1469,
+    "longitude": 120.6839,
+    "timezone": "Asia/Taipei",
+    "country_code": "TW"
+  },
+  "TW:타이난": {
+    "latitude": 22.99259,
+    "longitude": 120.20507,
+    "timezone": "Asia/Taipei",
+    "country_code": "TW"
+  },
+  "TW:화롄": {
+    "latitude": 23.97694,
+    "longitude": 121.60444,
+    "timezone": "Asia/Taipei",
+    "country_code": "TW"
+  },
+  "US:뉴욕": {
+    "latitude": 40.71427,
+    "longitude": -74.00597,
+    "timezone": "America/New_York",
+    "country_code": "US"
+  },
+  "US:로스앤젤레스": {
+    "latitude": 34.05223,
+    "longitude": -118.24368,
+    "timezone": "America/Los_Angeles",
+    "country_code": "US"
+  },
+  "US:샌프란시스코": {
+    "latitude": 37.77493,
+    "longitude": -122.41942,
+    "timezone": "America/Los_Angeles",
+    "country_code": "US"
+  },
+  "US:라스베이거스": {
+    "latitude": 36.17497,
+    "longitude": -115.13722,
+    "timezone": "America/Los_Angeles",
+    "country_code": "US"
+  },
+  "US:시애틀": {
+    "latitude": 47.60621,
+    "longitude": -122.33207,
+    "timezone": "America/Los_Angeles",
+    "country_code": "US"
+  },
+  "US:호놀룰루": {
+    "latitude": 21.30694,
+    "longitude": -157.85834,
+    "timezone": "Pacific/Honolulu",
+    "country_code": "US"
+  },
+  "US:보스턴": {
+    "latitude": 42.35843,
+    "longitude": -71.05977,
+    "timezone": "America/New_York",
+    "country_code": "US"
+  },
+  "US:시카고": {
+    "latitude": 41.85003,
+    "longitude": -87.65005,
+    "timezone": "America/Chicago",
+    "country_code": "US"
+  },
+  "US:워싱턴": {
+    "latitude": 38.89511,
+    "longitude": -77.03637,
+    "timezone": "America/New_York",
+    "country_code": "US"
+  },
+  "US:샌디에이고": {
+    "latitude": 32.71571,
+    "longitude": -117.16472,
+    "timezone": "America/Los_Angeles",
+    "country_code": "US"
+  },
+  "US:마이애미": {
+    "latitude": 25.77427,
+    "longitude": -80.19366,
+    "timezone": "America/New_York",
+    "country_code": "US"
+  },
+  "FR:파리": {
+    "latitude": 48.85341,
+    "longitude": 2.3488,
+    "timezone": "Europe/Paris",
+    "country_code": "FR"
+  },
+  "FR:니스": {
+    "latitude": 43.70313,
+    "longitude": 7.26608,
+    "timezone": "Europe/Paris",
+    "country_code": "FR"
+  },
+  "FR:리옹": {
+    "latitude": 45.74906,
+    "longitude": 4.84789,
+    "timezone": "Europe/Paris",
+    "country_code": "FR"
+  },
+  "FR:마르세유": {
+    "latitude": 43.29695,
+    "longitude": 5.38107,
+    "timezone": "Europe/Paris",
+    "country_code": "FR"
+  },
+  "FR:보르도": {
+    "latitude": 44.84124,
+    "longitude": -0.58046,
+    "timezone": "Europe/Paris",
+    "country_code": "FR"
+  },
+  "FR:스트라스부르": {
+    "latitude": 48.58392,
+    "longitude": 7.74553,
+    "timezone": "Europe/Paris",
+    "country_code": "FR"
+  },
+  "IT:로마": {
+    "latitude": 41.89193,
+    "longitude": 12.51133,
+    "timezone": "Europe/Rome",
+    "country_code": "IT"
+  },
+  "IT:밀라노": {
+    "latitude": 45.46427,
+    "longitude": 9.18951,
+    "timezone": "Europe/Rome",
+    "country_code": "IT"
+  },
+  "IT:피렌체": {
+    "latitude": 43.77925,
+    "longitude": 11.24626,
+    "timezone": "Europe/Rome",
+    "country_code": "IT"
+  },
+  "IT:베네치아": {
+    "latitude": 45.43713,
+    "longitude": 12.33265,
+    "timezone": "Europe/Rome",
+    "country_code": "IT"
+  },
+  "IT:나폴리": {
+    "latitude": 40.85216,
+    "longitude": 14.26811,
+    "timezone": "Europe/Rome",
+    "country_code": "IT"
+  },
+  "IT:볼로냐": {
+    "latitude": 44.49381,
+    "longitude": 11.33875,
+    "timezone": "Europe/Rome",
+    "country_code": "IT"
+  },
+  "JP:센다이": {
+    "latitude": 38.26667,
+    "longitude": 140.86667,
+    "timezone": "Asia/Tokyo",
+    "country_code": "JP"
+  }
+}
