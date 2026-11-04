@@ -14,9 +14,9 @@ import { ReservationDocuments } from "@/app/components/reservation-documents";
 import { TripScheduleCalendar } from "@/app/components/trip-schedule-calendar";
 import { formatDate } from "@/lib/date";
 import { authenticatedFetch } from "@/lib/authenticated-fetch";
-import type { DashboardItem, Reservation, ScheduleItem } from "@/types/trip";
+import type { DashboardItem, Reservation, ScheduleItem, WeatherDay } from "@/types/trip";
 
-type TripMeta = { title: string; dates: string; city: string; startDate: string; endDate: string; status: string; destinationCurrency: string; tripType: "domestic" | "international" };
+type TripMeta = { title: string; dates: string; country: string; city: string; startDate: string; endDate: string; status: string; destinationCurrency: string; tripType: "domestic" | "international" };
 type QuickReservation = { title: string; type: string; date: string; endDate: string; time: string; location: string; departureLocation: string; arrivalLocation: string; departureTime: string; arrivalTime: string; airline: string; terminal: string; reservationNumber: string; memo: string; link: string };
 const blankQuickReservation: QuickReservation = { title: "", type: "Flight", date: "", endDate: "", time: "", location: "", departureLocation: "", arrivalLocation: "", departureTime: "", arrivalTime: "", airline: "", terminal: "", reservationNumber: "", memo: "", link: "" };
 const localDateIso = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -31,6 +31,7 @@ function TripPageContent() {
   const [trip, setTrip] = useState<TripMeta>({
     title: "여행 정보를 불러오는 중…",
     dates: "날짜를 정해 주세요",
+    country: "",
     city: "",
     status: "planning",
     startDate: "",
@@ -77,6 +78,7 @@ function TripPageContent() {
           setTrip({
             title: local.title || `${local.city}, ${local.country}`,
             dates: `${local.startDate} — ${local.endDate}`,
+            country: String(local.country || ""),
             city: String(local.city || ""),
             startDate: local.startDate || "",
             endDate: local.endDate || "",
@@ -91,6 +93,7 @@ function TripPageContent() {
             setTrip({
               title: String(result.trip.title),
               dates: `${String(result.trip.start_date ?? "Dates to be planned")} — ${String(result.trip.end_date ?? "")}`,
+              country: String(result.trip.country ?? ""),
               city: String(result.trip.city ?? ""),
               startDate: String(result.trip.start_date ?? ""),
               endDate: String(result.trip.end_date ?? ""),
@@ -105,16 +108,24 @@ function TripPageContent() {
     };
     void load();
   }, [tripId, user]);
-  const weatherRequested = useRef(false);
+  const weatherKey = JSON.stringify([tripId, trip.city, trip.country, trip.startDate, trip.endDate]);
+  const [automaticWeather, setAutomaticWeather] = useState<{ key: string; days: WeatherDay[]; status: "loading" | "ready" | "error"; message?: string }>();
+  const [weatherRetry, setWeatherRetry] = useState(0);
   useEffect(() => {
-    if (!user || weatherRequested.current || state.weather.length || !trip.city || !trip.startDate) return;
-    weatherRequested.current = true;
-    void authenticatedFetch(`/api/trips/${tripId}/weather/auto`, { method: "POST" })
-      .then((response) => {
-        if (response.ok) window.setTimeout(refresh, 150);
+    if (!user || (!trip.city && !trip.country) || !trip.startDate) return;
+    const controller = new AbortController();
+    setAutomaticWeather({ key: weatherKey, days: [], status: "loading" });
+    void authenticatedFetch(`/api/trips/${tripId}/weather/auto`, { signal: controller.signal })
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "날씨를 불러오지 못했습니다.");
+        if (!controller.signal.aborted) setAutomaticWeather({ key: weatherKey, days: result.weather || [], status: "ready", message: result.message });
       })
-      .catch(() => undefined);
-  }, [refresh, state.weather.length, trip.city, trip.startDate, tripId, user]);
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) setAutomaticWeather({ key: weatherKey, days: [], status: "error", message: error instanceof Error ? error.message : "날씨를 불러오지 못했습니다." });
+      });
+    return () => controller.abort();
+  }, [tripId, trip.city, trip.country, trip.startDate, trip.endDate, weatherKey, weatherRetry, user]);
   const completeTrip = async () => {
     setSavingStatus(true);
     setTrip((current) => ({ ...current, status: "completed" }));
@@ -149,7 +160,8 @@ function TripPageContent() {
   const total = formatTotals(state.expenses);
   const expenseCategories = [...new Set([...state.expenseCategories, ...state.budgetCategories])];
   const remainingExchange = Math.max(0, (state.exchange.plannedExchange || state.exchange.expectedCash || 0) - (state.exchange.actualExchange || 0));
-  const overviewWeather = state.weather.find((item) => item.date === localDateIso(new Date())) || state.weather[0];
+  const weatherResult = automaticWeather?.key === weatherKey ? automaticWeather : undefined;
+  const overviewWeather = weatherResult?.days.find((item) => item.date === localDateIso(new Date())) || weatherResult?.days[0];
   const plannedTotal = formatTotals(state.budget);
   const sections = ko
     ? [
@@ -480,7 +492,7 @@ function TripPageContent() {
           </article>
           <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "현재까지 지출" : "Spent so far"}</p><p className="mt-2 text-xl font-bold">{total || (ko ? "아직 지출 없음" : "No spending yet")}</p><p className="mt-1 text-xs muted">{state.expenses.length}{ko ? "건" : " expenses"}</p></article>
           {trip.tripType === "international" && <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "남은 환전금액" : "Remaining exchange"}</p><p className="mt-2 text-xl font-bold">{remainingExchange.toLocaleString()} {state.exchange.to || "JPY"}</p><p className="mt-1 text-xs muted">{ko ? "현금 환전 기준" : "Cash exchange balance"}</p></article>}
-          <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "여행 날씨" : "Trip weather"}</p>{overviewWeather ? <div className="mt-2 flex items-center gap-2"><span className="text-2xl" aria-hidden="true">{overviewWeather.icon}</span><div><p className="text-sm font-bold">{overviewWeather.condition}</p><p className="text-xs muted">{overviewWeather.date} · {overviewWeather.temperature}°C</p></div></div> : <div className="mt-2"><p className="text-sm font-bold">{ko ? "날씨 정보 없음" : "No weather yet"}</p><Link href={`/trips/${tripId}/during/weather`} className="mt-1 block text-xs font-bold text-[var(--color-primary)]">{ko ? "날씨 추가 →" : "Add weather →"}</Link></div>}</article>
+          <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "여행 날씨" : "Trip weather"}</p>{overviewWeather ? <div className="mt-2 flex items-center gap-2"><span className="text-2xl" aria-hidden="true">{overviewWeather.icon}</span><div><p className="text-sm font-bold">{overviewWeather.condition}</p><p className="text-xs muted">{overviewWeather.date} · {trip.city || trip.country} · {ko ? "최고 " : "High "}{overviewWeather.temperature}°C</p></div></div> : <div className="mt-2"><p className="text-sm font-bold" role="status">{weatherResult?.status === "loading" ? (ko ? "날씨를 자동으로 불러오는 중…" : "Loading weather…") : weatherResult?.status === "error" ? (ko ? "날씨를 불러오지 못했어요." : "Could not load weather.") : weatherResult?.message ? (ko ? weatherResult.message : "Weather is outside the available forecast window.") : (ko ? "여행 날짜와 장소를 설정하면 자동으로 표시돼요." : "Set trip dates and destination to see weather automatically.")}</p>{weatherResult?.status === "error" && <button type="button" onClick={() => setWeatherRetry((value) => value + 1)} className="mt-1 text-xs font-bold text-[var(--color-primary)]">{ko ? "다시 불러오기" : "Retry"}</button>}</div>}</article>
         </section>
         <section data-section="trip-schedule-board" className="card mt-7 p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
