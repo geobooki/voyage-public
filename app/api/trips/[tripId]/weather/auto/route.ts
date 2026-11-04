@@ -36,6 +36,7 @@ async function loadWeather(request: Request, context: Context, save: boolean) {
   const end = String(trip.end_date || start).slice(0, 10);
   if (!validDate(start) || !validDate(end) || start > end) return NextResponse.json({ error: "여행 날짜를 확인해 주세요." }, { status: 400 });
 
+  let stage: "location" | "forecast" = "location";
   try {
     // Search by city name rather than a combined city/country string.
     const geoResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city || country)}&count=10&language=ko&format=json`, { next: { revalidate: 86400 }, signal: AbortSignal.timeout(10000) });
@@ -47,6 +48,7 @@ async function loadWeather(request: Request, context: Context, save: boolean) {
     const matches = (location: Location) => [location.country, location.country_code, location.country_code ? names.of(location.country_code) : "", location.country_code ? englishNames.of(location.country_code) : ""].some((name) => name && normalize(name) === normalize(country));
     const location = geo.results?.find(matches) || geo.results?.[0];
     if (!location) return NextResponse.json({ error: "여행 장소의 위치를 찾지 못했습니다." }, { status: 404 });
+    stage = "forecast";
     const today = dateInZone(new Date(), location.timezone || "UTC");
     const earliest = shiftDate(today, -92);
     const latest = shiftDate(today, 15);
@@ -70,8 +72,10 @@ async function loadWeather(request: Request, context: Context, save: boolean) {
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return NextResponse.json({ weather: rows, source: "open-meteo", message: rows.length ? undefined : "해당 날짜의 날씨가 아직 제공되지 않아요." });
-  } catch {
-    return NextResponse.json({ error: "날씨를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요." }, { status: 502 });
+  } catch (error: unknown) {
+    const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+    const message = stage === "location" ? "여행 장소 검색에 실패했어요. 도시와 국가를 확인한 뒤 다시 불러와 주세요." : "여행 날짜의 날씨를 불러오지 못했어요. 잠시 후 다시 불러와 주세요.";
+    return NextResponse.json({ error: timedOut ? "날씨 서비스 응답이 지연되고 있어요. 다시 불러와 주세요." : message }, { status: 502 });
   }
 }
 

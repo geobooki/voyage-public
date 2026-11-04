@@ -130,6 +130,10 @@ function TripPageContent() {
   useEffect(() => {
     if (!user || (!trip.city && !trip.country) || !trip.startDate) return;
     const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      setAutomaticWeather({ key: weatherKey, days: [], status: "error", message: "날씨 조회 시간이 초과됐어요. 다시 불러오기를 눌러 주세요." });
+      controller.abort();
+    }, 25000);
     setAutomaticWeather({ key: weatherKey, days: [], status: "loading" });
     void authenticatedFetch(`/api/trips/${tripId}/weather/auto`, { signal: controller.signal })
       .then(async (response) => {
@@ -139,8 +143,9 @@ function TripPageContent() {
       })
       .catch((error: unknown) => {
         if (!controller.signal.aborted) setAutomaticWeather({ key: weatherKey, days: [], status: "error", message: error instanceof Error ? error.message : "날씨를 불러오지 못했습니다." });
-      });
-    return () => controller.abort();
+      })
+      .finally(() => window.clearTimeout(timeout));
+    return () => { window.clearTimeout(timeout); controller.abort(); };
   }, [tripId, trip.city, trip.country, trip.startDate, trip.endDate, weatherKey, weatherRetry, user]);
   const completeTrip = async () => {
     setSavingStatus(true);
@@ -508,7 +513,7 @@ function TripPageContent() {
           </article>
           <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "현재까지 지출" : "Spent so far"}</p><p className="mt-2 text-xl font-bold">{total || (ko ? "아직 지출 없음" : "No spending yet")}</p><p className="mt-1 text-xs muted">{state.expenses.length}{ko ? "건" : " expenses"}</p></article>
           {trip.tripType === "international" && <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "남은 환전금액" : "Remaining exchange"}</p><p className="mt-2 text-xl font-bold">{remainingExchange.toLocaleString()} {state.exchange.to || "JPY"}</p><p className="mt-1 text-xs muted">{ko ? "현금 환전 기준" : "Cash exchange balance"}</p></article>}
-          <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "여행 날씨" : "Trip weather"}</p>{overviewWeather ? <div className="mt-2 flex items-center gap-2"><span className="text-2xl" aria-hidden="true">{overviewWeather.icon}</span><div><p className="text-sm font-bold">{overviewWeather.condition}</p><p className="text-xs muted">{overviewWeather.date} · {trip.city || trip.country} · {ko ? "최고 " : "High "}{overviewWeather.temperature}°C</p></div></div> : <div className="mt-2"><p className="text-sm font-bold" role="status">{weatherResult?.status === "loading" ? (ko ? "날씨를 자동으로 불러오는 중…" : "Loading weather…") : weatherResult?.status === "error" ? (ko ? "날씨를 불러오지 못했어요." : "Could not load weather.") : weatherResult?.message ? (ko ? weatherResult.message : "Weather is outside the available forecast window.") : (ko ? "여행 날짜와 장소를 설정하면 자동으로 표시돼요." : "Set trip dates and destination to see weather automatically.")}</p>{weatherResult?.status === "error" && <button type="button" onClick={() => setWeatherRetry((value) => value + 1)} className="mt-1 text-xs font-bold text-[var(--color-primary)]">{ko ? "다시 불러오기" : "Retry"}</button>}</div>}</article>
+          <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "여행 날씨" : "Trip weather"}</p>{overviewWeather ? <div className="mt-2 flex items-center gap-2"><span className="text-2xl" aria-hidden="true">{overviewWeather.icon}</span><div><p className="text-sm font-bold">{overviewWeather.condition}</p><p className="text-xs muted">{overviewWeather.date} · {trip.city || trip.country} · {ko ? "최고 " : "High "}{overviewWeather.temperature}°C</p></div></div> : <div className="mt-2"><p className="text-sm font-bold" role="status">{weatherResult?.status === "loading" ? (ko ? "날씨를 자동으로 불러오는 중…" : "Loading weather…") : weatherResult?.status === "error" ? (ko ? weatherResult.message || "날씨를 불러오지 못했어요." : "Could not load weather. Please try again.") : weatherResult?.message ? (ko ? weatherResult.message : "Weather is outside the available forecast window.") : (ko ? "여행 날짜와 장소를 설정하면 자동으로 표시돼요." : "Set trip dates and destination to see weather automatically.")}</p>{weatherResult?.status === "error" && <button type="button" onClick={() => setWeatherRetry((value) => value + 1)} className="mt-1 text-xs font-bold text-[var(--color-primary)]">{ko ? "다시 불러오기" : "Retry"}</button>}</div>}</article>
         </section>
         <section data-section="trip-schedule-board" className="card mt-7 p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
