@@ -507,7 +507,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
                 id: String(item.id),
                 date: String(item.date ?? ""),
                 title: String(item.title),
-                time: String(item.time ?? ""),
+                time: String(item.time ?? "").slice(0, 5),
                 endTime: item.end_time ? String(item.end_time).slice(0, 5) : undefined,
                 durationMinutes: item.duration_minutes == null ? undefined : Number(item.duration_minutes),
                 type: String(item.type),
