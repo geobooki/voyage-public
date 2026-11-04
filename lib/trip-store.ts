@@ -959,8 +959,10 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     }));
     sync(tripId, "dashboard", { ...changes, id: itemId }, "PATCH");
   };
+  const refresh = () => setReloadNonce((value) => value + 1);
   return {
     state,
+    refresh,
     toggleChecklist,
     addChecklist,
     removeChecklist,
