@@ -198,3 +198,34 @@ end $$;
 -- 기존 여행은 자동으로 임의 사용자에게 소유권을 주지 않습니다.
 -- 첫 로그인 후 본인 UUID로 필요한 기존 여행을 1회 연결하세요.
 -- update public.trips set owner_id='YOUR_AUTH_USER_UUID' where slug='your-trip-slug' and owner_id is null;
+
+-- 아이디 로그인용 프로필 별칭. 기존 데이터와 auth.users를 삭제하지 않습니다.
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  username text unique,
+  email text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create unique index if not exists profiles_username_lower_idx on public.profiles (lower(username)) where username is not null;
+alter table public.profiles enable row level security;
+drop policy if exists "profiles self read" on public.profiles;
+drop policy if exists "profiles self update" on public.profiles;
+create policy "profiles self read" on public.profiles for select to authenticated using (id = auth.uid());
+create policy "profiles self update" on public.profiles for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
+
+create or replace function public.voyage_create_profile()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, username, email)
+  values (new.id, nullif(lower(trim(new.raw_user_meta_data->>'username')), ''), new.email)
+  on conflict (id) do update set email = excluded.email, updated_at = now();
+  return new;
+end;
+$$;
+drop trigger if exists on_auth_user_created_voyage_profile on auth.users;
+create trigger on_auth_user_created_voyage_profile after insert on auth.users
+for each row execute procedure public.voyage_create_profile();
+insert into public.profiles (id, email)
+select id, email from auth.users where email is not null
+on conflict (id) do update set email = excluded.email, updated_at = now();

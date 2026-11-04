@@ -12,9 +12,14 @@ type AuthContextValue = {
   signUp: (
     email: string,
     password: string,
+    username?: string,
   ) => Promise<{ error: string | null; needsConfirmation: boolean }>;
   signIn: (
     email: string,
+    password: string,
+  ) => Promise<{ error: string | null }>;
+  signInWithUsername: (
+    username: string,
     password: string,
   ) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
@@ -30,6 +35,7 @@ const AuthContext = createContext<AuthContextValue>({
   configured: false,
   signUp: async () => ({ error: null, needsConfirmation: false }),
   signIn: async () => ({ error: null }),
+  signInWithUsername: async () => ({ error: null }),
   signInWithGoogle: async () => ({ error: null }),
   signOut: async () => undefined,
   sendPasswordReset: async () => ({ error: null }),
@@ -61,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       loading,
       configured: Boolean(supabaseBrowser),
-      signUp: async (email, password) => {
+      signUp: async (email, password, username) => {
         if (!supabaseBrowser)
           return {
             error: "Supabase 환경변수가 설정되지 않았습니다.",
@@ -72,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: username ? { username } : undefined,
           },
         });
         return {
@@ -85,6 +92,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { error } = await supabaseBrowser.auth.signInWithPassword({
           email,
           password,
+        });
+        return { error: message(error) };
+      },
+      signInWithUsername: async (username, password) => {
+        if (!supabaseBrowser) return { error: "Supabase 환경변수가 설정되지 않았습니다." };
+        const response = await fetch("/api/auth/username-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) return { error: String(result.error || "아이디 로그인에 실패했습니다.") };
+        const { error } = await supabaseBrowser.auth.setSession({
+          access_token: String(result.access_token),
+          refresh_token: String(result.refresh_token),
         });
         return { error: message(error) };
       },
