@@ -54,3 +54,10 @@ export function usesScheduleDuration(type: string) {
 }
 
 export const endTimeOptions = scheduleTimes.filter((time) => time.endsWith(":00") || time.endsWith(":30"));
+
+export function scheduleDurationPreset(type: string): number | undefined {
+  const normalized = type.trim().toLowerCase();
+  if (["간식", "snack", "dessert", "디저트"].some((name) => normalized.includes(name))) return 30;
+  if (["식사", "식당", "아침", "점심", "저녁", "restaurant", "meal", "breakfast", "lunch", "dinner", "brunch"].some((name) => normalized.includes(name))) return 60;
+  return undefined;
+}
