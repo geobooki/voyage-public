@@ -41,7 +41,7 @@ function eventsForDate(date: string, schedule: ScheduleItem[], reservations: Res
     for (const item of schedule) {
       if (!item.time || !usesScheduleDuration(item.type)) continue;
       const start = (dayNumber(item.date) - dayNumber(date)) * 1440 + timeMinutes(item.time);
-      const duration = item.endTime ? durationBetween(item.time, item.endTime) : item.durationMinutes || 30;
+      const duration = item.endTime ? durationBetween(item.time, item.endTime) : item.durationMinutes || 60;
       clip({ kind: "schedule", item, start, end: start + Math.max(5, duration), color: "var(--color-accent)" });
     }
     for (const item of reservations) {
@@ -49,7 +49,7 @@ function eventsForDate(date: string, schedule: ScheduleItem[], reservations: Res
       if (!time || isStay(item.type) || !usesScheduleDuration(item.type)) continue;
       const start = (dayNumber(item.date) - dayNumber(date)) * 1440 + timeMinutes(time);
       const endOffset = item.endDate ? (dayNumber(item.endDate) - dayNumber(item.date)) * 1440 : 0;
-      const duration = item.arrivalTime ? (endOffset > 0 ? endOffset + timeMinutes(item.arrivalTime) - timeMinutes(time) : durationBetween(time, item.arrivalTime)) : 30;
+      const duration = item.arrivalTime ? (endOffset > 0 ? endOffset + timeMinutes(item.arrivalTime) - timeMinutes(time) : durationBetween(time, item.arrivalTime)) : 60;
       clip({ kind: "reservation", item, start, end: start + Math.max(5, duration), color: "#7CB5D9" });
     }
   return entries;
@@ -95,7 +95,7 @@ export function TripScheduleCalendar({ dates, schedule, reservations, ko, onAdd,
           })}
           <div className="pointer-events-none absolute inset-y-0 left-[68px] right-3">{events.map((event) => {
             const startTime = event.kind === "schedule" ? event.item.time : event.item.departureTime || event.item.time || "";
-            const endTime = event.kind === "schedule" ? event.item.endTime || (event.item.durationMinutes ? timingFromDuration(event.item.time, String(event.item.durationMinutes)).endTime : (ko ? "소요시간 미정" : "duration not set")) : event.item.arrivalTime || "";
+            const endTime = event.kind === "schedule" ? event.item.endTime || timingFromDuration(event.item.time, String(event.item.durationMinutes || 60)).endTime : event.item.arrivalTime || "";
             const note = event.kind === "schedule" ? event.item.note : event.item.memo;
             const label = `${startTime}${endTime ? "–" + endTime : ""} · ${event.item.title}${note ? "\\n" + note : ""}`;
             return <button key={event.kind + event.item.id} type="button" onClick={() => event.kind === "schedule" ? onScheduleClick(event.item) : onReservationClick(event.item)} title={label} aria-label={label} className={`pointer-events-auto absolute flex flex-col items-stretch justify-start overflow-y-auto rounded-lg border bg-[var(--color-surface)] px-2 py-1.5 text-left text-xs leading-snug transition hover:shadow-sm ${event.kind === "schedule" ? "border-dashed" : ""} ${event.kind === "schedule" && event.item.completed ? "opacity-60" : ""}`} style={{ top: timeline.position(event.start), height: timeline.position(event.end) - timeline.position(event.start), left: `${event.lane * 100 / event.columns}%`, width: `calc(${100 / event.columns}% - 2px)`, borderColor: event.color }}><span className="block whitespace-pre-wrap break-words font-bold">{event.item.title}</span>{true && <span className="mt-0.5 block truncate text-[10px] muted">{startTime}{endTime ? "–" + endTime : ""}</span>}{note && <span className="mt-1 block whitespace-pre-wrap break-words text-[10px] muted">{note}</span>}</button>;
