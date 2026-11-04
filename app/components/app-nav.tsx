@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 
 const items = [
   { href: "/", label: "Overview", icon: "⌂" },
-  { href: "/trips", label: "Trips", icon: "🧳" },
+  { href: "/trips", label: "Trips", icon: "▣" },
   // 지도 기능은 보류 중입니다. 대시보드와 여행 관리에 집중하기 위해 메뉴에서 숨깁니다.
   // { href: "/map", label: "World map", icon: "◎" },
 ];
@@ -43,7 +43,7 @@ export function AppNav() {
     return () => viewport.removeEventListener("resize", updateKeyboardState);
   }, []);
   const navigationItems = hasNowTrip
-    ? [{ href: "/now", label: t("overview"), icon: "📍" }, ...items]
+    ? [{ href: "/now", label: t("overview"), icon: "●" }, ...items]
     : items;
   const labels = {
     "/": t("overview"),
@@ -52,9 +52,9 @@ export function AppNav() {
   const tripItems = tripId
     ? [
         { href: `/trips/${tripId}/before/budget`, label: language === "ko" ? (tripIsInternational ? "예산·환전" : "지출") : (tripIsInternational ? "Budget & exchange" : "Expenses"), icon: "₩" },
-        ...(tripIsInternational ? [{ href: `/trips/${tripId}/before/reservations`, label: language === "ko" ? "예약" : "Bookings", icon: "🎫" }] : []),
-        { href: `/trips/${tripId}/during/schedule`, label: language === "ko" ? "일정" : "Schedule", icon: "🗓️" },
-          { href: `/trips/${tripId}/after`, label: language === "ko" ? "정산" : "Settlement", icon: "🧾" },
+        ...(tripIsInternational ? [{ href: `/trips/${tripId}/before/reservations`, label: language === "ko" ? "예약" : "Bookings", icon: "▤" }] : []),
+        { href: `/trips/${tripId}/during/schedule`, label: language === "ko" ? "일정" : "Schedule", icon: "☷" },
+          { href: `/trips/${tripId}/after`, label: language === "ko" ? "정산" : "Settlement", icon: "⇄" },
       ]
     : [];
   return (
