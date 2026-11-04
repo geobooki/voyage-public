@@ -52,3 +52,5 @@ export function usesScheduleDuration(type: string) {
     "activity", "activities", "ferry", "car rental",
   ].some((category) => normalized.includes(category));
 }
+
+export const endTimeOptions = scheduleTimes.filter((time) => time.endsWith(":00") || time.endsWith(":30"));
