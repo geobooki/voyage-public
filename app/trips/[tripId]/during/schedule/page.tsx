@@ -21,7 +21,7 @@ type ScheduleForm = {
   note: string;
 };
 const control =
-  "rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
+  "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm box-border";
 
 export default function SchedulePage() {
   const { tripId } = useParams<{ tripId: string }>();
@@ -106,7 +106,7 @@ export default function SchedulePage() {
   return (
     <main
       data-section="schedule-board"
-      className="min-h-screen px-5 py-8 pb-16 sm:px-10 lg:px-20 lg:py-12"
+      className="min-h-screen px-5 py-8 pb-28 sm:px-10 sm:pb-16 lg:px-20 lg:py-12"
     >
       <div className="mx-auto max-w-6xl">
         <Link

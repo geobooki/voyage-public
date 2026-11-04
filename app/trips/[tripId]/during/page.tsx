@@ -27,6 +27,7 @@ export default function DuringPage() {
     time: "12:00",
     placeId: "",
     payerId: state.travelers[0]?.id ?? "",
+    participantIds: [] as string[],
     memo: "",
   });
   const [place, setPlace] = useState({
@@ -142,6 +143,10 @@ export default function DuringPage() {
               <option>KRW</option>
               <option>USD</option>
             </select>
+            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm lg:col-span-2">
+              <p className="mb-2 text-xs font-bold">함께 쓴 사람</p>
+              {state.travelers.length ? <div className="flex flex-wrap gap-3">{state.travelers.map((traveler) => <label key={traveler.id} className="flex items-center gap-2 text-xs"><input type="checkbox" checked={expense.participantIds.includes(traveler.id)} onChange={(event) => setExpense({ ...expense, participantIds: event.target.checked ? [...expense.participantIds, traveler.id] : expense.participantIds.filter((id) => id !== traveler.id) })} />{traveler.name}</label>)}</div> : <p className="text-xs muted">먼저 여행자 이름을 추가하세요.</p>}
+            </div>
             <input
               required
               type="date"
