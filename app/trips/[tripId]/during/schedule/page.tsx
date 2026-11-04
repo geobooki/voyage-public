@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { scheduleTimes, fiveMinuteTime, timingFromDuration, timingFromEnd } from "@/lib/schedule-time";
 import { useParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
@@ -73,9 +74,10 @@ export default function SchedulePage() {
     const current = state.schedule.find((entry) => entry.id === editingId);
     const value = {
       ...item,
+      time: fiveMinuteTime(item.time),
       title: item.title.trim(),
       note: item.note.trim(),
-      durationMinutes: item.durationMinutes ? Number(item.durationMinutes) : undefined,
+      durationMinutes: item.durationMinutes ? Math.max(5, Math.round(Number(item.durationMinutes) / 5) * 5) : undefined,
       completed: current?.completed ?? false,
     };
     if (editingId) updateSchedule(editingId, value);
@@ -88,9 +90,9 @@ export default function SchedulePage() {
     setItem({
       date: entry.date,
       title: entry.title,
-      time: entry.time,
-      endTime: entry.endTime ?? "",
-      durationMinutes: entry.durationMinutes ? String(entry.durationMinutes) : "",
+      time: fiveMinuteTime(entry.time),
+      ...timingFromDuration(fiveMinuteTime(entry.time), entry.durationMinutes ? String(entry.durationMinutes) : ""),
+      ...(entry.endTime ? timingFromEnd(fiveMinuteTime(entry.time), entry.endTime) : {}),
       type: entry.type,
       placeId: entry.placeId ?? "",
       note: entry.note,
@@ -100,7 +102,8 @@ export default function SchedulePage() {
   const schedulePageCount = Math.max(1, Math.ceil(dates.length / 3));
   const visibleDesktopDates = dates.slice(schedulePage * 3, schedulePage * 3 + 3);
   const openAt = (date: string, time: string) => {
-    setItem((current) => ({ ...current, date, time }));
+    setEditingId(null);
+    setItem({ ...empty(), date, time });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   return (
@@ -123,9 +126,11 @@ export default function SchedulePage() {
         <form onSubmit={save} className="card mt-9 space-y-4 p-5 sm:p-6">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm font-bold">날짜<input required type="date" value={item.date} onChange={(event) => setItem({ ...item, date: event.target.value })} className={`mt-2 ${control}`} /></label>
-            <label className="text-sm font-bold">시간<input required type="time" value={item.time} onChange={(event) => setItem({ ...item, time: event.target.value })} className={`mt-2 ${control}`} /></label>
+            <label className="text-sm font-bold">시간<select required aria-label="시간 (5분 단위)" value={item.time} onChange={(event) => setItem({ ...item, time: event.target.value, ...timingFromDuration(event.target.value, item.durationMinutes) })} className={`mt-2 ${control}`}>{scheduleTimes.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>
           </div>
-          <label className="block text-sm font-bold">소요시간 <span className="font-normal muted">(선택)</span><div className="mt-2 flex items-center gap-2"><input type="number" min="1" value={item.durationMinutes} onChange={(event) => setItem({ ...item, durationMinutes: event.target.value, endTime: "" })} placeholder="예: 90" className={`max-w-xs ${control}`} /><span className="text-sm muted">분</span></div></label>
+          <label className="block text-sm font-bold">소요시간 <span className="font-normal muted">(선택)</span><div className="mt-2 flex items-center gap-2"><input type="number" min="5" max="1440" step="5" value={item.durationMinutes} onChange={(event) => setItem({ ...item, ...timingFromDuration(item.time, event.target.value), durationMinutes: event.target.value })} placeholder="예: 90" className={`max-w-xs ${control}`} /><span className="text-sm muted">분</span></div></label>
+          <label className="block text-sm font-bold">종료시간 <span className="font-normal muted">(선택 · 소요시간과 자동 계산)</span><select value={item.endTime} onChange={(event) => setItem({ ...item, ...timingFromEnd(item.time, event.target.value) })} className={`mt-2 ${control}`}><option value="">선택 안 함</option>{scheduleTimes.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>
+          {item.endTime && item.endTime <= item.time && <p className="text-xs muted">종료시간은 다음 날 기준이에요.</p>}
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm font-bold">타입<select value={item.type} onChange={(event) => setItem({ ...item, type: event.target.value })} className={`mt-2 ${control}`}><option>관광</option><option>식사</option><option>활동</option><option>숙박</option><option>교통</option></select></label>
             <label className="text-sm font-bold">장소<select value={item.placeId} onChange={(event) => setItem({ ...item, placeId: event.target.value })} className={`mt-2 ${control}`}><option value="">장소 없음</option>{state.places.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}</select></label>

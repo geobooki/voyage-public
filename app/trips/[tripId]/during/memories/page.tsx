@@ -50,7 +50,7 @@ export default function MemoriesPage() {
                     {item.date} · {item.time || "시간 미정"}
                   </p>
                   <h3 className="mt-2 text-lg font-bold">{item.title}</h3>
-                  <p className="mt-2 text-sm muted">
+                  <p className="mt-2 whitespace-pre-wrap break-words text-sm muted">
                     {item.type}
                     {item.note ? ` · ${item.note}` : ""}
                   </p>
