@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: "여행 전·중·후를 한 곳에서 관리하는 여행 기록 앱",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    icon: [{ url: "/icon.svg?v=20261105", type: "image/svg+xml" }],
     apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
   },
 };
