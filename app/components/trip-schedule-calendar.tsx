@@ -3,7 +3,7 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { Reservation, ScheduleItem } from "@/types/trip";
 import { formatDate } from "@/lib/date";
-import { timeMinutes, durationBetween, timingFromDuration, layoutIntervals, usesScheduleDuration } from "@/lib/schedule-time";
+import { timeMinutes, durationBetween, timingFromDuration, layoutIntervals, usesScheduleDuration, scheduleDurationPreset } from "@/lib/schedule-time";
 
 function compactTimeline(_events: { start: number; end: number }[]) {
   const start = 480;
@@ -73,16 +73,18 @@ function eventsForDate(date: string, schedule: ScheduleItem[], reservations: Res
     const time = clockTime(item.time);
     if (!time || isStay(item.type)) continue;
     const start = (dayNumber(item.date) - dayNumber(date)) * 1440 + timeMinutes(time);
-    const compact = !usesScheduleDuration(item.type) && !item.durationMinutes && !item.endTime;
-    const duration = compact ? 15 : item.endTime ? durationBetween(item.time, item.endTime) : item.durationMinutes || 60;
+    const preset = scheduleDurationPreset(item.type);
+    const compact = Boolean(preset) || (!usesScheduleDuration(item.type) && !item.durationMinutes && !item.endTime);
+    const duration = preset ? item.durationMinutes || preset : compact ? 15 : item.endTime ? durationBetween(item.time, item.endTime) : item.durationMinutes || 60;
     clip({ kind: "schedule", item, start, end: start + Math.max(5, duration), compact, color: "var(--color-accent)" });
   }
   for (const item of reservations) {
     const time = clockTime(item.departureTime) || clockTime(item.time);
     if (!time || isStay(item.type)) continue;
     const start = (dayNumber(item.date) - dayNumber(date)) * 1440 + timeMinutes(time);
-    const compact = !usesScheduleDuration(item.type) && !item.arrivalTime;
-    clip({ kind: "reservation", item, start, end: start + (compact ? 15 : Math.max(5, reservationDuration(item))), compact, color: "#BAE6FD" });
+    const preset = scheduleDurationPreset(item.type);
+    const compact = Boolean(preset) || (!usesScheduleDuration(item.type) && !item.arrivalTime);
+    clip({ kind: "reservation", item, start, end: start + (preset ? item.arrivalTime ? reservationDuration(item) : preset : compact ? 15 : Math.max(5, reservationDuration(item))), compact, color: "#BAE6FD" });
   }
   return entries;
 }
@@ -136,7 +138,8 @@ export function TripScheduleCalendar({ dates, schedule, reservations, ko, onAdd,
     const canvas = event.currentTarget.closest("[data-calendar-canvas]") as HTMLElement | null;
     if (!canvas) return;
     const minute = timeline.minuteAt(event.clientY - canvas.getBoundingClientRect().top);
-    const duration = item.kind === "schedule" ? item.compact ? 15 : item.item.endTime ? durationBetween(item.item.time, item.item.endTime) : item.item.durationMinutes || 60 : item.compact ? 15 : reservationDuration(item.item);
+    const preset = scheduleDurationPreset(item.item.type);
+    const duration = item.kind === "schedule" ? item.item.durationMinutes || (preset ? preset : item.compact ? 15 : item.item.endTime ? durationBetween(item.item.time, item.item.endTime) : 60) : preset ? item.item.arrivalTime ? reservationDuration(item.item) : preset : item.compact ? 15 : reservationDuration(item.item);
     gesture.current = { event: item, mode, date, pointerId: event.pointerId, x: event.clientX, y: event.clientY, offset: minute - item.start, initialMinute: minute, duration, timeline };
     root.current?.setPointerCapture(event.pointerId);
     event.stopPropagation();
@@ -155,7 +158,7 @@ export function TripScheduleCalendar({ dates, schedule, reservations, ko, onAdd,
     const minute = current.timeline.minuteAt(event.clientY - canvas.getBoundingClientRect().top);
     const originalTime = current.event.kind === "schedule" ? current.event.item.time : current.event.item.departureTime || current.event.item.time || "09:00";
     const value: Preview = current.mode === "move"
-      ? { date: column.dataset.calendarDate || current.date, time: displayTime(Math.max(480, Math.min(1305, Math.round((minute - current.offset) / 15) * 15))), ...(!current.event.compact ? { duration: current.duration } : {}) }
+      ? { date: column.dataset.calendarDate || current.date, time: displayTime(Math.max(480, Math.min(1305, Math.round((minute - current.offset) / 15) * 15))), ...(!current.event.compact || scheduleDurationPreset(current.event.item.type) ? { duration: current.duration } : {}) }
       : { date: current.event.item.date, time: originalTime.slice(0, 5), duration: Math.max(15, Math.min(1440, Math.round((current.duration + minute - current.initialMinute) / 15) * 15)) };
     current.preview = value;
     setPreview({ kind: current.event.kind, id: current.event.item.id, value });
@@ -193,7 +196,7 @@ export function TripScheduleCalendar({ dates, schedule, reservations, ko, onAdd,
               const isPreview = preview?.id === item.item.id && preview.kind === item.kind;
               const open = () => item.kind === "schedule" ? onScheduleClick(item.item) : onReservationClick(item.item);
               return <div key={item.kind + item.item.id} role="button" tabIndex={0} onPointerDown={(event) => begin(event, item, date, "move")} onClick={open} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); open(); } }} title={label} aria-label={label} className={`pointer-events-auto absolute select-none touch-none overflow-hidden rounded-lg border bg-white text-left text-[11px] transition-shadow ${isPreview ? "z-20 shadow-lg ring-2 ring-[var(--color-primary)]/25" : "hover:shadow-sm"} ${item.kind === "schedule" && !item.compact ? "border-dashed" : ""} ${item.kind === "schedule" && item.item.completed ? "opacity-60" : ""}`} style={{ top: timeline.position(item.start), height: item.compact ? 24 : Math.max(16, timeline.position(item.actualEnd) - timeline.position(item.start)), left: `${item.lane * 100 / item.columns}%`, width: `calc(${100 / item.columns}% - 3px)`, borderColor: item.compact ? "var(--color-border)" : item.color, cursor: gesture.current ? "grabbing" : "grab" }}>
-                {item.compact ? <div className="flex h-full items-center gap-2 px-2 pb-0.5">{isMeal(item.item.type) && <span className="shrink-0 text-[10px] font-bold text-orange-600">{ko ? "식사" : "Meal"}</span>}<span className="shrink-0 text-[10px] muted">{startTime}</span><span className="min-w-0 truncate text-[11px] font-normal">{item.item.title}</span></div> : <div className="h-full overflow-y-auto px-2 pb-2 pt-0.5">{isTransport(item.item.type) && <p className="mb-0.5 text-[9px] font-normal text-[var(--color-primary)]">{ko ? "교통편" : "Transport"}</p>}<p className="whitespace-pre-wrap break-words text-[11px] font-normal">{isMeal(item.item.type) && <span className="mr-1 font-bold text-orange-600">{ko ? "식사" : "Meal"}</span>}{item.item.title}</p><p className="mt-0.5 text-[10px] muted">{startTime}–{endTime}</p>{note && <p className="mt-1 whitespace-pre-wrap break-words text-[10px] muted">{note}</p>}</div>}
+                {item.compact ? <div className="flex h-full items-center gap-2 px-2 pb-0.5">{scheduleDurationPreset(item.item.type) && <span className="shrink-0 text-[10px] font-bold text-orange-600">{scheduleDurationPreset(item.item.type) === 30 ? (ko ? "간식" : "Snack") : (ko ? "식사" : "Meal")}</span>}<span className="shrink-0 text-[10px] muted">{startTime}</span><span className="min-w-0 truncate text-[11px] font-normal">{item.item.title}</span></div> : <div className="h-full overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-2 pb-2 pt-0.5">{isTransport(item.item.type) && <p className="mb-0.5 text-[9px] font-normal text-[var(--color-primary)]">{ko ? "교통편" : "Transport"}</p>}<p className="whitespace-pre-wrap break-words text-[11px] font-normal">{isMeal(item.item.type) && <span className="mr-1 font-bold text-orange-600">{ko ? "식사" : "Meal"}</span>}{item.item.title}</p><p className="mt-0.5 text-[10px] muted">{startTime}–{endTime}</p>{note && <p className="mt-1 whitespace-pre-wrap break-words text-[10px] muted">{note}</p>}</div>}
                 <button type="button" aria-label={ko ? "소요시간 조절" : "Resize duration"} title={ko ? "아래로 끌어 소요시간 조절" : "Drag to change duration"} onClick={(event) => { event.stopPropagation(); if (!suppressClick.current) open(); }} onPointerDown={(event) => begin(event, item, date, "resize")} className="absolute inset-x-0 bottom-0 flex h-1.5 cursor-ns-resize touch-none items-center justify-center hover:bg-[var(--color-surface-muted)]"><span className="h-0.5 w-6 rounded-full bg-[var(--color-border)]" /></button>
               </div>;
             })}</div>
