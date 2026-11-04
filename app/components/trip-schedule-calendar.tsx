@@ -5,30 +5,25 @@ import type { Reservation, ScheduleItem } from "@/types/trip";
 import { formatDate } from "@/lib/date";
 import { timeMinutes, durationBetween, timingFromDuration, layoutIntervals, usesScheduleDuration } from "@/lib/schedule-time";
 
-function compactTimeline(events: { start: number; end: number }[]) {
-  const start = Math.min(480, ...events.map((event) => Math.floor(event.start / 120) * 120));
-  const end = Math.max(1320, ...events.map((event) => Math.ceil(event.end / 120) * 120));
-  const boundaries = [...new Set([
-    ...Array.from({ length: (end - start) / 120 + 1 }, (_, index) => start + index * 120),
-    ...events.flatMap((event) => [event.start, event.end]),
-  ])].sort((a, b) => a - b);
+function compactTimeline(_events: { start: number; end: number }[]) {
+  const start = 480;
+  const end = 1320;
   let height = 0;
-  const segments = boundaries.slice(0, -1).map((minute, index) => {
-    const next = boundaries[index + 1];
-    const occupied = events.some((event) => event.start < next && event.end > minute);
-    const size = occupied ? Math.max(48, (next - minute) * 0.8) : (next - minute) * 64 / 120;
-    const segment = { start: minute, end: next, top: height, height: size };
+  const segments = Array.from({ length: (end - start) / 120 }, (_, index) => {
+    const minute = start + index * 120;
+    const size = 64;
+    const segment = { start: minute, end: minute + 120, top: height, height: size };
     height += size;
     return segment;
   });
   const position = (minute: number) => {
     const segment = segments.find((segment) => minute >= segment.start && minute < segment.end);
-    return segment ? segment.top + (minute - segment.start) / (segment.end - segment.start) * segment.height : height;
+    return segment ? segment.top + (minute - segment.start) / 120 * segment.height : minute < start ? 0 : height;
   };
   const minuteAt = (y: number) => {
     const bounded = Math.max(0, Math.min(height, y));
     const segment = segments.find((segment) => bounded >= segment.top && bounded < segment.top + segment.height);
-    return segment ? segment.start + (bounded - segment.top) / segment.height * (segment.end - segment.start) : end;
+    return segment ? segment.start + (bounded - segment.top) / segment.height * 120 : end;
   };
   return { segments, height, position, minuteAt };
 }
@@ -36,6 +31,12 @@ function compactTimeline(events: { start: number; end: number }[]) {
 const displayTime = (minutes: number) => {
   const bounded = ((minutes % 1440) + 1440) % 1440;
   return `${String(Math.floor(bounded / 60)).padStart(2, "0")}:${String(bounded % 60).padStart(2, "0")}`;
+};
+const isMeal = (type: string) => ["식사", "식당", "아침", "점심", "저녁", "restaurant", "meal", "breakfast", "lunch", "dinner", "brunch"].some((name) => type.trim().toLowerCase().includes(name));
+const isTransport = (type: string) => ["교통", "항공", "기차", "버스", "택시", "도보", "transport", "flight", "train", "bus", "taxi", "ferry", "car rental"].some((name) => type.trim().toLowerCase().includes(name));
+const clockTime = (value?: string) => {
+  const match = value?.trim().match(/(?:^|T)([0-2]?\d):([0-5]\d)/);
+  return match && Number(match[1]) < 24 ? match[1].padStart(2, "0") + ":" + match[2] : "";
 };
 const isStay = (type: string) => ["stay", "숙박", "hotel", "호텔", "accommodation"].includes(type.trim().toLowerCase());
 const dayNumber = (date: string) => Date.parse(date + "T00:00:00Z") / 86400000;
@@ -69,14 +70,15 @@ function eventsForDate(date: string, schedule: ScheduleItem[], reservations: Res
       entries.push({ ...entry, start: Math.max(0, entry.start), end: Math.min(1440, entry.end) });
   };
   for (const item of schedule) {
-    if (!item.time || isStay(item.type)) continue;
-    const start = (dayNumber(item.date) - dayNumber(date)) * 1440 + timeMinutes(item.time);
+    const time = clockTime(item.time);
+    if (!time || isStay(item.type)) continue;
+    const start = (dayNumber(item.date) - dayNumber(date)) * 1440 + timeMinutes(time);
     const compact = !usesScheduleDuration(item.type) && !item.durationMinutes && !item.endTime;
     const duration = compact ? 15 : item.endTime ? durationBetween(item.time, item.endTime) : item.durationMinutes || 60;
     clip({ kind: "schedule", item, start, end: start + Math.max(5, duration), compact, color: "var(--color-accent)" });
   }
   for (const item of reservations) {
-    const time = item.departureTime || item.time;
+    const time = clockTime(item.departureTime) || clockTime(item.time);
     if (!time || isStay(item.type)) continue;
     const start = (dayNumber(item.date) - dayNumber(date)) * 1440 + timeMinutes(time);
     const compact = !usesScheduleDuration(item.type) && !item.arrivalTime;
@@ -107,8 +109,9 @@ export function TripScheduleCalendar({ dates, schedule, reservations, ko, onAdd,
   const computedTimeline = compactTimeline([...dateEvents.values()].flat());
   const timeline = gesture.current?.timeline || computedTimeline;
   const compactRows = Math.max(0, ...dates.map((date) =>
-    activeReservations.filter((item) => isStay(item.type) ? item.date <= date && date <= (item.endDate || item.date) : item.date === date && !item.time && !item.departureTime).length +
-    activeSchedule.filter((item) => item.date === date && (!item.time || isStay(item.type))).length
+    activeReservations.filter((item) => isStay(item.type) ? item.date <= date && date <= (item.endDate || item.date) : item.date === date && !clockTime(item.time) && !clockTime(item.departureTime)).length +
+    activeSchedule.filter((item) => item.date === date && (!clockTime(item.time) || isStay(item.type))).length +
+    (dateEvents.get(date) || []).filter((event) => event.end <= 480 || event.start >= 1320).length
   ));
   const finish = (cancel = false) => {
     const current = gesture.current;
@@ -149,13 +152,10 @@ export function TripScheduleCalendar({ dates, schedule, reservations, ko, onAdd,
     const canvas = column.querySelector<HTMLElement>("[data-calendar-canvas]");
     const scroller = column.querySelector<HTMLElement>("[data-calendar-scroll]");
     if (!canvas || !scroller) return;
-    const box = scroller.getBoundingClientRect();
-    if (event.clientY < box.top + 28) scroller.scrollTop -= 12;
-    else if (event.clientY > box.bottom - 28) scroller.scrollTop += 12;
     const minute = current.timeline.minuteAt(event.clientY - canvas.getBoundingClientRect().top);
     const originalTime = current.event.kind === "schedule" ? current.event.item.time : current.event.item.departureTime || current.event.item.time || "09:00";
     const value: Preview = current.mode === "move"
-      ? { date: column.dataset.calendarDate || current.date, time: displayTime(Math.max(0, Math.min(1425, Math.round((minute - current.offset) / 15) * 15))), ...(!current.event.compact ? { duration: current.duration } : {}) }
+      ? { date: column.dataset.calendarDate || current.date, time: displayTime(Math.max(480, Math.min(1305, Math.round((minute - current.offset) / 15) * 15))), ...(!current.event.compact ? { duration: current.duration } : {}) }
       : { date: current.event.item.date, time: originalTime.slice(0, 5), duration: Math.max(15, Math.min(1440, Math.round((current.duration + minute - current.initialMinute) / 15) * 15)) };
     current.preview = value;
     setPreview({ kind: current.event.kind, id: current.event.item.id, value });
@@ -167,7 +167,9 @@ export function TripScheduleCalendar({ dates, schedule, reservations, ko, onAdd,
       const dayStays = activeReservations.filter((item) => isStay(item.type) && item.date <= date && date <= (item.endDate || item.date));
       const untimedSchedule = activeSchedule.filter((item) => item.date === date && (!item.time || isStay(item.type)));
       const untimedReservations = activeReservations.filter((item) => item.date === date && !isStay(item.type) && !item.time && !item.departureTime);
-      const events = layoutIntervals(dateEvents.get(date) || []);
+      const outsideEvents = (dateEvents.get(date) || []).filter((event) => event.end <= 480 || event.start >= 1320);
+      const visibleEvents = (dateEvents.get(date) || []).filter((event) => event.start < 1320 && event.end > 480).map((event) => ({ ...event, start: Math.max(480, event.start), end: Math.min(1320, event.end) }));
+      const events = layoutIntervals(visibleEvents.map((event) => ({ ...event, actualEnd: event.end, end: Math.max(event.end, event.start + (event.compact ? 45 : 30)) })));
       const first = timeline.segments[0].start;
       const last = timeline.segments[timeline.segments.length - 1].end;
       const slots = Array.from({ length: (last - first) / 120 }, (_, index) => first + index * 120);
@@ -177,20 +179,22 @@ export function TripScheduleCalendar({ dates, schedule, reservations, ko, onAdd,
           {dayStays.map((item) => <button key={item.id} type="button" onClick={() => onReservationClick(item)} className="block h-8 w-full truncate border-b border-[var(--color-border)] px-3 text-left text-[11px] font-normal">⌂ {item.title}</button>)}
           {untimedReservations.map((item) => <button key={item.id} type="button" onClick={() => onReservationClick(item)} className="block h-8 w-full truncate border-b border-[var(--color-border)] px-3 text-left text-[11px]">{item.title}</button>)}
           {untimedSchedule.map((item) => <button key={item.id} type="button" onClick={() => onScheduleClick(item)} className="block h-8 w-full truncate border-b border-[var(--color-border)] px-3 text-left text-[11px]">{item.title}</button>)}
+          {outsideEvents.map((event) => <button key={event.kind + event.item.id} type="button" onClick={() => event.kind === "schedule" ? onScheduleClick(event.item) : onReservationClick(event.item)} className="block h-8 w-full truncate border-b border-[var(--color-border)] px-3 text-left text-[11px]">{clockTime(event.kind === "schedule" ? event.item.time : event.item.departureTime || event.item.time)} · {event.item.title} <span className="muted">({ko ? "시간표 밖" : "outside timetable"})</span></button>)}
         </div>
-        <div data-calendar-scroll className="max-h-[640px] overflow-y-auto" aria-label={ko ? "여행 일정 시간표" : "Trip timeline"}>
-          <div data-calendar-canvas className="relative" style={{ height: timeline.height }}>
-            {slots.map((minute, index) => <button key={minute} type="button" onClick={() => onAdd(date, displayTime(minute))} aria-label={ko ? `${date} ${displayTime(minute)} 일정 추가` : `Add plan at ${date} ${displayTime(minute)}`} className="absolute left-0 flex w-full gap-3 border-t border-[var(--color-border)] px-3 py-3 text-left transition hover:bg-[var(--color-surface-muted)]" style={{ top: timeline.position(minute), height: timeline.position(minute + 120) - timeline.position(minute) }}><span className="w-11 shrink-0 pt-0.5 text-[11px] font-normal text-[var(--color-text-muted)]">{displayTime(minute)}{index < slots.length - 1 && <span className="mt-1 block text-[9px] font-normal opacity-60">{displayTime(minute + 120)}</span>}</span>{!events.some((item) => item.start < minute + 120 && item.end > minute) && <span className="block text-[10px] text-[var(--color-border)]">＋</span>}</button>)}
+        <div data-calendar-scroll className="overflow-visible" aria-label={ko ? "여행 일정 시간표" : "Trip timeline"}>
+          <div data-calendar-canvas className="relative" style={{ height: timeline.height + 24 }}>
+            {slots.map((minute) => <button key={minute} type="button" onClick={() => onAdd(date, displayTime(minute))} aria-label={ko ? `${date} ${displayTime(minute)} 일정 추가` : `Add plan at ${date} ${displayTime(minute)}`} className="absolute left-0 w-full border-t border-[var(--color-border)] text-left transition hover:bg-[var(--color-surface-muted)]" style={{ top: timeline.position(minute), height: timeline.position(minute + 120) - timeline.position(minute) }}>{[0, 30, 60, 90].map((offset) => <span key={offset} className="pointer-events-none absolute left-3 text-[9px] font-normal leading-none text-[var(--color-text-muted)]" style={{ top: timeline.position(minute + offset) - timeline.position(minute) }}>{displayTime(minute + offset)}</span>)}{!events.some((item) => item.start < minute + 120 && item.end > minute) && <span className="absolute left-[68px] top-3 block text-[10px] text-[var(--color-border)]">＋</span>}</button>)}
+            <span className="pointer-events-none absolute left-3 text-[9px] font-normal leading-none text-[var(--color-text-muted)]" style={{ top: timeline.height }}>22:00</span>
             <div className="pointer-events-none absolute inset-y-0 left-[68px] right-3">{events.map((item) => {
-              const startTime = (item.kind === "schedule" ? item.item.time : item.item.departureTime || item.item.time || "").slice(0, 5);
+              const startTime = clockTime(item.kind === "schedule" ? item.item.time : item.item.departureTime || item.item.time);
               const endTime = (item.kind === "schedule" ? item.item.endTime || timingFromDuration(item.item.time, String(item.item.durationMinutes || 60)).endTime : item.item.arrivalTime || timingFromDuration(startTime, "60").endTime).slice(0, 5);
               const note = item.kind === "schedule" ? item.item.note : item.item.memo;
               const label = `${startTime}${!item.compact && endTime ? "–" + endTime : ""} · ${item.item.title}${note ? "\n" + note : ""}`;
               const isPreview = preview?.id === item.item.id && preview.kind === item.kind;
               const open = () => item.kind === "schedule" ? onScheduleClick(item.item) : onReservationClick(item.item);
-              return <div key={item.kind + item.item.id} role="button" tabIndex={0} onPointerDown={(event) => begin(event, item, date, "move")} onClick={open} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); open(); } }} title={label} aria-label={label} className={`pointer-events-auto absolute select-none touch-none overflow-hidden rounded-lg border bg-white text-left text-[11px] transition-shadow ${isPreview ? "z-20 shadow-lg ring-2 ring-[var(--color-primary)]/25" : "hover:shadow-sm"} ${item.kind === "schedule" && !item.compact ? "border-dashed" : ""} ${item.kind === "schedule" && item.item.completed ? "opacity-60" : ""}`} style={{ top: timeline.position(item.start), height: item.compact ? 32 : Math.max(32, timeline.position(item.end) - timeline.position(item.start)), left: `${item.lane * 100 / item.columns}%`, width: `calc(${100 / item.columns}% - 3px)`, borderColor: item.compact ? "var(--color-border)" : item.color, cursor: gesture.current ? "grabbing" : "grab" }}>
-                {item.compact ? <div className="flex h-full items-center gap-2 px-2 pb-1"><span className="shrink-0 text-[10px] muted">{startTime}</span><span className="min-w-0 truncate text-[11px] font-normal">{item.item.title}</span></div> : <div className="h-full overflow-y-auto px-2 pb-3 pt-1.5"><p className="whitespace-pre-wrap break-words text-[11px] font-normal">{item.item.title}</p><p className="mt-0.5 text-[10px] muted">{startTime}–{endTime}</p>{note && <p className="mt-1 whitespace-pre-wrap break-words text-[10px] muted">{note}</p>}</div>}
-                <button type="button" aria-label={ko ? "소요시간 조절" : "Resize duration"} title={ko ? "아래로 끌어 소요시간 조절" : "Drag to change duration"} onClick={(event) => { event.stopPropagation(); if (!suppressClick.current) open(); }} onPointerDown={(event) => begin(event, item, date, "resize")} className="absolute inset-x-0 bottom-0 flex h-2 cursor-ns-resize touch-none items-center justify-center hover:bg-[var(--color-surface-muted)]"><span className="h-0.5 w-6 rounded-full bg-[var(--color-border)]" /></button>
+              return <div key={item.kind + item.item.id} role="button" tabIndex={0} onPointerDown={(event) => begin(event, item, date, "move")} onClick={open} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); open(); } }} title={label} aria-label={label} className={`pointer-events-auto absolute select-none touch-none overflow-hidden rounded-lg border bg-white text-left text-[11px] transition-shadow ${isPreview ? "z-20 shadow-lg ring-2 ring-[var(--color-primary)]/25" : "hover:shadow-sm"} ${item.kind === "schedule" && !item.compact ? "border-dashed" : ""} ${item.kind === "schedule" && item.item.completed ? "opacity-60" : ""}`} style={{ top: timeline.position(item.start), height: item.compact ? 24 : Math.max(16, timeline.position(item.actualEnd) - timeline.position(item.start)), left: `${item.lane * 100 / item.columns}%`, width: `calc(${100 / item.columns}% - 3px)`, borderColor: item.compact ? "var(--color-border)" : item.color, cursor: gesture.current ? "grabbing" : "grab" }}>
+                {item.compact ? <div className="flex h-full items-center gap-2 px-2 pb-0.5">{isMeal(item.item.type) && <span className="shrink-0 text-[10px] font-bold text-orange-600">{ko ? "식사" : "Meal"}</span>}<span className="shrink-0 text-[10px] muted">{startTime}</span><span className="min-w-0 truncate text-[11px] font-normal">{item.item.title}</span></div> : <div className="h-full overflow-y-auto px-2 pb-2 pt-0.5">{isTransport(item.item.type) && <p className="mb-0.5 text-[9px] font-normal text-[var(--color-primary)]">{ko ? "교통편" : "Transport"}</p>}<p className="whitespace-pre-wrap break-words text-[11px] font-normal">{isMeal(item.item.type) && <span className="mr-1 font-bold text-orange-600">{ko ? "식사" : "Meal"}</span>}{item.item.title}</p><p className="mt-0.5 text-[10px] muted">{startTime}–{endTime}</p>{note && <p className="mt-1 whitespace-pre-wrap break-words text-[10px] muted">{note}</p>}</div>}
+                <button type="button" aria-label={ko ? "소요시간 조절" : "Resize duration"} title={ko ? "아래로 끌어 소요시간 조절" : "Drag to change duration"} onClick={(event) => { event.stopPropagation(); if (!suppressClick.current) open(); }} onPointerDown={(event) => begin(event, item, date, "resize")} className="absolute inset-x-0 bottom-0 flex h-1.5 cursor-ns-resize touch-none items-center justify-center hover:bg-[var(--color-surface-muted)]"><span className="h-0.5 w-6 rounded-full bg-[var(--color-border)]" /></button>
               </div>;
             })}</div>
           </div>
