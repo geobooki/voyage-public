@@ -13,7 +13,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ trip
   // Detail pages already load the full trip store. Keep metadata-only callers
   // from repeating 13 unrelated table queries just to render the header.
   if (new URL(request.url).searchParams.get("view") === "meta") {
-    const { data, error } = await client.from("trips").select("id,title,slug,city,country,start_date,end_date,status,destination_currency,trip_type").eq("id", tripId).single();
+    const { data, error } = await client.from("trips").select("id,title,slug,city,country,start_date,end_date,status,destination_currency").eq("id", tripId).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ trip: data });
   }
