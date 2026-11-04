@@ -335,9 +335,9 @@ export default function DuringPage() {
                 <span className="w-12 text-xs font-bold muted">
                   {item.time}
                 </span>
-                <div className="flex-1">
-                  <p className="font-bold">{item.title}</p>
-                  <p className="mt-1 text-xs muted">
+                <div className="min-w-0 flex-1">
+                  <p className="break-words font-bold">{item.title}</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-xs muted">
                     {item.type}
                     {item.note ? ` · ${item.note}` : ""}
                   </p>
