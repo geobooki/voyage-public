@@ -51,7 +51,7 @@ function TripPageContent() {
   const [quickExpense, setQuickExpense] = useState({ name: "", amount: "", currency: "KRW", category: "", date: localDateIso(new Date()), memo: "" });
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
-  const [scheduleDraft, setScheduleDraft] = useState({ date: "", time: "09:00", endTime: "", durationMinutes: "", title: "", type: "관광", note: "" });
+  const [scheduleDraft, setScheduleDraft] = useState({ date: "", time: "09:00", endTime: "10:00", durationMinutes: "60", title: "", type: "관광", note: "" });
   const [wishDraft, setWishDraft] = useState<{ kind: DashboardItem["kind"]; title: string; detail: string }>({ kind: "do", title: "", detail: "" });
   const [wishNotice, setWishNotice] = useState("");
   const wishNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -379,18 +379,18 @@ function TripPageContent() {
   const weekdayLabel = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { weekday: "short" });
   const openSchedule = (date: string, time = "09:00") => {
     setEditingScheduleId(null);
-    setScheduleDraft({ date, time, endTime: "", durationMinutes: "", title: "", type: "관광", note: "" });
+    setScheduleDraft({ date, time, ...timingFromDuration(time, "60"), title: "", type: "관광", note: "" });
     setScheduleOpen(true);
   };
   const editSchedule = (item: ScheduleItem) => {
     setEditingScheduleId(item.id);
-    setScheduleDraft({ date: item.date, time: fiveMinuteTime(item.time || "09:00"), ...timingFromDuration(fiveMinuteTime(item.time || "09:00"), item.durationMinutes ? String(item.durationMinutes) : ""), ...(item.endTime ? timingFromEnd(fiveMinuteTime(item.time || "09:00"), item.endTime) : {}), title: item.title, type: item.type, note: item.note || "" });
+    setScheduleDraft({ date: item.date, time: fiveMinuteTime(item.time || "09:00"), ...timingFromDuration(fiveMinuteTime(item.time || "09:00"), item.durationMinutes ? String(item.durationMinutes) : "60"), ...(item.endTime ? timingFromEnd(fiveMinuteTime(item.time || "09:00"), item.endTime) : {}), title: item.title, type: item.type, note: item.note || "" });
     setScheduleOpen(true);
   };
   const saveSchedule = (event: FormEvent) => {
     event.preventDefault();
     if (!scheduleDraft.title.trim() || !scheduleDraft.date) return;
-    const value = { ...scheduleDraft, time: fiveMinuteTime(scheduleDraft.time), endTime: usesScheduleDuration(scheduleDraft.type) ? scheduleDraft.endTime || undefined : undefined, durationMinutes: usesScheduleDuration(scheduleDraft.type) && scheduleDraft.durationMinutes ? Number(scheduleDraft.durationMinutes) : undefined, title: scheduleDraft.title.trim() };
+    const value = { ...scheduleDraft, time: fiveMinuteTime(scheduleDraft.time), endTime: usesScheduleDuration(scheduleDraft.type) ? timingFromDuration(scheduleDraft.time, scheduleDraft.durationMinutes || "60").endTime : undefined, durationMinutes: usesScheduleDuration(scheduleDraft.type) ? Number(scheduleDraft.durationMinutes || 60) : undefined, title: scheduleDraft.title.trim() };
     if (editingScheduleId) {
       const current = state.schedule.find((item) => item.id === editingScheduleId);
       updateSchedule(editingScheduleId, { ...value, completed: current?.completed ?? false });
