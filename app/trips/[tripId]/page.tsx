@@ -182,7 +182,6 @@ function TripPageContent() {
   const expenseCategories = [...new Set([...state.expenseCategories, ...state.budgetCategories])];
   const remainingExchange = Math.max(0, (state.exchange.plannedExchange || state.exchange.expectedCash || 0) - (state.exchange.actualExchange || 0));
   const weatherResult = automaticWeather?.key === weatherKey ? automaticWeather : undefined;
-  const overviewWeather = weatherResult?.days.find((item) => item.date === localDateIso(new Date())) || weatherResult?.days[0];
   const plannedTotal = formatTotals(state.budget);
   const sections = ko
     ? [
@@ -376,6 +375,13 @@ function TripPageContent() {
   const scheduleDates = tripDates.length
     ? tripDates
     : Array.from(new Set(state.schedule.map((item) => item.date).filter(Boolean))).sort();
+  const weatherDate = scheduleDates[Math.min(mobileSchedulePage, Math.max(0, scheduleDates.length - 1))] || trip.startDate;
+  const overviewWeather = weatherResult?.days.find((item) => item.date === weatherDate);
+  const goToScheduleDate = (index: number) => {
+    const day = Math.max(0, Math.min(scheduleDates.length - 1, index));
+    setMobileSchedulePage(day);
+    setSchedulePage(Math.floor(day / 3));
+  };
   const schedulePageCount = Math.max(1, Math.ceil(scheduleDates.length / 3));
   const visibleScheduleDates = scheduleDates.slice(schedulePage * 3, schedulePage * 3 + 3);
   useEffect(() => {
@@ -513,7 +519,7 @@ function TripPageContent() {
           </article>
           <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "현재까지 지출" : "Spent so far"}</p><p className="mt-2 text-xl font-bold">{total || (ko ? "아직 지출 없음" : "No spending yet")}</p><p className="mt-1 text-xs muted">{state.expenses.length}{ko ? "건" : " expenses"}</p></article>
           {trip.tripType === "international" && <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "남은 환전금액" : "Remaining exchange"}</p><p className="mt-2 text-xl font-bold">{remainingExchange.toLocaleString()} {state.exchange.to || "JPY"}</p><p className="mt-1 text-xs muted">{ko ? "현금 환전 기준" : "Cash exchange balance"}</p></article>}
-          <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "여행 날씨" : "Trip weather"}</p>{overviewWeather ? <div className="mt-2 flex items-center gap-2"><span className="text-2xl" aria-hidden="true">{overviewWeather.icon}</span><div><p className="text-sm font-bold">{overviewWeather.condition}</p><p className="text-xs muted">{overviewWeather.date} · {overviewWeather.locationSource === "stay" ? (ko ? "숙소 기준 · " : "Hotel · ") : ""}{overviewWeather.locationLabel || trip.city || trip.country} · {ko ? "최고 " : "High "}{overviewWeather.temperature}°C</p></div></div> : <div className="mt-2"><p className="text-sm font-bold" role="status">{weatherResult?.status === "loading" ? (ko ? "날씨를 자동으로 불러오는 중…" : "Loading weather…") : weatherResult?.status === "error" ? (ko ? weatherResult.message || "날씨를 불러오지 못했어요." : "Could not load weather. Please try again.") : weatherResult?.message ? (ko ? weatherResult.message : "Weather is outside the available forecast window.") : (ko ? "여행 날짜와 장소를 설정하면 자동으로 표시돼요." : "Set trip dates and destination to see weather automatically.")}</p>{weatherResult?.status === "error" && <button type="button" onClick={() => setWeatherRetry((value) => value + 1)} className="mt-1 text-xs font-bold text-[var(--color-primary)]">{ko ? "다시 불러오기" : "Retry"}</button>}</div>}</article>
+          <article className="card p-5"><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "여행 날씨" : "Trip weather"}</p>{overviewWeather ? <div className="mt-2 flex items-center gap-2"><span className="text-2xl" aria-hidden="true">{overviewWeather.icon}</span><div><p className="text-sm font-bold">{overviewWeather.condition}</p><p className="text-xs muted">{overviewWeather.date} · {overviewWeather.locationSource === "stay" ? (ko ? "숙소 기준 · " : "Hotel · ") : ""}{overviewWeather.locationLabel || trip.city || trip.country} · {ko ? "최고 " : "High "}{overviewWeather.temperature}°C</p></div></div> : <div className="mt-2"><p className="text-sm font-bold" role="status">{weatherResult?.status === "loading" ? (ko ? "날씨를 자동으로 불러오는 중…" : "Loading weather…") : weatherResult?.status === "error" ? (ko ? weatherResult.message || "날씨를 불러오지 못했어요." : "Could not load weather. Please try again.") : weatherResult?.status === "ready" ? (ko ? `${weatherDate ? weatherDate + " · " : ""}해당 날짜의 날씨가 아직 제공되지 않아요.` : `${weatherDate ? weatherDate + " · " : ""}Weather is not available for this date yet.`) : (ko ? "여행 날짜와 장소를 설정하면 자동으로 표시돼요." : "Set trip dates and destination to see weather automatically.")}</p>{weatherResult?.status === "error" && <button type="button" onClick={() => setWeatherRetry((value) => value + 1)} className="mt-1 text-xs font-bold text-[var(--color-primary)]">{ko ? "다시 불러오기" : "Retry"}</button>}</div>}</article>
         </section>
         <section data-section="trip-schedule-board" className="card mt-7 p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -523,14 +529,14 @@ function TripPageContent() {
           {scheduleDates.length ? (
             <>
               <div className="mt-6 hidden items-center justify-between gap-3 md:flex">
-                <button type="button" onClick={() => setSchedulePage((current) => Math.max(0, current - 1))} disabled={schedulePage === 0} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "이전 3일" : "Previous three days"}>‹</button>
+                <button type="button" onClick={() => goToScheduleDate((schedulePage - 1) * 3)} disabled={schedulePage === 0} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "이전 3일" : "Previous three days"}>‹</button>
                 <p className="text-xs font-bold muted">{schedulePage * 3 + 1}–{Math.min((schedulePage + 1) * 3, scheduleDates.length)} / {scheduleDates.length}{ko ? "일" : " days"}</p>
-                <button type="button" onClick={() => setSchedulePage((current) => Math.min(schedulePageCount - 1, current + 1))} disabled={schedulePage >= schedulePageCount - 1} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "다음 3일" : "Next three days"}>›</button>
+                <button type="button" onClick={() => goToScheduleDate((schedulePage + 1) * 3)} disabled={schedulePage >= schedulePageCount - 1} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "다음 3일" : "Next three days"}>›</button>
               </div>
               <div className="mt-6 flex items-center justify-between gap-3 md:hidden">
-                <button type="button" onClick={() => setMobileSchedulePage((current) => Math.max(0, current - 1))} disabled={mobileSchedulePage === 0} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "이전 날짜" : "Previous day"}>‹</button>
+                <button type="button" onClick={() => goToScheduleDate(mobileSchedulePage - 1)} disabled={mobileSchedulePage === 0} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "이전 날짜" : "Previous day"}>‹</button>
                 <p className="text-xs font-bold muted">{mobileSchedulePage + 1} / {scheduleDates.length}{ko ? "일" : " days"}</p>
-                <button type="button" onClick={() => setMobileSchedulePage((current) => Math.min(scheduleDates.length - 1, current + 1))} disabled={mobileSchedulePage >= scheduleDates.length - 1} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "다음 날짜" : "Next day"}>›</button>
+                <button type="button" onClick={() => goToScheduleDate(mobileSchedulePage + 1)} disabled={mobileSchedulePage >= scheduleDates.length - 1} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "다음 날짜" : "Next day"}>›</button>
               </div>
               <div className="hidden md:block">
                 <TripScheduleCalendar dates={visibleScheduleDates} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openSchedule} onReservationClick={editQuickReservation} onScheduleClick={editSchedule} onScheduleChange={(item, changes) => updateSchedule(item.id, { ...item, ...changes })} onReservationChange={(item, changes) => updateReservation(item.id, { ...item, ...changes })} />
