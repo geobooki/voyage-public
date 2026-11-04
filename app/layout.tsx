@@ -9,17 +9,17 @@ import { AuthGuard } from "./components/auth-guard";
 export const metadata: Metadata = {
   title: "Voyage — 여행 기록",
   description: "여행 전·중·후를 한 곳에서 관리하는 여행 기록 앱",
-  manifest: "/manifest.webmanifest",
+  manifest: "/manifest.webmanifest?v=20261105-bear",
   icons: {
-    icon: [{ url: "/icon.svg?v=20261105", type: "image/svg+xml" }],
-    apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    icon: [{ url: "/icon.svg?v=20261105-bear", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-touch-icon.png?v=20261105-bear", sizes: "180x180", type: "image/png" }],
   },
 };
 export const viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#16a66a",
+  themeColor: "#F5EBE2",
 };
 
 export default function RootLayout({
