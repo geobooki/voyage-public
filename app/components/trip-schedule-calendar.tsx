@@ -5,7 +5,7 @@ import type { Reservation, ScheduleItem } from "@/types/trip";
 import { formatDate } from "@/lib/date";
 import { scheduleTimes, timeMinutes, durationBetween, timingFromDuration, layoutIntervals } from "@/lib/schedule-time";
 
-const pixelsPerMinute = 2;
+const pixelsPerMinute = 3;
 const isStay = (type: string) => ["stay", "숙박", "hotel", "호텔", "accommodation"].includes(type.trim().toLowerCase());
 const dayNumber = (date: string) => Date.parse(date + "T00:00:00Z") / 86400000;
 type CalendarEvent = { kind: "schedule"; item: ScheduleItem; start: number; end: number; color: string } | { kind: "reservation"; item: Reservation; start: number; end: number; color: string };
