@@ -34,6 +34,7 @@ export default function SchedulePage() {
     state,
     addSchedule,
     updateSchedule,
+    updateReservation,
     removeSchedule,
   } = useTripData();
   const tripDates = useMemo(() => {
@@ -77,8 +78,8 @@ export default function SchedulePage() {
       time: fiveMinuteTime(item.time),
       title: item.title.trim(),
       note: item.note.trim(),
-      endTime: usesScheduleDuration(item.type) ? timingFromDuration(item.time, item.durationMinutes || "60").endTime : undefined,
-      durationMinutes: usesScheduleDuration(item.type) ? Math.max(5, Math.round(Number(item.durationMinutes || 60) / 5) * 5) : undefined,
+      endTime: (usesScheduleDuration(item.type) || Boolean(editingId && state.schedule.find((entry) => entry.id === editingId)?.durationMinutes)) ? timingFromDuration(item.time, item.durationMinutes || "60").endTime : undefined,
+      durationMinutes: (usesScheduleDuration(item.type) || Boolean(editingId && state.schedule.find((entry) => entry.id === editingId)?.durationMinutes)) ? Math.max(5, Math.round(Number(item.durationMinutes || 60) / 5) * 5) : undefined,
       completed: current?.completed ?? false,
     };
     if (editingId) updateSchedule(editingId, value);
@@ -129,7 +130,7 @@ export default function SchedulePage() {
             <label className="text-sm font-bold">날짜<input required type="date" value={item.date} onChange={(event) => setItem({ ...item, date: event.target.value })} className={`mt-2 ${control}`} /></label>
             <label className="text-sm font-bold">시간<select required aria-label="시간 (5분 단위)" value={item.time} onChange={(event) => setItem({ ...item, time: event.target.value, ...timingFromDuration(event.target.value, item.durationMinutes) })} className={`mt-2 ${control}`}>{scheduleTimes.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>
           </div>
-          {usesScheduleDuration(item.type) && <>
+          {(usesScheduleDuration(item.type) || Boolean(editingId && state.schedule.find((entry) => entry.id === editingId)?.durationMinutes)) && <>
           <label className="block text-sm font-bold">소요시간 <span className="font-normal muted">(선택)</span><div className="mt-2 flex items-center gap-2"><input type="number" min="5" max="1440" step="5" value={item.durationMinutes} onChange={(event) => setItem({ ...item, ...timingFromDuration(item.time, event.target.value), durationMinutes: event.target.value })} placeholder="예: 90" className={`max-w-xs ${control}`} /><span className="text-sm muted">분</span></div></label>
           <label className="block text-sm font-bold">종료시간 <span className="font-normal muted">(선택 · 소요시간과 자동 계산)</span><select value={item.endTime} onChange={(event) => setItem({ ...item, ...timingFromEnd(item.time, event.target.value) })} className={`mt-2 ${control}`}><option value="">선택 안 함</option>{item.endTime && !endTimeOptions.includes(item.endTime) && <option hidden value={item.endTime}>{item.endTime}</option>}{endTimeOptions.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>
           {item.endTime && item.endTime <= item.time && <p className="text-xs muted">종료시간은 다음 날 기준이에요.</p>}
@@ -161,8 +162,8 @@ export default function SchedulePage() {
             <div><p className="eyebrow mb-2">{ko ? "여행 일정" : "Trip schedule"}</p><h2 className="text-2xl font-bold">{ko ? "날짜별로 여행을 채워요." : "Build the trip day by day."}</h2><p className="mt-2 text-sm muted">{ko ? "시간을 누르면 그 시간에 일정을 추가할 수 있어요." : "Click a time to add a plan."}</p></div>
             <div className="hidden items-center gap-2 md:flex"><button type="button" onClick={() => setSchedulePage((current) => Math.max(0, current - 1))} disabled={schedulePage === 0} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "이전 3일" : "Previous three days"}>‹</button><span className="text-xs font-bold muted">{schedulePage * 3 + 1}–{Math.min((schedulePage + 1) * 3, dates.length)} / {dates.length}{ko ? "일" : " days"}</span><button type="button" onClick={() => setSchedulePage((current) => Math.min(schedulePageCount - 1, current + 1))} disabled={schedulePage >= schedulePageCount - 1} className="grid size-9 place-items-center rounded-full border border-[var(--color-border)] text-lg font-bold disabled:opacity-30" aria-label={ko ? "다음 3일" : "Next three days"}>›</button></div>
           </div>
-          <div className="hidden md:block"><TripScheduleCalendar dates={visibleDesktopDates} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openAt} onReservationClick={(_reservation: Reservation) => undefined} onScheduleClick={edit} /></div>
-          <div className="md:hidden"><TripScheduleCalendar dates={[dates[0]]} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openAt} onReservationClick={(_reservation: Reservation) => undefined} onScheduleClick={edit} /></div>
+          <div className="hidden md:block"><TripScheduleCalendar dates={visibleDesktopDates} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openAt} onReservationClick={(_reservation: Reservation) => undefined} onScheduleClick={edit} onScheduleChange={(entry, changes) => updateSchedule(entry.id, { ...entry, ...changes })} onReservationChange={(entry, changes) => updateReservation(entry.id, { ...entry, ...changes })} /></div>
+          <div className="md:hidden"><TripScheduleCalendar dates={[dates[0]]} schedule={state.schedule} reservations={state.reservations} ko={ko} onAdd={openAt} onReservationClick={(_reservation: Reservation) => undefined} onScheduleClick={edit} onScheduleChange={(entry, changes) => updateSchedule(entry.id, { ...entry, ...changes })} onReservationChange={(entry, changes) => updateReservation(entry.id, { ...entry, ...changes })} /></div>
           {isDomestic && state.schedule.length > 0 && <section className="mt-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4"><p className="text-sm font-bold">일정별 첨부파일</p><p className="mt-1 text-xs muted">국내 여행은 예약 탭 대신 각 일정에 사진이나 PDF를 선택적으로 추가할 수 있어요.</p><div className="mt-3 space-y-3">{state.schedule.map((entry) => <div key={entry.id} className="rounded-xl bg-[var(--color-surface)] px-3"><p className="pt-3 text-sm font-bold">{entry.date} · {entry.title}</p><ReservationDocuments tripId={tripId} itemId={entry.id} resource="schedule" /></div>)}</div></section>}
         </section>}
         {!dates.length && (
