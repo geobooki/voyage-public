@@ -333,7 +333,7 @@ export default function DuringPage() {
                 key={item.id}
               >
                 <span className="w-12 text-xs font-bold muted">
-                  {item.time}
+                  {item.time?.slice(0, 5)}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="break-words font-bold">{item.title}</p>
@@ -373,7 +373,7 @@ export default function DuringPage() {
                     </p>
                   </div>
                   <p className="mt-1 text-xs muted">
-                    {item.time} · {item.category}
+                    {item.time?.slice(0, 5)} · {item.category}
                     {item.memo ? ` · ${item.memo}` : ""}
                   </p>
                 </div>
@@ -510,7 +510,7 @@ export default function DuringPage() {
                       key={item.id}
                     >
                       <span className="muted">
-                        {item.time} · {item.category} · {item.memo || "Expense"}
+                        {item.time?.slice(0, 5)} · {item.category} · {item.memo || "Expense"}
                       </span>
                       <span className="font-bold">
                         {item.currency} {item.amount.toLocaleString()}

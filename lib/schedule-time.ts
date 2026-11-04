@@ -4,6 +4,7 @@ export const scheduleTimes = Array.from({ length: 24 * 12 }, (_, index) => {
 });
 
 export function fiveMinuteTime(value: string) {
+  value = value.slice(0, 5);
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) return "09:00";
   const minutes = Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5));
   return scheduleTimes[Math.min(scheduleTimes.length - 1, Math.round(minutes / 5))];
@@ -51,3 +52,5 @@ export function usesScheduleDuration(type: string) {
     "activity", "activities", "ferry", "car rental",
   ].some((category) => normalized.includes(category));
 }
+
+export const endTimeOptions = scheduleTimes.filter((time) => time.endsWith(":00") || time.endsWith(":30"));

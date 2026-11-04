@@ -47,7 +47,7 @@ export default function MemoriesPage() {
                   key={item.id}
                 >
                   <p className="text-xs font-bold text-[var(--color-primary)]">
-                    {item.date} · {item.time || "시간 미정"}
+                    {item.date} · {item.time?.slice(0, 5) || "시간 미정"}
                   </p>
                   <h3 className="mt-2 text-lg font-bold">{item.title}</h3>
                   <p className="mt-2 whitespace-pre-wrap break-words text-sm muted">

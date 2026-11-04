@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { scheduleTimes, fiveMinuteTime, timingFromDuration, timingFromEnd, usesScheduleDuration } from "@/lib/schedule-time";
+import { scheduleTimes, fiveMinuteTime, timingFromDuration, timingFromEnd, usesScheduleDuration, endTimeOptions } from "@/lib/schedule-time";
 import { useParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
@@ -52,8 +52,8 @@ export default function SchedulePage() {
     date: defaultDate,
     title: "",
     time: "09:00",
-    endTime: "",
-    durationMinutes: "",
+    endTime: "10:00",
+    durationMinutes: "60",
     type: "Sightseeing",
     placeId: "",
     note: "",
@@ -77,8 +77,8 @@ export default function SchedulePage() {
       time: fiveMinuteTime(item.time),
       title: item.title.trim(),
       note: item.note.trim(),
-      endTime: usesScheduleDuration(item.type) ? item.endTime || undefined : undefined,
-      durationMinutes: usesScheduleDuration(item.type) && item.durationMinutes ? Math.max(5, Math.round(Number(item.durationMinutes) / 5) * 5) : undefined,
+      endTime: usesScheduleDuration(item.type) ? timingFromDuration(item.time, item.durationMinutes || "60").endTime : undefined,
+      durationMinutes: usesScheduleDuration(item.type) ? Math.max(5, Math.round(Number(item.durationMinutes || 60) / 5) * 5) : undefined,
       completed: current?.completed ?? false,
     };
     if (editingId) updateSchedule(editingId, value);
@@ -92,7 +92,7 @@ export default function SchedulePage() {
       date: entry.date,
       title: entry.title,
       time: fiveMinuteTime(entry.time),
-      ...timingFromDuration(fiveMinuteTime(entry.time), entry.durationMinutes ? String(entry.durationMinutes) : ""),
+      ...timingFromDuration(fiveMinuteTime(entry.time), entry.durationMinutes ? String(entry.durationMinutes) : "60"),
       ...(entry.endTime ? timingFromEnd(fiveMinuteTime(entry.time), entry.endTime) : {}),
       type: entry.type,
       placeId: entry.placeId ?? "",
@@ -104,7 +104,7 @@ export default function SchedulePage() {
   const visibleDesktopDates = dates.slice(schedulePage * 3, schedulePage * 3 + 3);
   const openAt = (date: string, time: string) => {
     setEditingId(null);
-    setItem({ ...empty(), date, time });
+    setItem({ ...empty(), date, time, ...timingFromDuration(time, "60") });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   return (
@@ -131,7 +131,7 @@ export default function SchedulePage() {
           </div>
           {usesScheduleDuration(item.type) && <>
           <label className="block text-sm font-bold">소요시간 <span className="font-normal muted">(선택)</span><div className="mt-2 flex items-center gap-2"><input type="number" min="5" max="1440" step="5" value={item.durationMinutes} onChange={(event) => setItem({ ...item, ...timingFromDuration(item.time, event.target.value), durationMinutes: event.target.value })} placeholder="예: 90" className={`max-w-xs ${control}`} /><span className="text-sm muted">분</span></div></label>
-          <label className="block text-sm font-bold">종료시간 <span className="font-normal muted">(선택 · 소요시간과 자동 계산)</span><select value={item.endTime} onChange={(event) => setItem({ ...item, ...timingFromEnd(item.time, event.target.value) })} className={`mt-2 ${control}`}><option value="">선택 안 함</option>{scheduleTimes.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>
+          <label className="block text-sm font-bold">종료시간 <span className="font-normal muted">(선택 · 소요시간과 자동 계산)</span><select value={item.endTime} onChange={(event) => setItem({ ...item, ...timingFromEnd(item.time, event.target.value) })} className={`mt-2 ${control}`}><option value="">선택 안 함</option>{item.endTime && !endTimeOptions.includes(item.endTime) && <option hidden value={item.endTime}>{item.endTime}</option>}{endTimeOptions.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>
           {item.endTime && item.endTime <= item.time && <p className="text-xs muted">종료시간은 다음 날 기준이에요.</p>}
           </>}
           <div className="grid gap-3 sm:grid-cols-2">
