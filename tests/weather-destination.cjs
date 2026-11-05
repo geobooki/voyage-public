@@ -26,12 +26,14 @@ const route=compile("app/api/trips/[tripId]/weather/auto/route.ts",{
  "@/lib/destinations":destinations,"@/lib/destination-locations.json":{default:knownLocations},"@/lib/weather-destination":helpers
 });
 const context={params:Promise.resolve({tripId:"test"})};
-const forecast={daily:{time:[today],temperature_2m_max:[28],weather_code:[1]}};
+const forecast={daily:{time:[today],temperature_2m_max:[28],temperature_2m_min:[19],precipitation_probability_max:[60],weather_code:[1]}};
 (async()=>{
  let calls=[];
  global.fetch=async(url)=>{calls.push(url);if(url.includes("geocoding-api"))return {ok:true,json:async()=>({results:[{latitude:16.06778,longitude:108.22083,country_code:"VN",feature_code:"PPL",timezone:"Asia/Ho_Chi_Minh"}]})};return {ok:true,json:async()=>forecast};};
  let result=await route.GET({},context);
  assert.equal(result.status,200);assert.equal(result.data.weather[0].locationSource,"city");assert.equal(calls.length,2);assert(calls[0].includes("countryCode=VN"));
+ assert.equal(result.data.weather[0].temperature,28);assert.equal(result.data.weather[0].minimumTemperature,19);assert.equal(result.data.weather[0].precipitationProbability,60);
+ assert(new URL(calls[1]).searchParams.get("daily").includes("precipitation_probability_max"));
  let forecasts=0;
  global.fetch=async(url)=>{if(url.includes("geocoding-api"))return {ok:true,json:async()=>({results:[{latitude:16,longitude:108,country_code:"VN",feature_code:"PPL"}]})};forecasts++;return forecasts===1?{ok:false}:{ok:true,json:async()=>forecast};};
  result=await route.POST({},context);
@@ -41,6 +43,10 @@ const forecast={daily:{time:[today],temperature_2m_max:[28],weather_code:[1]}};
  knownLocations["VN:다낭"]={latitude:16,longitude:108,country_code:"VN"};
  let cachedCalls=0;global.fetch=async(url)=>{assert(!url.includes("geocoding-api"));cachedCalls++;return {ok:true,json:async()=>forecast};};
  result=await route.GET({},context);assert.equal(result.data.weather[0].locationSource,"city");assert.equal(cachedCalls,1);
+ forecast.daily.precipitation_probability_max=[0];forecast.daily.temperature_2m_min=[0];
+ result=await route.GET({},context);assert.equal(result.data.weather[0].precipitationProbability,0);assert.equal(result.data.weather[0].minimumTemperature,0);
+ forecast.daily.precipitation_probability_max=[null];forecast.daily.temperature_2m_min=[null];
+ result=await route.GET({},context);assert.equal(result.data.weather[0].precipitationProbability,null);assert.equal(result.data.weather[0].minimumTemperature,null);
  trip={...trip,start_date:"2030-01-01",end_date:"2030-01-02"};
  result=await route.GET({},context);assert.equal(result.status,200);assert.equal(result.data.weather.length,0);
  console.log("PASS: country/city catalog, country filtering, city priority, hotel fallback after forecast failure or wrong country, save payload, forecast date limits");

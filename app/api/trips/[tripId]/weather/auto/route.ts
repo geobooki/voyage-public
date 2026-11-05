@@ -5,7 +5,7 @@ import destinationLocations from "@/lib/destination-locations.json";
 import { destinationCountryCode, destinationCityQuery } from "@/lib/destinations";
 import { isWeatherStay, stayForWeatherDate, stayCoordinate, type WeatherStay } from "@/lib/weather-destination";
 
-type DailyForecast = { time?: string[]; temperature_2m_max?: (number | null)[]; weather_code?: (number | null)[] };
+type DailyForecast = { time?: string[]; temperature_2m_max?: (number | null)[]; temperature_2m_min?: (number | null)[]; precipitation_probability_max?: (number | null)[]; weather_code?: (number | null)[] };
 type Location = { latitude: number; longitude: number; country?: string; country_code?: string; timezone?: string; feature_code?: string };
 export const maxDuration = 40;
 type Context = { params: Promise<{ tripId: string }> };
@@ -98,7 +98,7 @@ async function loadWeather(request: Request, context: Context, save: boolean) {
     for (let date = from; date <= to; date = shiftDate(date, 1)) dates.push(date);
     const fetchForecast = async (location: Destination, dates: string[]) => {
       const ordered = [...dates].sort();
-      const query = new URLSearchParams({ latitude: String(location.latitude), longitude: String(location.longitude), daily: "weather_code,temperature_2m_max", timezone: "auto", start_date: ordered[0], end_date: ordered[ordered.length - 1] });
+      const query = new URLSearchParams({ latitude: String(location.latitude), longitude: String(location.longitude), daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max", timezone: "auto", start_date: ordered[0], end_date: ordered[ordered.length - 1] });
       const response = await fetch("https://api.open-meteo.com/v1/forecast?" + query, { next: { revalidate: 1800 }, signal: AbortSignal.timeout(6000) });
       if (!response.ok) throw new Error("forecast");
       const data = await response.json() as { daily?: DailyForecast };
@@ -106,8 +106,11 @@ async function loadWeather(request: Request, context: Context, save: boolean) {
         if (!dates.includes(date)) return [];
         const temperature = data.daily?.temperature_2m_max?.[index], code = data.daily?.weather_code?.[index];
         if (temperature == null || code == null || !Number.isFinite(temperature) || !Number.isFinite(code)) return [];
+        const minimum = data.daily?.temperature_2m_min?.[index], probability = data.daily?.precipitation_probability_max?.[index];
+        const minimumTemperature = minimum != null && Number.isFinite(minimum) ? minimum : null;
+        const precipitationProbability = probability != null && Number.isFinite(probability) && probability >= 0 && probability <= 100 ? probability : null;
         const [condition, icon] = weatherLabel(code);
-        return [{ trip_id: tripId, date, temperature, condition, icon, locationLabel: location.label, locationSource: location.kind }];
+        return [{ trip_id: tripId, date, temperature, minimumTemperature, precipitationProbability, condition, icon, locationLabel: location.label, locationSource: location.kind }];
       });
     };
     // Only look up hotel addresses for dates that city weather could not supply.

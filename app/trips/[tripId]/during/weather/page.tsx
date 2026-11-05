@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { WeatherMetrics } from "@/app/components/weather-metrics";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
@@ -52,7 +53,7 @@ export default function WeatherPage() {
           const schedule = state.schedule.filter((item) => item.date === day.date).sort((a, b) => a.time.localeCompare(b.time));
           return <article className="card p-6" key={day.date}>
             <p className="text-xs font-bold muted">{day.date}</p>
-            <div className="mt-5 flex items-end justify-between"><span className="text-4xl" aria-hidden="true">{day.icon}</span><div><p className="text-xs muted">{ko ? "최고 기온" : "High"}</p><span className="text-3xl font-bold">{day.temperature}°C</span></div></div>
+            <div className="mt-5 flex items-end justify-between"><span className="text-4xl" aria-hidden="true">{day.icon}</span><WeatherMetrics weather={day} ko={ko}/></div>
             <p className="mt-2 text-sm muted">{day.condition}</p>{day.locationLabel && <p className="mt-1 text-xs muted">{day.locationSource === "stay" ? (ko ? "숙소 기준 · " : "Hotel · ") : ""}{day.locationLabel}</p>}
             <div className="mt-6 border-t border-[var(--color-border)] pt-4"><p className="eyebrow mb-3">{ko ? "이날의 일정" : "Day plan"}</p>
               {schedule.length ? <div className="space-y-2">{schedule.map((item) => <div key={item.id} className="flex gap-3 text-sm"><span className="w-11 font-bold text-[var(--color-primary)]">{item.time?.slice(0, 5) || "—"}</span><span className="muted">{item.title}</span></div>)}</div> : <p className="text-sm muted">{ko ? "등록된 일정이 없어요." : "No schedule for this day."}</p>}
