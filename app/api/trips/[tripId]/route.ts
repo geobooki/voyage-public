@@ -33,6 +33,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ trip
       reservations: client.from("reservations").select("*").eq("trip_id", tripId).order("date"),
     },
     budget: {
+      travelers: client.from("travelers").select("*").eq("trip_id", tripId).order("created_at"),
+      schedule: client.from("schedule_items").select("*").eq("trip_id", tripId).order("date").order("time"),
+      places: client.from("places").select("*").eq("trip_id", tripId).order("created_at"),
       trip: client.from("trips").select("id,destination_currency").eq("id", tripId).single(),
       expenses: client.from("expenses").select("*").eq("trip_id", tripId).order("spent_at", { ascending: false }),
       budget: client.from("budget_items").select("*").eq("trip_id", tripId).order("created_at"),
