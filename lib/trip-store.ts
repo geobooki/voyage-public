@@ -796,6 +796,41 @@ export function useTripStore(tripId = "tokyo", view = "full") {
   const addExpenseCategory = (name: string) => update((s) => s.expenseCategories.includes(name) ? s : { ...s, expenseCategories: [...s.expenseCategories, name] });
   const renameExpenseCategory = (from: string, to: string) => update((s) => ({ ...s, expenseCategories: s.expenseCategories.map((item) => item === from ? to : item), expenses: s.expenses.map((item) => item.category === from ? { ...item, category: to } : item) }));
   const removeExpenseCategory = (name: string) => update((s) => ({ ...s, expenseCategories: s.expenseCategories.filter((item) => item !== name) }));
+  const saveScheduleActivity = async (schedule: Omit<ScheduleItem, "id">, scheduleId?: string) => {
+    const next = { ...schedule, id: scheduleId || id() };
+    await sendMutation(tripId, { key: "schedule:" + next.id, resource: "schedule", payload: next, method: scheduleId ? "PATCH" : "POST" });
+    update((s) => ({ ...s, schedule: scheduleId ? s.schedule.map((item) => item.id === scheduleId ? next : item) : [...s.schedule, next] }));
+    return next.id;
+  };
+  const saveExpenseEntry = async (expense: Omit<Expense, "id">, expenseId?: string) => {
+    const next = { ...expense, id: expenseId || id() };
+    await sendMutation(tripId, { key: "expense:" + next.id, resource: "expenses", payload: next, method: expenseId ? "PATCH" : "POST" });
+    update((s) => ({ ...s, expenses: expenseId ? s.expenses.map((item) => item.id === expenseId ? next : item) : [...s.expenses, next] }));
+  };
+  const ensureSchedulePlace = async (scheduleId: string) => {
+    const schedule = state.schedule.find((item) => item.id === scheduleId);
+    if (!schedule) throw new Error("연결할 일정을 찾지 못했어요.");
+    if (schedule.placeId) return schedule.placeId;
+    const place = { id: id(), name: schedule.title, type: "Activity", address: "", expectedCost: 0, visitDate: schedule.date, mustGo: false, visited: false, memo: "" };
+    await sendMutation(tripId, { key: "place:" + place.id, resource: "places", payload: place, method: "POST" });
+    const linked = { ...schedule, placeId: place.id };
+    await sendMutation(tripId, { key: "schedule:" + schedule.id, resource: "schedule", payload: linked, method: "PATCH" });
+    update((s) => ({ ...s, places: [...s.places, place], schedule: s.schedule.map((item) => item.id === scheduleId ? { ...item, placeId: place.id } : item) }));
+    return place.id;
+  };
+  const createTraveler = async (name: string) => {
+    const next = { id: id(), name };
+    await sendMutation(tripId, { key: "traveler:" + next.id, resource: "travelers", payload: next, method: "POST" });
+    update((s) => ({ ...s, travelers: [...s.travelers, next] }));
+  };
+  const updateTraveler = async (travelerId: string, name: string) => {
+    await sendMutation(tripId, { key: "traveler:" + travelerId, resource: "travelers", payload: { id: travelerId, name }, method: "PATCH" });
+    update((s) => ({ ...s, travelers: s.travelers.map((item) => item.id === travelerId ? { ...item, name } : item) }));
+  };
+  const removeTraveler = async (travelerId: string) => {
+    await sendMutation(tripId, { key: "traveler:" + travelerId, resource: "travelers", payload: { id: travelerId }, method: "DELETE" });
+    update((s) => ({ ...s, travelers: s.travelers.filter((item) => item.id !== travelerId) }));
+  };
   const addTraveler = (name: string) => {
     const next = { id: id(), name };
     update((s) => ({ ...s, travelers: [...s.travelers, next] }));
@@ -985,6 +1020,12 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     renameExpenseCategory,
     removeExpenseCategory,
     addTraveler,
+    createTraveler,
+    updateTraveler,
+    removeTraveler,
+    ensureSchedulePlace,
+    saveScheduleActivity,
+    saveExpenseEntry,
     addReservation,
     updateReservation,
     removeReservation,

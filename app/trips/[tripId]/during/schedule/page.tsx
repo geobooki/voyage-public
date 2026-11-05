@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ScheduleTypeSelect } from "@/app/components/schedule-type-select";
 import { scheduleTimes, fiveMinuteTime, timingFromDuration, timingFromEnd, usesScheduleDuration, endTimeOptions, scheduleDurationPreset } from "@/lib/schedule-time";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
 import { useLanguage } from "@/lib/i18n";
@@ -27,6 +27,10 @@ const control =
 
 export default function SchedulePage() {
   const { tripId } = useParams<{ tripId: string }>();
+  const router = useRouter();
+  const [recordExpense, setRecordExpense] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const { language } = useLanguage();
   const ko = language === "ko";
   const trip = useTripMeta(tripId);
@@ -34,6 +38,7 @@ export default function SchedulePage() {
   const {
     state,
     addSchedule,
+    saveScheduleActivity,
     updateSchedule,
     updateReservation,
     removeSchedule,
@@ -70,7 +75,7 @@ export default function SchedulePage() {
       ...state.reservations.flatMap((reservation) => [reservation.date, reservation.endDate]),
     ]),
   ).filter((date): date is string => Boolean(date)).sort();
-  const save = (event: FormEvent) => {
+  const save = async (event: FormEvent) => {
     event.preventDefault();
     if (!item.title.trim() || !item.date || !item.time) return;
     const current = state.schedule.find((entry) => entry.id === editingId);
@@ -83,6 +88,14 @@ export default function SchedulePage() {
       durationMinutes: (usesScheduleDuration(item.type) || Boolean(scheduleDurationPreset(item.type)) || Boolean(editingId && state.schedule.find((entry) => entry.id === editingId)?.durationMinutes)) ? Math.max(5, Math.round(Number(item.durationMinutes || 60) / 5) * 5) : undefined,
       completed: current?.completed ?? false,
     };
+    if (recordExpense) {
+      setSaving(true); setSaveError("");
+      try {
+        const id = await saveScheduleActivity(value, editingId || undefined);
+        router.push(`/trips/${tripId}/before/budget?schedule=${encodeURIComponent(id)}`);
+      } catch (caught) { setSaveError(caught instanceof Error ? caught.message : "일정을 저장하지 못했어요."); setSaving(false); }
+      return;
+    }
     if (editingId) updateSchedule(editingId, value);
     else addSchedule(value);
     setItem(empty());
@@ -142,8 +155,10 @@ export default function SchedulePage() {
           </div>
           <label className="block text-sm font-bold">무엇을 하는지<input required value={item.title} onChange={(event) => setItem({ ...item, title: event.target.value })} placeholder="예: 바나힐 케이블카 타기" className={`mt-2 ${control}`} /></label>
           <label className="block text-sm font-bold">메모 <span className="font-normal muted">(선택)</span><textarea value={item.note} onChange={(event) => setItem({ ...item, note: event.target.value })} placeholder="준비물이나 예약 정보를 적어두세요" rows={3} className={`mt-2 ${control}`} /></label>
+          <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={recordExpense} onChange={(event) => setRecordExpense(event.target.checked)}/>{ko ? "저장 후 이 일정의 지출 기록" : "Record spending after saving"}</label>
+          {saveError && <p role="alert" className="text-xs text-[var(--color-danger)]">{saveError}</p>}
           <div className="flex flex-wrap gap-2">
-            <button className="w-full rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white sm:w-auto">{editingId ? "저장" : "일정 추가"}</button>
+            <button disabled={saving} className="w-full rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white sm:w-auto">{saving ? "저장 중…" : recordExpense ? "저장하고 지출 기록" : editingId ? "저장" : "일정 추가"}</button>
             {editingId && <button type="button" onClick={() => { if (window.confirm("이 일정을 삭제할까요?")) { removeSchedule(editingId); setEditingId(null); setItem(empty()); } }} className="rounded-xl border border-[var(--color-danger)] px-4 py-3 text-sm font-bold text-[var(--color-danger)]">삭제</button>}
           </div>
         </form>

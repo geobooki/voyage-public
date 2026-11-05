@@ -370,3 +370,16 @@ select:not([multiple]) {
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+/* Compact ledger controls and keep its calendar inside small viewports. */
+.expense-ledger :is(input, select, textarea) { max-width: 100%; min-width: 0; }
+.expense-ledger .date-field-trigger { min-width: 0; padding: 10px 12px; font-size: 14px; }
+.expense-ledger .date-picker-popover { left: 0; transform: none; width: min(300px, calc(100vw - 64px)); }
+.expense-ledger .card { min-width: 0; }
+@media (max-width: 639px) {
+  .expense-ledger .date-field-trigger { font-size: 16px; }
+  .expense-ledger h1 { font-size: 24px; }
+  .expense-ledger [class~="text-3xl"] { font-size: 24px; overflow-wrap: anywhere; }
+  .expense-ledger [class~="text-2xl"] { overflow-wrap: anywhere; }
+  .expense-ledger form > * { min-width: 0; }
+}
