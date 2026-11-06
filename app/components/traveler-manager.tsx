@@ -13,8 +13,8 @@ export function TravelerManager({ ko }: { ko: boolean }) {
     try { await action(); } catch (caught) { setError(caught instanceof Error ? caught.message : "저장하지 못했어요."); } finally { setBusy(false); }
   };
   const control = "min-w-0 flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm";
-  return <section className="card mt-5 p-4 sm:p-6" id="expense-travelers">
-    <h2 className="text-base font-semibold">{ko ? "여행자 관리" : "Travelers"}</h2>
+  return <details className="card mt-5 p-4 sm:p-6" id="expense-travelers">
+    <summary className="cursor-pointer text-sm font-medium">{ko ? "여행자 관리" : "Travelers"}</summary>
     <p className="mt-1 text-xs muted">{ko ? "이 페이지에서 여행자를 추가하고 이름을 수정할 수 있어요." : "Add and rename travelers here."}</p>
     <form className="mt-4 flex gap-2" onSubmit={(event) => { event.preventDefault(); if (name.trim()) void run(async () => { await createTraveler(name.trim()); setName(""); }); }}>
       <input required aria-label={ko ? "새 여행자 이름" : "New traveler name"} value={name} onChange={(event) => setName(event.target.value)} placeholder={ko ? "여행자 이름" : "Traveler name"} className={control}/>
@@ -31,5 +31,5 @@ export function TravelerManager({ ko }: { ko: boolean }) {
     </div>)}</div>
     {!state.travelers.length && <p className="mt-3 text-xs muted">{ko ? "여행자를 추가하면 결제자·분담자로 선택할 수 있어요." : "Add travelers to select payers and participants."}</p>}
     {error && <p role="alert" className="mt-3 text-xs text-[var(--color-danger)]">{error}</p>}
-  </section>;
+  </details>;
 }

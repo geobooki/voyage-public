@@ -19,6 +19,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ trip
   }
   const viewTables: Record<string, Record<string, any>> = {
     overview: {
+      travelers: client.from("travelers").select("*").eq("trip_id", tripId).order("created_at"),
       trip: client.from("trips").select("id,title,slug,city,country,start_date,end_date,status,destination_currency").eq("id", tripId).single(),
       places: client.from("places").select("*").eq("trip_id", tripId).order("created_at"),
       expenses: client.from("expenses").select("*").eq("trip_id", tripId).order("spent_at", { ascending: false }),
