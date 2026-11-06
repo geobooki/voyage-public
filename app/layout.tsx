@@ -9,10 +9,10 @@ import { AuthGuard } from "./components/auth-guard";
 export const metadata: Metadata = {
   title: "Voyage — 여행 기록",
   description: "여행 전·중·후를 한 곳에서 관리하는 여행 기록 앱",
-  manifest: "/manifest.webmanifest?v=20261105-bear",
+  manifest: "/manifest.webmanifest?v=20261107-brown",
   icons: {
-    icon: [{ url: "/icon.svg?v=20261105-bear", type: "image/svg+xml" }],
-    apple: [{ url: "/apple-touch-icon.png?v=20261105-bear", sizes: "180x180", type: "image/png" }],
+    icon: [{ url: "/icon.svg?v=20261107-brown", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-touch-icon.png?v=20261107-brown", sizes: "180x180", type: "image/png" }],
   },
 };
 export const viewport = {
