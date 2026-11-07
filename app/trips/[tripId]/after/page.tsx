@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SettlementPanel } from "@/app/components/settlement-panel";
 import { useParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { formatTotals, totalsByCurrency } from "@/lib/money";
@@ -19,9 +20,8 @@ const control =
 
 export default function AfterPage() {
   const { tripId } = useParams<{ tripId: string }>();
-  const { state, saveReview, addTraveler } = useTripData();
+  const { state, saveReview } = useTripData();
   const [review, setReview] = useState(state.review);
-  const [travelerName, setTravelerName] = useState("");
   useEffect(() => setReview(state.review), [state.review]);
   const totalLabel = formatTotals(state.expenses);
   const plannedLabel = formatTotals(state.budget);
@@ -74,56 +74,9 @@ export default function AfterPage() {
   });
   const sharedExpenses = expenseViews.filter((item) => item.shared);
   const personalExpenses = expenseViews.filter((item) => !item.shared);
-  const settlementByCurrency = Object.entries(currencyTotals).map(
-    ([currency, total]) => {
-      const owedByTraveler = new Map(state.travelers.map((traveler) => [traveler.id, 0]));
-      const paidByTraveler = new Map(state.travelers.map((traveler) => [traveler.id, 0]));
-      state.expenses.filter((expense) => expense.currency === currency).forEach((expense) => {
-        const participants = expense.participantIds?.length ? state.travelers.filter((traveler) => expense.participantIds?.includes(traveler.id)) : state.travelers;
-        const share = participants.length ? expense.amount / participants.length : 0;
-        participants.forEach((traveler) => owedByTraveler.set(traveler.id, (owedByTraveler.get(traveler.id) || 0) + share));
-        if (expense.payerId) paidByTraveler.set(expense.payerId, (paidByTraveler.get(expense.payerId) || 0) + expense.amount);
-      });
-      const share = state.travelers.length ? total / state.travelers.length : 0;
-      const balances = state.travelers.map((traveler) => ({ ...traveler, paid: paidByTraveler.get(traveler.id) || 0, owed: owedByTraveler.get(traveler.id) || 0, balance: (paidByTraveler.get(traveler.id) || 0) - (owedByTraveler.get(traveler.id) || 0) }));
-      const debtors = balances
-        .filter((person) => person.balance < -0.5)
-        .map((person) => ({ name: person.name, amount: -person.balance }));
-      const creditors = balances
-        .filter((person) => person.balance > 0.5)
-        .map((person) => ({ name: person.name, amount: person.balance }));
-      const transfers: { from: string; to: string; amount: number }[] = [];
-      let debtor = 0;
-      let creditor = 0;
-      while (debtor < debtors.length && creditor < creditors.length) {
-        const amount = Math.min(
-          debtors[debtor].amount,
-          creditors[creditor].amount,
-        );
-        if (amount > 0.5)
-          transfers.push({
-            from: debtors[debtor].name,
-            to: creditors[creditor].name,
-            amount: Math.round(amount),
-          });
-        debtors[debtor].amount -= amount;
-        creditors[creditor].amount -= amount;
-        if (debtors[debtor].amount <= 0.5) debtor += 1;
-        if (creditors[creditor].amount <= 0.5) creditor += 1;
-      }
-      return { currency, share, balances, transfers };
-    },
-  );
   const save = (event: FormEvent) => {
     event.preventDefault();
     saveReview(review);
-  };
-  const addPerson = (event: FormEvent) => {
-    event.preventDefault();
-    if (travelerName.trim()) {
-      addTraveler(travelerName.trim());
-      setTravelerName("");
-    }
   };
   return (
     <main className="min-h-screen px-5 py-8 pb-16 sm:px-10 lg:px-20 lg:py-12">
@@ -137,6 +90,7 @@ export default function AfterPage() {
         <p className="eyebrow mt-10 mb-3">After the trip</p>
         <h1 className="text-4xl font-bold">Keep the story.</h1>
         <p className="mt-2 muted">A few numbers, a lot of memories.</p>
+        <section className="card mt-5 p-4 sm:p-6" id="settlement"><h2 className="mb-4 text-xl font-semibold">여행 경비 정산</h2><SettlementPanel tripId={tripId}/></section>
         <div className="mt-10 grid gap-5 sm:grid-cols-3">
           <div className="card p-6">
             <p className="text-2xl font-bold">{totalLabel || "—"}</p>
@@ -251,87 +205,6 @@ export default function AfterPage() {
               </div>
             ))}
           </div>
-        </section>
-        <section className="card mt-5 p-7">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="eyebrow mb-2">Settlement</p>
-              <h2 className="text-xl font-bold">Split the trip fairly</h2>
-              <p className="mt-1 text-sm muted">
-                Equal split, calculated separately for each currency.
-              </p>
-            </div>
-            <form onSubmit={addPerson} className="flex gap-2">
-              <input
-                value={travelerName}
-                onChange={(event) => setTravelerName(event.target.value)}
-                placeholder="Add traveler"
-                className={`w-32 ${control}`}
-              />
-              <button className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-xs font-bold">
-                Add
-              </button>
-            </form>
-          </div>
-          {settlementByCurrency.map(
-            ({ currency, share, balances, transfers }) => (
-              <div
-                className="mt-6 border-t border-[var(--color-border)] pt-5"
-                key={currency}
-              >
-                <p className="eyebrow mb-2">{currency} settlement</p>
-                <p className="text-sm muted">
-                  기본 균등분담 · {Math.round(share).toLocaleString()} {currency}{" "}
-                  per person
-                </p>
-                <div className="mt-3 space-y-2">
-                  {balances.map((traveler) => (
-                    <div
-                      key={traveler.id}
-                      className="flex items-center gap-3 rounded-xl bg-[var(--color-background)] px-4 py-3 text-sm"
-                    >
-                      <span className="flex-1 font-semibold">
-                        {traveler.name}
-                      </span>
-                      <span className="text-xs muted">Paid {traveler.paid.toLocaleString()} · Owes {Math.round(traveler.owed).toLocaleString()} {currency}</span>
-                      <span
-                        className={`font-bold ${traveler.balance >= 0 ? "text-[var(--color-success)]" : "text-[var(--color-warning)]"}`}
-                      >
-                        {traveler.balance >= 0
-                          ? `Gets ${Math.round(traveler.balance).toLocaleString()}`
-                          : `Owes ${Math.round(-traveler.balance).toLocaleString()}`}{" "}
-                        {currency}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4">
-                  {transfers.length ? (
-                    transfers.map((transfer) => (
-                      <div
-                        key={`${transfer.from}-${transfer.to}`}
-                        className="flex items-center justify-between rounded-xl bg-[var(--color-background)] px-4 py-3 text-sm"
-                      >
-                        <span className="font-semibold">
-                          {transfer.from} → {transfer.to}
-                        </span>
-                        <span className="font-bold text-[var(--color-primary)]">
-                          {transfer.amount.toLocaleString()} {currency}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm muted">Everyone is settled up.</p>
-                  )}
-                </div>
-              </div>
-            ),
-          )}
-          {!settlementByCurrency.length && (
-            <p className="mt-6 text-sm muted">
-              Add expenses and travelers to calculate settlement.
-            </p>
-          )}
         </section>
         <form onSubmit={save} className="card mt-5 p-7">
           <p className="eyebrow mb-2">Your reflection</p>
