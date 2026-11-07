@@ -1,6 +1,11 @@
 "use client";
 
+import type { Ref } from "react";
+
 type MoneyFieldProps = {
+  autoFocus?: boolean;
+  inputRef?: Ref<HTMLInputElement>;
+  ariaLabel?: string;
   value: string | number;
   onChange: (value: string) => void;
   className?: string;
@@ -25,11 +30,11 @@ export function MoneyField({
   placeholder,
   required,
   min,
-  inputMode = "decimal",
+  inputMode = "decimal", autoFocus, inputRef, ariaLabel,
 }: MoneyFieldProps) {
   return (
     <input
-      type="text"
+      ref={inputRef} autoFocus={autoFocus} aria-label={ariaLabel} type="text"
       inputMode={inputMode}
       required={required}
       min={min}
