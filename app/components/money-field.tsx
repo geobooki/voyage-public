@@ -7,6 +7,7 @@ type MoneyFieldProps = {
   placeholder?: string;
   required?: boolean;
   min?: string;
+  inputMode?: "decimal" | "numeric";
 };
 
 const format = (value: string | number) => {
@@ -24,17 +25,18 @@ export function MoneyField({
   placeholder,
   required,
   min,
+  inputMode = "decimal",
 }: MoneyFieldProps) {
   return (
     <input
       type="text"
-      inputMode="decimal"
+      inputMode={inputMode}
       required={required}
       min={min}
       value={format(value)}
       onFocus={(event) => event.currentTarget.select()}
       onChange={(event) =>
-        onChange(event.target.value.replace(/,/g, "").replace(/[^0-9.]/g, ""))
+        onChange(event.target.value.replace(/,/g, "").replace(inputMode === "numeric" ? /[^0-9]/g : /[^0-9.]/g, ""))
       }
       placeholder={placeholder}
       className={className}
