@@ -20,6 +20,7 @@ export default function DuringPage() {
   const [placeOpen, setPlaceOpen] = useState(false);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const [expense, setExpense] = useState({
+    name: "",
     amount: "",
     currency: "KRW",
     category: "Food",
@@ -57,8 +58,8 @@ export default function DuringPage() {
     : [];
   const saveExpense = (event: FormEvent) => {
     event.preventDefault();
-    if (!expense.amount) return;
-    addExpense({ ...expense, amount: Number(expense.amount) });
+    if (!expense.name.trim() || !expense.amount) return;
+    addExpense({ ...expense, name: expense.name.trim(), paymentMethod: "카드", amount: Number(expense.amount) });
     setExpense({ ...expense, amount: "" });
     setExpenseOpen(false);
   };
@@ -125,6 +126,7 @@ export default function DuringPage() {
             onSubmit={saveExpense}
             className="card mt-6 grid gap-3 p-5 sm:grid-cols-4 lg:grid-cols-8"
           >
+            <input required aria-label="지출 이름" placeholder="지출 이름 (필수)" value={expense.name} onChange={(event) => setExpense({ ...expense, name: event.target.value })} className="w-full rounded-xl border p-3 text-sm" />
             <MoneyField
               required
               value={expense.amount}
