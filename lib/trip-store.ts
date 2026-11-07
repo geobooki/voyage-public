@@ -379,6 +379,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
               parsed.expenses?.map((item) => ({
                 ...item,
                 time: item.time || "12:00",
+                paymentMethod: item.paymentMethod?.trim() || "카드",
               })) ?? current.expenses,
             schedule:
               parsed.schedule?.map((item) => ({
@@ -390,7 +391,9 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     } catch {
       /* demo fallback */
     }
-    authenticatedFetch(`/api/trips/${tripId}${view === "full" ? "" : `?view=${view}`}`)
+    authenticatedFetch("/api/expenses/default-payment", { method: "POST" })
+      .catch(() => undefined)
+      .then(() => authenticatedFetch(`/api/trips/${tripId}${view === "full" ? "" : `?view=${view}`}`))
       .then(async (response) => {
         if (!response.ok) return null;
         return response.json();
@@ -486,7 +489,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
               amount: Number(item.amount),
               currency: String(item.currency),
               category: String(item.category),
-              paymentMethod: item.payment_method ? String(item.payment_method) : undefined,
+              paymentMethod: String(item.payment_method || "").trim() || "카드",
               participantIds: Array.isArray(item.participant_ids) ? item.participant_ids.map(String) : [],
               placeId: item.place_id ? String(item.place_id) : undefined,
               payerId: item.payer_id ? String(item.payer_id) : undefined,
