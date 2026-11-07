@@ -62,6 +62,7 @@ function TripPageContent() {
   const wishNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [schedulePage, setSchedulePage] = useState(0);
   const [mobileSchedulePage, setMobileSchedulePage] = useState(0);
+  const scheduleSelection = useRef({ tripId, manuallySelected: false });
   const [packingOpen, setPackingOpen] = useState(false);
   const [packingName, setPackingName] = useState("");
   const [packingCategory, setPackingCategory] = useState("기타");
@@ -389,16 +390,26 @@ function TripPageContent() {
   const weatherDate = scheduleDates[Math.min(mobileSchedulePage, Math.max(0, scheduleDates.length - 1))] || trip.startDate;
   const overviewWeather = weatherResult?.days.find((item) => item.date === weatherDate);
   const goToScheduleDate = (index: number) => {
+    scheduleSelection.current = { tripId, manuallySelected: true };
     const day = Math.max(0, Math.min(scheduleDates.length - 1, index));
     setMobileSchedulePage(day);
     setSchedulePage(Math.floor(day / 3));
   };
   const schedulePageCount = Math.max(1, Math.ceil(scheduleDates.length / 3));
   const visibleScheduleDates = scheduleDates.slice(schedulePage * 3, schedulePage * 3 + 3);
+  const scheduleDatesKey = scheduleDates.join("|");
   useEffect(() => {
-    setSchedulePage((current) => Math.min(current, schedulePageCount - 1));
-    setMobileSchedulePage((current) => Math.min(current, Math.max(0, scheduleDates.length - 1)));
-  }, [scheduleDates.length, schedulePageCount]);
+    if (scheduleSelection.current.tripId !== tripId) scheduleSelection.current = { tripId, manuallySelected: false };
+    const dates = scheduleDatesKey ? scheduleDatesKey.split("|") : [];
+    if (!scheduleSelection.current.manuallySelected) {
+      const day = Math.max(0, dates.indexOf(localDateIso(new Date())));
+      setMobileSchedulePage(day);
+      setSchedulePage(Math.floor(day / 3));
+    } else {
+      setSchedulePage((current) => Math.min(current, schedulePageCount - 1));
+      setMobileSchedulePage((current) => Math.min(current, Math.max(0, dates.length - 1)));
+    }
+  }, [tripId, scheduleDatesKey, schedulePageCount]);
   const weekdayLabel = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { weekday: "short" });
   const openSchedule = (date: string, time = "09:00") => {
     setEditingScheduleId(null);
