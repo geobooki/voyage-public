@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemePicker } from "@/app/components/theme-picker";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
@@ -28,6 +29,7 @@ export default function SettingsPage() {
             ? "언어와 계정 환경을 관리하세요."
             : "Manage your language and account preferences."}
         </p>
+        <ThemePicker />
         <section className="card mt-9 p-6 sm:p-7">
           <p className="eyebrow mb-2">{ko ? "언어" : "Language"}</p>
           <h2 className="text-xl font-bold">

@@ -1,5 +1,6 @@
 "use client";
 
+import { ScheduleDateTimeFields } from "@/app/components/schedule-date-time-fields";
 import Link from "next/link";
 import { ScheduleTypeSelect } from "@/app/components/schedule-type-select";
 import { scheduleTimes, fiveMinuteTime, timingFromDuration, timingFromEnd, usesScheduleDuration, endTimeOptions, scheduleDurationPreset } from "@/lib/schedule-time";
@@ -68,8 +69,9 @@ export default function SchedulePage() {
   const [item, setItem] = useState<ScheduleForm>(() => empty());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [schedulePage, setSchedulePage] = useState(0);
-  const dates = tripDates.length ? tripDates : Array.from(
+  const dates = Array.from(
     new Set([
+      ...tripDates,
       ...state.schedule.map((entry) => entry.date),
       ...state.weather.map((day) => day.date),
       ...state.reservations.flatMap((reservation) => [reservation.date, reservation.endDate]),
@@ -77,9 +79,10 @@ export default function SchedulePage() {
   ).filter((date): date is string => Boolean(date)).sort();
   const save = async (event: FormEvent) => {
     event.preventDefault();
-    if (!item.title.trim() || !item.date || !item.time) return;
+    if (saving || !item.title.trim() || !item.date || !item.time) return;
     const current = state.schedule.find((entry) => entry.id === editingId);
     const value = {
+      ...current,
       ...item,
       time: fiveMinuteTime(item.time),
       title: item.title.trim(),
@@ -88,19 +91,15 @@ export default function SchedulePage() {
       durationMinutes: (usesScheduleDuration(item.type) || Boolean(scheduleDurationPreset(item.type)) || Boolean(editingId && state.schedule.find((entry) => entry.id === editingId)?.durationMinutes)) ? Math.max(5, Math.round(Number(item.durationMinutes || 60) / 5) * 5) : undefined,
       completed: current?.completed ?? false,
     };
-    if (recordExpense) {
-      setSaving(true); setSaveError("");
-      try {
-        const id = await saveScheduleActivity(value, editingId || undefined);
-        router.push(`/trips/${tripId}/before/budget?schedule=${encodeURIComponent(id)}`);
-      } catch (caught) { setSaveError(caught instanceof Error ? caught.message : "일정을 저장하지 못했어요."); setSaving(false); }
-      return;
-    }
-    if (editingId) updateSchedule(editingId, value);
-    else addSchedule(value);
-    setItem(empty());
-    setEditingId(null);
+    setSaving(true); setSaveError("");
+    try {
+      const id = await saveScheduleActivity(value, editingId || undefined);
+      if (recordExpense) { router.push(`/trips/${tripId}/before/budget?schedule=${encodeURIComponent(id)}`); return; }
+      setItem(empty()); setEditingId(null);
+    } catch (caught) { setSaveError(caught instanceof Error ? caught.message : "일정을 저장하지 못했어요."); }
+    finally { setSaving(false); }
   };
+
   const edit = (entry: ScheduleItem) => {
     setEditingId(entry.id);
     setItem({
@@ -140,10 +139,7 @@ export default function SchedulePage() {
           일정을 추가하면 메인 여행 일정 타임테이블에도 똑같이 표시됩니다.
         </p>
         <form onSubmit={save} className="card mt-9 space-y-4 p-5 sm:p-6">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-sm font-bold">날짜<input required type="date" value={item.date} onChange={(event) => setItem({ ...item, date: event.target.value })} className={`mt-2 ${control}`} /></label>
-            <label className="text-sm font-bold">시간<select required aria-label="시간 (5분 단위)" value={item.time} onChange={(event) => setItem({ ...item, time: event.target.value, ...timingFromDuration(event.target.value, item.durationMinutes) })} className={`mt-2 ${control}`}>{scheduleTimes.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>
-          </div>
+          <ScheduleDateTimeFields date={item.date} time={item.time} ko={ko} onDateChange={(date) => setItem({ ...item, date })} onTimeChange={(time) => setItem({ ...item, time, ...timingFromDuration(time, item.durationMinutes) })} />
           {(usesScheduleDuration(item.type) || Boolean(scheduleDurationPreset(item.type)) || Boolean(editingId && state.schedule.find((entry) => entry.id === editingId)?.durationMinutes)) && <>
           <label className="block text-sm font-bold">소요시간 <span className="font-normal muted">(선택)</span><div className="mt-2 flex items-center gap-2"><input type="number" min="5" max="1440" step="5" value={item.durationMinutes} onChange={(event) => setItem({ ...item, ...timingFromDuration(item.time, event.target.value), durationMinutes: event.target.value })} placeholder="예: 90" className={`max-w-xs ${control}`} /><span className="text-sm muted">분</span></div></label>
           <label className="block text-sm font-bold">종료시간 <span className="font-normal muted">(선택 · 소요시간과 자동 계산)</span><select value={item.endTime} onChange={(event) => setItem({ ...item, ...timingFromEnd(item.time, event.target.value) })} className={`mt-2 ${control}`}><option value="">선택 안 함</option>{item.endTime && !endTimeOptions.includes(item.endTime) && <option hidden value={item.endTime}>{item.endTime}</option>}{endTimeOptions.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>

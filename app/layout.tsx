@@ -6,6 +6,9 @@ import { AuthProvider } from "@/lib/auth";
 import { LocaleBridge } from "@/lib/locale-bridge";
 import { AuthGuard } from "./components/auth-guard";
 
+import { ThemeProvider } from "./components/theme-provider";
+import { themeInitScript } from "@/lib/themes";
+
 export const metadata: Metadata = {
   title: "Voyage — 여행 기록",
   description: "여행 전·중·후를 한 곳에서 관리하는 여행 기록 앱",
@@ -26,9 +29,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <body>
-        <LanguageProvider>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <ThemeProvider><LanguageProvider>
           <AuthProvider>
             <AuthGuard>
               <AppNav />
@@ -36,7 +40,7 @@ export default function RootLayout({
               <div className="md:pl-24">{children}</div>
             </AuthGuard>
           </AuthProvider>
-        </LanguageProvider>
+        </LanguageProvider></ThemeProvider>
       </body>
     </html>
   );
