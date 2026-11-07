@@ -583,15 +583,9 @@ function TripPageContent() {
             {otherReservations.length ? otherReservations.map((item) => <div key={item.id}><h2 className="font-bold">{item.title}</h2><p className="mt-2 text-sm muted">{item.type} · {dateLabel(item.date)}{item.location ? ` · ${item.location}` : ""}</p><ReservationDocuments tripId={tripId} reservationId={item.id} /></div>) : <p className="text-sm muted">{ko ? "투어·교통 등 기타 예약이 없어요." : "No tour or transport reservations yet."}</p>}
           </article>
         </section>}
-        <section data-section="trip-wish-board" className="card mt-7 p-6 sm:p-8">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="eyebrow mb-2">{ko ? "여행 버킷리스트" : "Trip wishlist"}</p>
-              <h2 className="text-2xl font-bold">{ko ? "가고 싶은 곳, 하고 싶은 것, 사고 싶은 것" : "Places, experiences, and things to bring home"}</h2>
-              <p className="mt-2 text-sm muted">{ko ? "여행 중 체크하면 실제로 한 일과 남은 일을 한눈에 볼 수 있어요." : "Check items off during the trip to see what is done and what remains."}</p>
-            </div>
-            <span className="text-sm font-bold text-[var(--color-primary)]">{state.dashboardItems.filter((item) => ["do", "eat", "souvenir"].includes(item.kind) && item.completed).length} / {state.dashboardItems.filter((item) => ["do", "eat", "souvenir"].includes(item.kind)).length} {ko ? "완료" : "done"}</span>
-          </div>
+        <details data-section="trip-wish-board" className="card mt-7 p-4 sm:p-6">
+          <summary className="cursor-pointer text-base font-semibold"><span>{ko ? "여행 버킷리스트" : "Trip wishlist"}</span><span className="float-right text-xs font-medium text-[var(--color-primary)]">{state.dashboardItems.filter((item) => ["do", "eat", "souvenir"].includes(item.kind) && item.completed).length} / {state.dashboardItems.filter((item) => ["do", "eat", "souvenir"].includes(item.kind)).length} {ko ? "완료" : "done"}</span></summary>
+          <p className="mt-3 text-sm muted">{ko ? "가고 싶은 곳, 하고 싶은 것, 사고 싶은 것을 추가하고 여행 중 체크해 보세요." : "Add places, experiences and things to buy, then check them off during your trip."}</p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {([
               ["do", ko ? "가고 싶은 곳" : "Places to go", "📍"],
@@ -608,7 +602,7 @@ function TripPageContent() {
             <input value={wishDraft.detail} onChange={(event) => setWishDraft({ ...wishDraft, detail: event.target.value })} placeholder={ko ? "메모 (선택)" : "Note (optional)"} className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3 text-sm outline-none focus:border-[var(--color-primary)]" />
             <button className="rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white">{ko ? "추가" : "Add"}</button>
           </form>
-        </section>
+        </details>
         {wishNotice && <div className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-gray-500/55 px-5 py-3 text-sm font-semibold text-black shadow-sm backdrop-blur-sm" role="status" aria-live="polite">{wishNotice}</div>}
         {phaseKey === "before" && <section data-section="packing-summary" className="card mt-7 p-6"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow mb-2">{ko ? "준비물" : "Packing"}</p><h2 className="text-xl font-bold">{packingItems.length ? `${packingItems.filter((item) => item.checked).length} / ${packingItems.length} ${ko ? "완료" : "complete"}` : (ko ? "아직 준비물이 없어요" : "No packing items yet")}</h2></div><div className="flex items-center gap-2"><button type="button" onClick={() => setPackingOpen(true)} className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-xs font-bold text-[var(--color-primary)]">+ {ko ? "추가" : "Add"}</button><Link href={`/trips/${tripId}/before/packing`} className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-xs font-bold">{ko ? "자세히" : "Details"}</Link></div></div><div className="mt-4 h-2 rounded-full bg-[var(--color-background)]"><div className="h-2 rounded-full bg-[var(--color-primary)]" style={{ width: `${packed}%` }} /></div></section>}
         {travelerOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 px-5 py-6" onClick={(event) => { if (event.target === event.currentTarget) closeTraveler(); }}><div className="card w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="traveler-dialog-title" onKeyDown={(event) => {

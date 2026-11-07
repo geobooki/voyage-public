@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 import { isCurrentOrSoonTrip } from "@/lib/trip-selection";
 import { getTrips } from "@/lib/trips-client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const items = [
   { href: "/", label: "Overview", icon: "⌂" },
@@ -16,6 +16,17 @@ const items = [
 
 export function AppNav() {
   const { t, language } = useLanguage();
+  const navRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const update = () => document.documentElement.style.setProperty("--mobile-nav-height", window.innerWidth < 768 ? `${nav.getBoundingClientRect().height}px` : "0px");
+    const observer = new ResizeObserver(update);
+    observer.observe(nav);
+    window.addEventListener("resize", update);
+    update();
+    return () => { observer.disconnect(); window.removeEventListener("resize", update); document.documentElement.style.removeProperty("--mobile-nav-height"); };
+  }, []);
   const pathname = usePathname();
   const tripId = pathname.match(/^\/trips\/([^/]+)/)?.[1];
   const inTrip = Boolean(tripId && tripId !== "new");
@@ -59,6 +70,7 @@ export function AppNav() {
     : [];
   return (
     <nav
+      ref={navRef}
       aria-label="Primary navigation"
       data-component="side-navigation"
       className={`${keyboardOpen ? "hidden md:block" : ""} fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 px-4 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur md:inset-y-0 md:right-auto md:w-24 md:border-r md:border-t-0 md:px-2 md:py-6`}
