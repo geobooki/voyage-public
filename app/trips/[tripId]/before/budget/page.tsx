@@ -12,6 +12,7 @@ import { TravelerManager } from "@/app/components/traveler-manager";
 import { MoneyField } from "@/app/components/money-field";
 
 import { QuickExpenseForm } from "@/app/components/quick-expense-form";
+import { useSettlementRecords } from "@/lib/use-settlement-records";
 import { calculateSettlements } from "@/lib/settlement";
 
 const control = "min-w-0 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--color-primary)]";
@@ -143,7 +144,8 @@ export default function BudgetPage() {
     setEditingId(null); setBudgetForm((current) => ({ ...current, name: "", detail: "", amount: "" }));
   };
   const [quickOpen, setQuickOpen] = useState(false);
-  const settlementPreview = useMemo(() => calculateSettlements(state.expenses, state.travelers), [state.expenses, state.travelers]);
+  const settlementData = useSettlementRecords(tripId);
+  const settlementPreview = useMemo(() => calculateSettlements(state.expenses, state.travelers, settlementData.records), [state.expenses, state.travelers, settlementData.records]);
   const submitActual = async (event: FormEvent) => {
     event.preventDefault();
     if (expenseSaving || !actualForm.name.trim() || !actualForm.amount || !/^\d{4}-\d{2}-\d{2}$/.test(actualForm.date)) return;
@@ -173,6 +175,7 @@ export default function BudgetPage() {
 
   return <main data-section="expense-ledger" className="expense-ledger min-w-0 min-h-screen px-4 py-5 pb-28 sm:px-10 sm:pb-16 lg:px-20 lg:py-12"><div className="mx-auto min-w-0 max-w-5xl"><Link href={`/trips/${tripId}/before`} className="text-sm font-bold text-[var(--color-primary)]">← {ko ? "여행 전 개요" : "Before overview"}</Link><div className="mt-5 flex min-w-0 flex-wrap items-end justify-between gap-4 sm:mt-10"><div><p className="eyebrow mb-3">{ko ? "가계부" : "Ledger"}</p><h1 className="text-2xl font-semibold sm:text-4xl">{ko ? "가계부" : "Travel ledger"}</h1><p className="mt-2 muted">{ko ? "예산과 실제 사용 내역을 한곳에서 관리해요." : "Manage your budget and actual spending in one place."}</p></div><div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto"><div className={`min-w-0 rounded-2xl bg-white px-4 py-3 text-right shadow-sm ${isDomestic ? "hidden" : ""}`}><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "환전 후 잔액" : "Balance after exchange"}</p><p className="mt-1 text-sm font-bold">{ko ? "현금" : "Cash"} {cashBalance.toLocaleString()} {destination}</p><p className="text-sm font-bold">{ko ? "카드" : "Card"} {cardBalance.toLocaleString()} {destination}</p></div><div className={`min-w-0 rounded-2xl bg-white px-3 py-3 text-right shadow-sm ${isDomestic ? "col-span-2" : ""}`}><p className="text-xs font-bold text-[var(--color-primary)]">{ko ? "현재까지 사용한 총액" : "Total spent so far"}</p><p className="mt-1 break-all text-base font-semibold">₩{Math.round(actualKrw).toLocaleString("ko-KR")}</p><p className="text-xs muted">{state.expenses.length}{ko ? "건" : " expenses"}</p></div></div></div>
     <div className="mt-4 rounded-xl bg-white p-4 text-sm" aria-label={ko ? "정산 요약" : "Settlement summary"}>
+      {(settlementData.loading || settlementData.error) && <p className="mb-2 text-xs muted">{settlementData.loading ? "정산 기록 확인 중…" : "저장된 정산 기록을 확인하지 못했어요. 정산하기에서 확인해 주세요."}</p>}
       {settlementPreview.groups.flatMap((group) => group.transfers.map((transfer) => ({ ...transfer, currency: group.currency }))).slice(0, 3).map((transfer) => <p key={`${transfer.currency}-${transfer.fromId}-${transfer.toId}`} className="break-words">{transfer.from} → {transfer.to} · {transfer.amount.toLocaleString()} {transfer.currency}</p>)}
       {!settlementPreview.groups.some((group) => group.transfers.length) && <p>{settlementPreview.includedCount ? (ko ? "현재 계산된 정산 잔액이 없어요." : "No outstanding calculated balance.") : (ko ? "결제자와 분담자를 선택하면 정산을 계산해요." : "Choose payer and participants to calculate settlement.")}</p>}
       {settlementPreview.excluded.length > 0 && <p className="mt-1 text-xs muted">{ko ? `정보 확인이 필요한 지출 ${settlementPreview.excluded.length}건 · 정산하기에서 확인하세요.` : `${settlementPreview.excluded.length} expenses need details. Open settlement to review.`}</p>}

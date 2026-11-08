@@ -1,20 +1,27 @@
 "use client";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTripData } from "@/lib/trip-context";
 import { useLanguage } from "@/lib/i18n";
 import { calculateSettlements } from "@/lib/settlement";
+import { useSettlementRecords } from "@/lib/use-settlement-records";
+import { SettlementTransfer, ExpenseSplitEditor } from "./settlement-controls";
 import type { Expense } from "@/types/trip";
 
 export function SettlementPanel({ tripId, onEditExpense }: { tripId: string; onEditExpense?: (expense: Expense) => void }) {
   const { state } = useTripData();
   const { language } = useLanguage();
   const ko = language === "ko";
-  const result = useMemo(() => calculateSettlements(state.expenses, state.travelers), [state.expenses, state.travelers]);
+  const { records, loading, error: loadError, mutate, refresh } = useSettlementRecords(tripId);
+  const [busyId, setBusyId] = useState(""); const [error, setError] = useState("");
+  const result = useMemo(() => calculateSettlements(state.expenses, state.travelers, records), [state.expenses, state.travelers, records]);
+  const undo = async (id: string) => { if (busyId) return; setBusyId(id); setError(""); try { await mutate({ id }, true); } catch (caught) { setError(caught instanceof Error ? caught.message : "저장 오류"); } finally { setBusyId(""); } };
   const format = (amount: number, digits: number) => amount.toLocaleString(ko ? "ko-KR" : "en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
-  const reason = { payer: ko ? "결제자 확인 필요" : "Payer missing", participants: ko ? "참여자 확인 필요" : "Participants missing", amount: ko ? "금액 확인 필요" : "Invalid amount" };
+  const reason = { split: ko ? "분담액 합계·참여자 확인 필요" : "Review custom shares", payer: ko ? "결제자 확인 필요" : "Payer missing", participants: ko ? "참여자 확인 필요" : "Participants missing", amount: ko ? "금액 확인 필요" : "Invalid amount" };
   return <div className="min-w-0 space-y-4">
-    <p className="text-xs muted">{ko ? "선택한 참여자끼리 균등 분담하고 결제한 금액을 차감해 계산해요. 통화별로 따로 정산하며 소수점 이하는 통화의 최소 단위로 나눠요." : "Split each expense among its selected participants and offset payments, separately by currency."}</p>
+    {loading && <p role="status" className="text-xs muted">{ko ? "정산 기록 불러오는 중…" : "Loading settlements…"}</p>}
+    {loadError && <div role="alert" className="rounded-xl border border-[var(--color-warning)] p-3 text-xs"><p>{loadError}</p><p className="mt-1">{ko ? "아래 금액에는 저장된 정산 기록이 반영되지 않았을 수 있어요." : "Balances may not include saved records."}</p><button type="button" onClick={() => void refresh()} className="mt-2 underline">{ko ? "다시 불러오기" : "Retry"}</button></div>}
+    <p className="text-xs muted">{ko ? "기본은 균등 분담이에요. 상세에서 직접 분담액을 정하고 실제로 보낸 금액을 기록할 수 있어요. 기록은 송금 실행이 아니에요. 통화별로 따로 정산하며 소수점 이하는 통화의 최소 단위로 나눠요." : "Split each expense among its selected participants and offset payments, separately by currency."}</p>
     <p className="text-sm">{ko ? `전체 ${state.expenses.length}건 중 ${result.includedCount}건 계산` : `${result.includedCount} of ${state.expenses.length} expenses calculated`}</p>
     {!state.travelers.length && <Link href={`/trips/${tripId}/before/budget#expense-travelers`} className="block text-sm text-[var(--color-primary)]">{ko ? "여행자를 먼저 추가해 주세요 →" : "Add travelers first →"}</Link>}
     {result.excluded.length > 0 && <section className="rounded-xl border border-[var(--color-warning)] p-3" aria-label={ko ? "정산 전 확인" : "Needs attention"}>
@@ -25,9 +32,12 @@ export function SettlementPanel({ tripId, onEditExpense }: { tripId: string; onE
     {result.groups.map((group) => <section key={group.currency} className="min-w-0 rounded-xl border border-[var(--color-border)] p-3 sm:p-4">
       <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{group.currency} {ko ? "정산" : "settlement"}</h3><p className="text-xs muted">{group.count}{ko ? "건 · 합계 " : " expenses · "}{format(group.total, group.digits)} {group.currency}</p></div>
       <h4 className="mt-4 text-sm font-semibold">{ko ? "누가 누구에게 보내나요?" : "Who pays whom?"}</h4>
-      <div className="mt-2 space-y-2">{group.transfers.length ? group.transfers.map((transfer) => <div key={transfer.fromId + ":" + transfer.toId} className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl bg-[var(--color-surface-muted)] p-3"><p className="min-w-0 break-words text-sm">{transfer.from} <span aria-hidden="true">→</span> {transfer.to}</p><strong className="break-all text-sm text-[var(--color-primary)]">{format(transfer.amount, group.digits)} {group.currency}</strong></div>) : <p className="text-sm muted">{ko ? "계산된 내역에서는 보낼 금액이 없어요." : "No transfers needed for the calculated expenses."}</p>}</div>
+      <div className="mt-2 space-y-2">{group.transfers.length ? group.transfers.map((transfer) => <SettlementTransfer key={group.currency + transfer.fromId + ":" + transfer.toId} {...transfer} currency={group.currency} disabled={loading || Boolean(loadError)} mutate={mutate} ko={ko}/>) : <p className="text-sm muted">{ko ? "계산된 내역에서는 보낼 금액이 없어요." : "No transfers needed for the calculated expenses."}</p>}</div>
       <details className="mt-4"><summary className="cursor-pointer text-xs font-medium">{ko ? "여행자별 결제·분담 내역" : "Paid and owed by traveler"}</summary><div className="mt-2 space-y-2">{group.balances.map((person) => <div key={person.id} className="min-w-0 rounded-lg bg-[var(--color-background)] p-3"><p className="break-words text-sm font-medium">{person.name}</p><p className="mt-1 text-xs muted">{ko ? "결제 " : "Paid "}{format(person.paid, group.digits)} · {ko ? "분담 " : "Share "}{format(person.owed, group.digits)} {group.currency}</p><p className="mt-1 text-xs text-[var(--color-primary)]">{person.balance > 0 ? (ko ? "받을 금액 " : "Receive ") : person.balance < 0 ? (ko ? "보낼 금액 " : "Send ") : (ko ? "차액 " : "Balance ")}{format(Math.abs(person.balance), group.digits)} {group.currency}</p></div>)}</div></details>
     </section>)}
+    <details className="rounded-xl border border-[var(--color-border)] p-3"><summary className="cursor-pointer text-sm">{ko ? "상세 · 지출별 분담금액 직접 입력" : "Details · custom expense shares"}</summary><p className="mt-2 text-xs muted">{ko ? "예: 50,000원 지출을 나 10,000원, 친구 40,000원으로 분담" : "Example: split a 50,000 expense into 10,000 and 40,000."}</p><div className="mt-3 space-y-2">{state.expenses.filter((expense) => expense.participantIds?.length).map((expense) => { const split = records.splits.find((entry) => entry.expenseId === expense.id); return <ExpenseSplitEditor key={expense.id + JSON.stringify(split) + expense.participantIds?.join(",")} expense={expense} travelers={state.travelers} split={split} mutate={mutate} disabled={loading || Boolean(loadError)} ko={ko}/>; })}</div></details>
+    {records.payments.length > 0 && <section className="rounded-xl border border-[var(--color-border)] p-3"><h3 className="text-sm font-semibold">{ko ? "정산 기록 · 체크 해제하면 취소" : "Payment records · uncheck to undo"}</h3><div className="mt-3 space-y-2">{records.payments.map((payment) => <label key={payment.id} className="flex min-h-10 items-start gap-2 rounded-lg bg-[var(--color-background)] p-3 text-xs"><input type="checkbox" checked disabled={Boolean(busyId) || loading || Boolean(loadError)} onChange={() => void undo(payment.id)}/><span className="min-w-0 break-words">{state.travelers.find((person) => person.id === payment.fromId)?.name || "삭제된 여행자"} → {state.travelers.find((person) => person.id === payment.toId)?.name || "삭제된 여행자"} · {payment.amount.toLocaleString()} {payment.currency}<span className="mt-1 block muted">{new Date(payment.date).toLocaleString(ko ? "ko-KR" : "en-US")}</span></span></label>)}</div>{result.invalidPayments.length > 0 && <p className="mt-2 text-xs text-[var(--color-danger)]">{ko ? "여행자가 없거나 금액이 잘못된 기록은 계산에서 제외했어요. 해당 기록을 취소해 주세요." : "Invalid payment records are excluded. Please undo them."}</p>}</section>}
+    {error && <p role="alert" className="text-xs text-[var(--color-danger)]">{error}</p>}
     {!state.expenses.length && <p className="rounded-xl bg-[var(--color-background)] p-4 text-sm muted">{ko ? "지출을 기록하면 여기서 바로 정산할 수 있어요." : "Record expenses to calculate a settlement."}</p>}
   </div>;
 }
