@@ -30,3 +30,17 @@ assert.equal(calculateSettlements([{...expense(10),payerId:undefined}],people).e
 // Across uneven cent amounts, applying the suggested transfers must clear every balance.
 for(let amount=1;amount<120;amount++){group=calculateSettlements([expense(amount/100,"USD","c")],people).groups[0];balanced(group);}
 console.log("PASS: equal shares, exact remainder allocation, currency precision, multiple currencies, payer outside participants, missing details, duplicate names/ids, refunds and transfer conservation");
+
+const customExpense={...expense(50000,"KRW","a",["a","b"]),id:"custom"};
+let records={splits:[{expenseId:"custom",amounts:{a:10000,b:40000}}],payments:[]};
+result=calculateSettlements([customExpense],people,records);assert.equal(result.groups[0].transfers[0].amount,40000);
+records.payments=[{id:"payment",fromId:"b",toId:"a",currency:"KRW",amount:10000,date:"2026-11-08"}];
+result=calculateSettlements([customExpense],people,records);assert.equal(result.groups[0].transfers[0].amount,30000);balanced(result.groups[0]);
+records.payments.push({id:"payment2",fromId:"b",toId:"a",currency:"KRW",amount:30000,date:"2026-11-08"});
+result=calculateSettlements([customExpense],people,records);assert.equal(result.groups[0].transfers.length,0);balanced(result.groups[0]);
+records.splits[0].amounts={a:20000,b:30000};result=calculateSettlements([customExpense],people,records);assert.equal(result.groups[0].transfers[0].fromId,"a");assert.equal(result.groups[0].transfers[0].amount,10000);balanced(result.groups[0]);
+records.splits[0].amounts={a:10000,b:30000};result=calculateSettlements([customExpense],people,records);assert.equal(result.excluded[0].reason,"split");assert.equal(result.groups[0].total,0);assert.equal(result.groups[0].transfers[0].fromId,"a");
+records={splits:[{expenseId:"custom",amounts:{a:0,b:50000}}],payments:[]};assert.equal(calculateSettlements([customExpense],people,records).groups[0].transfers[0].amount,50000);
+records.splits[0].amounts={a:0,b:50000,c:0};assert.equal(calculateSettlements([customExpense],people,records).excluded[0].reason,"split");
+const dollar={...customExpense,amount:10,currency:"USD"};records={splits:[{expenseId:"custom",amounts:{a:2.25,b:7.75}}],payments:[{id:"dollar",fromId:"b",toId:"a",amount:2.50,currency:"USD",date:"2026-11-08"}]};result=calculateSettlements([dollar],people,records);assert.equal(result.groups[0].transfers[0].amount,5.25);balanced(result.groups[0]);
+console.log("PASS: custom shares, zero share, wrong sum, stale participants, partial payments, completion, expense edits after payment, currency precision and conservation");
