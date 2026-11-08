@@ -6,17 +6,23 @@ import type { ExpenseSplit } from "@/lib/settlement-records";
 type Mutate = (payload: Record<string, unknown>, remove?: boolean) => Promise<void>;
 const control = "mt-1 min-w-0 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm";
 export function SettlementTransfer({ fromId, toId, from, to, amount, currency, disabled, mutate, ko, expenseId }: { fromId: string; toId: string; from: string; to: string; amount: number; currency: string; disabled: boolean; mutate: Mutate; ko: boolean; expenseId?: string }) {
-  const [partial, setPartial] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const pending = useRef<string | null>(null); const lock = useRef(false);
+  const [partial, setPartial] = useState(""); const [busy, setBusy] = useState(false); const [completing, setCompleting] = useState(false); const [completed, setCompleted] = useState(false); const [error, setError] = useState(""); const pending = useRef<string | null>(null); const lock = useRef(false);
   const record = async (value: number) => {
-    if (lock.current || disabled) return;
+    if (lock.current || disabled || completed) return;
     if (!Number.isFinite(value) || value <= 0 || value > amount) { setError(ko ? "남은 정산금액 이내로 입력하세요." : "Enter a positive amount within the balance."); return; }
     lock.current = true; setBusy(true); setError("");
-    pending.current ||= crypto.randomUUID();
-    try { await mutate({ kind: "payment", id: pending.current, expenseId, fromId, toId, currency, amount: value, date: new Date().toISOString() }); pending.current = null; setPartial(""); }
+    setCompleting(value === amount);
+    try {
+      if (!pending.current) {
+        const bytes = crypto.getRandomValues(new Uint8Array(16)); bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
+        const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+        pending.current = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+      }
+      await mutate({ kind: "payment", id: pending.current, expenseId, fromId, toId, currency, amount: value, date: new Date().toISOString() }); pending.current = null; setPartial(""); if (value === amount) setCompleted(true); }
     catch (caught) { setError(caught instanceof Error ? caught.message : "저장 오류"); }
-    finally { lock.current = false; setBusy(false); }
+    finally { lock.current = false; setBusy(false); setCompleting(false); }
   };
-  return <div className="min-w-0 rounded-xl bg-[var(--color-surface-muted)] p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="break-words text-sm">{from} → {to}</p><strong className="text-sm text-[var(--color-primary)]">{amount.toLocaleString()} {currency}</strong></div><label className="mt-3 flex min-h-10 items-center gap-2 text-sm"><input type="checkbox" disabled={disabled || busy} checked={false} onChange={() => void record(amount)}/>{ko ? "정산완료" : "Mark settled"}</label><details className="mt-2"><summary className="cursor-pointer text-xs">{ko ? "상세 · 부분정산" : "Details · partial payment"}</summary><form className="mt-2 flex items-end gap-2" onSubmit={(event) => { event.preventDefault(); void record(Number(partial)); }}><label className="min-w-0 flex-1 text-xs">{ko ? "이번에 보낸 금액" : "Amount sent"}<MoneyField required value={partial} onChange={(value) => { setPartial(value); pending.current = null; }} className={control}/></label><button disabled={disabled || busy} className="shrink-0 rounded-xl border border-[var(--color-border)] px-3 py-2 text-sm disabled:opacity-50">{busy ? "…" : ko ? "기록" : "Record"}</button></form></details>{error && <p role="alert" className="mt-2 text-xs text-[var(--color-danger)]">{error}</p>}</div>;
+  return <div className="min-w-0 rounded-xl bg-[var(--color-surface-muted)] p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="break-words text-sm">{from} → {to}</p><strong className="text-sm text-[var(--color-primary)]">{amount.toLocaleString()} {currency}</strong></div><label className="mt-3 flex min-h-10 items-center gap-2 text-sm"><input type="checkbox" disabled={disabled || busy || completed} checked={completing || completed} aria-label={ko ? `${from} → ${to} 정산완료` : `Settle ${from} to ${to}`} onChange={() => void record(amount)}/>{busy && completing ? (ko ? "완료 저장 중…" : "Saving…") : ko ? "정산완료" : "Mark settled"}</label><details className="mt-2"><summary className="cursor-pointer text-xs">{ko ? "상세 · 부분정산" : "Details · partial payment"}</summary><form className="mt-2 flex items-end gap-2" onSubmit={(event) => { event.preventDefault(); void record(Number(partial)); }}><label className="min-w-0 flex-1 text-xs">{ko ? "이번에 보낸 금액" : "Amount sent"}<MoneyField required value={partial} onChange={(value) => { setPartial(value); pending.current = null; }} className={control}/></label><button disabled={disabled || busy} className="shrink-0 rounded-xl border border-[var(--color-border)] px-3 py-2 text-sm disabled:opacity-50">{busy ? "…" : ko ? "기록" : "Record"}</button></form></details>{error && <p role="alert" className="mt-2 text-xs text-[var(--color-danger)]">{error}</p>}</div>;
 }
 export function ExpenseSplitEditor({ expense, travelers, split, mutate, disabled, ko }: { expense: Expense; travelers: Traveler[]; split?: ExpenseSplit; mutate: Mutate; disabled: boolean; ko: boolean }) {
   const people = travelers.filter((person) => expense.participantIds?.includes(person.id));

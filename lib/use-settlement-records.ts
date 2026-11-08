@@ -9,7 +9,7 @@ export function useSettlementRecords(tripId: string) {
   const refresh = useCallback(async () => {
     const generation = ++requestId.current;
     try {
-      const response = await authenticatedFetch(`/api/trips/${tripId}/settlements`); const data = await response.json();
+      const response = await authenticatedFetch(`/api/trips/${tripId}/settlements`, { cache: "no-store" }); const data = await response.json();
       if (!response.ok) throw Error(data.error || "정산 내역을 불러오지 못했어요.");
       if (generation !== requestId.current) return;
       setSnapshot({ tripId, records: data, loading: false, error: "" });
@@ -19,7 +19,18 @@ export function useSettlementRecords(tripId: string) {
   const mutate = async (payload: Record<string, unknown>, remove = false) => {
     const response = await authenticatedFetch(`/api/trips/${tripId}/settlements${remove ? `?id=${encodeURIComponent(String(payload.id))}` : ""}`, { method: remove ? "DELETE" : "POST", headers: { "Content-Type": "application/json" }, body: remove ? undefined : JSON.stringify(payload) });
     const data = await response.json(); if (!response.ok) throw Error(data.error || "정산을 저장하지 못했어요.");
-    await refresh(); window.dispatchEvent(new Event(`voyage:settlements:${tripId}`));
+    // Apply the server-confirmed write immediately; a follow-up read must not
+    // make a successful checkbox appear to revert while the network is slow.
+    ++requestId.current;
+    setSnapshot((current) => {
+      const records = current.tripId === tripId ? current.records : empty;
+      const id = String(payload.id);
+      const next = remove ? { splits: records.splits.filter((entry) => entry.expenseId !== id), payments: records.payments.filter((entry) => entry.id !== id) }
+        : data.kind === "payment" ? { ...records, payments: [...records.payments.filter((entry) => entry.id !== data.id), { ...data.data, id: data.id }] }
+        : data.kind === "split" ? { ...records, splits: [...records.splits.filter((entry) => entry.expenseId !== data.data.expenseId), data.data] } : records;
+      return { tripId, records: next, loading: false, error: "" };
+    });
+    window.dispatchEvent(new Event(`voyage:settlements:${tripId}`));
   };
   return { ...(snapshot.tripId === tripId ? snapshot : { records: empty, loading: true, error: "" }), mutate, refresh };
 }
