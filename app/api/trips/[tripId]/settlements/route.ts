@@ -34,7 +34,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ tri
   } else {
     const currency = typeof body.currency === "string" ? body.currency.trim().toUpperCase() : "";
     if (!/^[A-Z]{3}$/.test(currency) || !people.has(body.fromId) || !people.has(body.toId) || body.fromId === body.toId || !validAmount(body.amount, currency, true) || typeof body.date !== "string" || !Number.isFinite(Date.parse(body.date))) return failure("송금자·받는 사람·금액을 확인해 주세요.");
-    data = { fromId: body.fromId, toId: body.toId, currency, amount: body.amount, date: body.date };
+    if (body.expenseId !== undefined) {
+      if (!uuid(body.expenseId)) return failure("연결 지출을 확인해 주세요.");
+      const { data: expense, error: expenseError } = await client.from("expenses").select("id,currency,payer_id,participant_ids").eq("trip_id", tripId).eq("id", body.expenseId).single();
+      if (expenseError || !expense || expense.currency.toUpperCase() !== currency || ![expense.payer_id, ...(expense.participant_ids || [])].includes(body.fromId) || ![expense.payer_id, ...(expense.participant_ids || [])].includes(body.toId)) return failure("해당 지출의 결제자·참여자와 통화를 확인해 주세요.");
+    }
+    data = { ...(body.expenseId ? { expenseId: body.expenseId } : {}), fromId: body.fromId, toId: body.toId, currency, amount: body.amount, date: body.date };
   }
   // Composite conflict target prevents a record from moving between trips.
   const result = await client.from("settlement_records").upsert({ id: body.id, trip_id: tripId, kind: body.kind, data }, { onConflict: "trip_id,id" }).select().single();
