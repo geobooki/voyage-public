@@ -481,3 +481,12 @@ select:not([multiple]) {
 .schedule-date-time .date-picker-popover { left: 0; transform: none; width: min(300px, calc(100vw - 80px)); }
 
 .schedule-date-time > label, .schedule-date-time > div > span { line-height: 16px; }
+
+@media print {
+  body:has([data-section="expense-report"]) { background: white; color: black; }
+  body:has([data-section="expense-report"]) nav, .report-no-print { display: none !important; }
+  body:has([data-section="expense-report"]) .md\:pl-24 { padding-left: 0 !important; }
+  body:has([data-section="expense-report"]) main { padding: 0 !important; }
+  [data-section="expense-report"] .card { box-shadow: none; border: 1px solid #ccc; }
+  .report-card { break-inside: avoid; }
+}

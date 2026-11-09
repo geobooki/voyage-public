@@ -90,7 +90,7 @@ export default function AfterPage() {
         <p className="eyebrow mt-10 mb-3">After the trip</p>
         <h1 className="text-4xl font-bold">Keep the story.</h1>
         <p className="mt-2 muted">A few numbers, a lot of memories.</p>
-        <section className="card mt-5 p-4 sm:p-6" id="settlement"><h2 className="mb-4 text-xl font-semibold">여행 경비 정산</h2><SettlementPanel tripId={tripId}/></section>
+        <div className="card mt-5 p-4"><p className="text-sm">여행이 끝나도 지출을 수정하고 정산을 이어갈 수 있어요.</p><div className="mt-3 flex flex-wrap gap-2"><Link href={`/trips/${tripId}/before/budget`} className="rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm text-white">지출 내역·추가·수정</Link><Link href={`/trips/${tripId}/report`} className="rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm">지출·정산 보고서</Link></div></div><section className="card mt-5 p-4 sm:p-6" id="settlement"><h2 className="mb-4 text-xl font-semibold">여행 경비 정산</h2><SettlementPanel tripId={tripId}/></section>
         <div className="mt-10 grid gap-5 sm:grid-cols-3">
           <div className="card p-6">
             <p className="text-2xl font-bold">{totalLabel || "—"}</p>
