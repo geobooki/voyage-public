@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import { supabaseBrowser } from "@/lib/supabase-browser";
+import { subscribeTripChanges } from "@/lib/trip-realtime";
 import type {
   BudgetItem,
   ChecklistItem,
@@ -336,6 +337,8 @@ export function useTripStore(tripId = "tokyo", view = "full") {
   const [reloadNonce, setReloadNonce] = useState(0);
   const [authReady, setAuthReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const [remoteTrip, setRemoteTrip] = useState<{ key: string; id: string } | null>(null);
+  const realtimeTripId = remoteTrip?.key === tripId ? remoteTrip.id : tripId;
   const hasExchangeAmount = (value: ExchangePlan) => value.expectedCash > 0 || value.cardEstimate > 0 || value.plannedExchange > 0 || value.actualExchange > 0;
   useEffect(() => {
     if (!supabaseBrowser) { setAuthReady(true); return; }
@@ -346,6 +349,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
   }, []);
   useEffect(() => {
     if (!authReady) return;
+    let active = true;
     setState(blankState());
     setHydrated(false);
     if (!authenticated) { setHydrated(true); return; }
@@ -399,7 +403,8 @@ export function useTripStore(tripId = "tokyo", view = "full") {
         return response.json();
       })
       .then((data) => {
-        if (!data) return;
+        if (!active || !data) return;
+        setRemoteTrip({ key: tripId, id: String(data.resolvedTripId || data.trip?.id || tripId) });
         const remoteReservations = (
           data.reservations as Record<string, unknown>[] | undefined
         )?.map(
@@ -599,20 +604,14 @@ export function useTripStore(tripId = "tokyo", view = "full") {
         }));
       })
       .catch(() => undefined)
-      .finally(() => setHydrated(true));
+      .finally(() => { if (active) setHydrated(true); });
+    return () => { active = false; };
   }, [tripId, view, reloadNonce, authReady, authenticated]);
 
   useEffect(() => {
-    if (!supabaseBrowser || !tripId || !authenticated) return;
-    const realtimeClient = supabaseBrowser;
-    const tables = ["trips", "places", "expenses", "travelers", "checklist_items", "checklist_categories", "budget_items", "reservations", "schedule_items", "exchange_plans", "dashboard_items", "souvenirs"];
-    const channel = realtimeClient.channel(`voyage-trip-${tripId}`);
-    tables.forEach((table) => {
-      channel.on("postgres_changes", { event: "*", schema: "public", table }, () => setReloadNonce((value) => value + 1));
-    });
-    channel.subscribe();
-    return () => { void realtimeClient.removeChannel(channel); };
-  }, [tripId, authenticated]);
+    if (!supabaseBrowser || !authenticated) return;
+    return subscribeTripChanges(supabaseBrowser, realtimeTripId, view, () => setReloadNonce((value) => value + 1));
+  }, [realtimeTripId, view, authenticated]);
   useEffect(() => {
     if (hydrated && authenticated) window.localStorage.setItem(key, JSON.stringify(state));
   }, [state, hydrated, authenticated]);

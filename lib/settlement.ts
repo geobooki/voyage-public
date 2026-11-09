@@ -8,6 +8,8 @@ export const currencyDigits = (currency: string) => {
 };
 export type SettlementGroup = { currency: string; digits: number; total: number; count: number; balances: { id: string; name: string; paid: number; owed: number; balance: number }[]; transfers: { fromId: string; toId: string; from: string; to: string; amount: number }[] };
 export function calculateSettlements(expenses: Expense[], travelers: Traveler[], records: SettlementRecords = { splits: [], payments: [] }) {
+  const splitsByExpense = new Map<string, (typeof records.splits)[number]>();
+  records.splits.forEach((split) => { if (!splitsByExpense.has(split.expenseId)) splitsByExpense.set(split.expenseId, split); });
   const people = new Map(travelers.map((person) => [person.id, person]));
   const excluded: { expense: Expense; reason: "payer" | "participants" | "amount" | "split" }[] = [];
   const groups = new Map<string, { digits: number; total: number; count: number; paid: Map<string, number>; owed: Map<string, number> }>();
@@ -20,7 +22,7 @@ export function calculateSettlements(expenses: Expense[], travelers: Traveler[],
     if (!expense.payerId || !people.has(expense.payerId)) { excluded.push({ expense, reason: "payer" }); continue; }
     const participants = [...new Set(expense.participantIds || [])];
     if (!participants.length || participants.some((id) => !people.has(id))) { excluded.push({ expense, reason: "participants" }); continue; }
-    const split = records.splits.find((entry) => entry.expenseId === expense.id);
+    const split = splitsByExpense.get(expense.id);
     const factor = 10 ** digits;
     const amounts = split ? participants.map((id) => split.amounts[id]) : [];
     const shareUnits = amounts.map((amount) => Math.round(amount * factor));

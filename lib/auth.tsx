@@ -1,5 +1,6 @@
 "use client";
 
+import { clearTripsCache } from "@/lib/trips-client";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabaseBrowser } from "@/lib/supabase-browser";
@@ -52,12 +53,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       return;
     }
+    let previousUser: string | null | undefined;
+    const updateSession = (next: Session | null) => { const id = next?.user.id || null; if (id !== previousUser) { clearTripsCache(); previousUser = id; } setSession(next); };
     void supabaseBrowser.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+      updateSession(data.session);
       setLoading(false);
     });
     const { data: listener } = supabaseBrowser.auth.onAuthStateChange(
-      (_event, nextSession) => setSession(nextSession),
+      (_event, nextSession) => updateSession(nextSession),
     );
     return () => listener.subscription.unsubscribe();
   }, []);

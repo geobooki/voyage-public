@@ -8,11 +8,12 @@ import { useSettlementRecords } from "@/lib/use-settlement-records";
 import { ExpenseSettlementList } from "./expense-settlement-list";
 import type { Expense } from "@/types/trip";
 
-export function SettlementPanel({ tripId, onEditExpense }: { tripId: string; onEditExpense?: (expense: Expense) => void }) {
+export function SettlementPanel({ tripId, onEditExpense, settlementData }: { tripId: string; onEditExpense?: (expense: Expense) => void; settlementData?: ReturnType<typeof useSettlementRecords> }) {
   const { state } = useTripData();
   const { language } = useLanguage();
   const ko = language === "ko";
-  const { records, loading, error: loadError, mutate, refresh } = useSettlementRecords(tripId);
+  const ownSettlementData = useSettlementRecords(tripId, !settlementData);
+  const { records, loading, error: loadError, mutate, refresh } = settlementData || ownSettlementData;
   const [busyId, setBusyId] = useState(""); const [error, setError] = useState("");
   const result = useMemo(() => calculateSettlements(state.expenses, state.travelers, records), [state.expenses, state.travelers, records]);
   const undo = async (id: string) => { if (busyId) return; setBusyId(id); setError(""); try { await mutate({ id }, true); } catch (caught) { setError(caught instanceof Error ? caught.message : "저장 오류"); } finally { setBusyId(""); } };

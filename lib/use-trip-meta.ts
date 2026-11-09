@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { authenticatedFetch } from "@/lib/authenticated-fetch";
+import { getTripMetadata } from "@/lib/trip-metadata-client";
 
 export type TripMeta = {
   title: string;
@@ -27,6 +27,7 @@ export function useTripMeta(tripId: string) {
   const { user } = useAuth();
   const [meta, setMeta] = useState<TripMeta>(fallback);
   useEffect(() => {
+    if (!user) { setMeta(fallback); return; }
     let active = true;
     const load = async () => {
       try {
@@ -43,9 +44,8 @@ export function useTripMeta(tripId: string) {
             destinationCurrency: String(local.destinationCurrency || "JPY"),
             tripType: local.tripType === "domestic" || local.tripType === "international" ? local.tripType : (local.destinationCurrency === "KRW" ? "domestic" : "international"),
           });
-        const response = await authenticatedFetch(`/api/trips/${tripId}`);
-        if (!active || !response.ok) return;
-        const result = await response.json();
+        const result = await getTripMetadata(tripId, user.id);
+        if (!active) return;
         if (result.trip)
           setMeta({
             title: String(result.trip.title || "Your journey"),
@@ -64,6 +64,6 @@ export function useTripMeta(tripId: string) {
     return () => {
       active = false;
     };
-  }, [tripId, user]);
+  }, [tripId, user?.id]);
   return meta;
 }
