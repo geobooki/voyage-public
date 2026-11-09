@@ -14,20 +14,23 @@ export type TripSummary = {
 };
 
 let tripsRequest: Promise<TripSummary[]> | null = null;
+let cachedAt = 0;
+let completed = false;
+const cacheLifetime = 30_000;
 
 export function getTrips(): Promise<TripSummary[]> {
+  if (tripsRequest && completed && Date.now() - cachedAt >= cacheLifetime) clearTripsCache();
   if (!tripsRequest) {
-    tripsRequest = authenticatedFetch("/api/trips")
-      .then((response) => (response.ok ? response.json() : { trips: [] }))
-      .then((result) => (Array.isArray(result.trips) ? result.trips : []))
-      .catch(() => {
-        tripsRequest = null;
-        return [];
-      });
+    completed = false;
+    const request = authenticatedFetch("/api/trips", { cache: "no-store" })
+      .then(async (response) => { if (!response.ok) throw Error("여행 목록 조회 실패"); return response.json(); })
+      .then((result) => { if (tripsRequest === request) { completed = true; cachedAt = Date.now(); } return Array.isArray(result.trips) ? result.trips : []; })
+      .catch(() => { if (tripsRequest === request) clearTripsCache(); return []; });
+    tripsRequest = request;
   }
   return tripsRequest;
 }
 
 export function clearTripsCache() {
-  tripsRequest = null;
+  tripsRequest = null; cachedAt = 0; completed = false;
 }

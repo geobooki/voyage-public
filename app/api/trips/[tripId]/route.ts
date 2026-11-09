@@ -15,7 +15,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ trip
   if (new URL(request.url).searchParams.get("view") === "meta") {
     const { data, error } = await client.from("trips").select("id,title,slug,city,country,start_date,end_date,status,destination_currency").eq("id", tripId).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ trip: data });
+    return NextResponse.json({ resolvedTripId: tripId, trip: data });
   }
   const viewTables: Record<string, Record<string, any>> = {
     overview: {
@@ -66,7 +66,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ trip
     }));
     const error = results.map(([, result]) => result.error).find(Boolean);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(Object.fromEntries(results.map(([key, result]) => [key, result.data])));
+    return NextResponse.json({ resolvedTripId: tripId, ...Object.fromEntries(results.map(([key, result]) => [key, result.data])) });
   }
   const [trip, places, expenses, travelers, schedule, souvenirs, exchange, weather, checklist, categories, budget, reservations, review, dashboard] = await Promise.all([
     client.from("trips").select("*").eq("id", tripId).single(),
@@ -86,7 +86,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ trip
   ]);
   const error = trip.error || places.error || expenses.error || travelers.error || schedule.error || souvenirs.error || exchange.error || weather.error || checklist.error || categories.error || budget.error || reservations.error || review.error;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ trip: trip.data, places: places.data, expenses: expenses.data, travelers: travelers.data, schedule: schedule.data, souvenirs: souvenirs.data, exchange: exchange.data, weather: weather.data, checklist: checklist.data, categories: categories.data, budget: budget.data, reservations: reservations.data, review: review.data, dashboard: dashboard.error ? [] : dashboard.data });
+  return NextResponse.json({ resolvedTripId: tripId, trip: trip.data, places: places.data, expenses: expenses.data, travelers: travelers.data, schedule: schedule.data, souvenirs: souvenirs.data, exchange: exchange.data, weather: weather.data, checklist: checklist.data, categories: categories.data, budget: budget.data, reservations: reservations.data, review: review.data, dashboard: dashboard.error ? [] : dashboard.data });
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ tripId: string }> }) {

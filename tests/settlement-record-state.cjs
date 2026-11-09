@@ -10,4 +10,5 @@ await hook.mutate({id:'payment',kind:'payment'});hook=render();assert.equal(hook
 resolveOld(response({splits:[],payments:[]}));await stale;assert.equal(render().records.payments.length,1);
 fetchImpl=async()=>response({error:'permission denied'},false);await assert.rejects(()=>render().mutate({id:'next'}),/permission denied/);assert.equal(render().records.payments.length,1);
 fetchImpl=async()=>response({ok:true});await render().mutate({id:'payment'},true);assert.equal(render().records.payments.length,0);
+react.useEffect=effect=>effect();let disabledFetches=0;fetchImpl=()=>{disabledFetches++;return Promise.resolve(response({splits:[],payments:[]}))};cursor=0;out.exports.useSettlementRecords('trip',false);assert.equal(disabledFetches,0);
 console.log('PASS: server-confirmed settlement applies immediately, stale GET cannot revert it, rejected write preserves state, successful undo removes record');})().catch(error=>{console.error(error);process.exitCode=1});
