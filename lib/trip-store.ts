@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/lib/auth";
+import { ensureExpenseDefaults, getTripData } from "@/lib/trip-data-client";
 import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { subscribeTripChanges } from "@/lib/trip-realtime";
@@ -335,25 +337,22 @@ export function useTripStore(tripId = "tokyo", view = "full") {
   const [state, setState] = useState<TripState>(blankState());
   const [hydrated, setHydrated] = useState(false);
   const [reloadNonce, setReloadNonce] = useState(0);
-  const [authReady, setAuthReady] = useState(false);
-  const [authenticated, setAuthenticated] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const authReady = !authLoading;
+  const authenticated = Boolean(user);
+  const loadedSource = useRef("");
   const [remoteTrip, setRemoteTrip] = useState<{ key: string; id: string } | null>(null);
   const realtimeTripId = remoteTrip?.key === tripId ? remoteTrip.id : tripId;
   const hasExchangeAmount = (value: ExchangePlan) => value.expectedCash > 0 || value.cardEstimate > 0 || value.plannedExchange > 0 || value.actualExchange > 0;
   useEffect(() => {
-    if (!supabaseBrowser) { setAuthReady(true); return; }
-    void supabaseBrowser.auth.getSession().then(({ data }) => {
-      setAuthenticated(Boolean(data.session));
-      setAuthReady(true);
-    });
-  }, []);
-  useEffect(() => {
     if (!authReady) return;
     let active = true;
-    setState(blankState());
-    setHydrated(false);
-    if (!authenticated) { setHydrated(true); return; }
-    try {
+    const source = JSON.stringify([user?.id, tripId, view]);
+    const reset = loadedSource.current !== source;
+    loadedSource.current = source;
+    if (reset) { setState(blankState()); setHydrated(false); }
+    if (!user) { setHydrated(true); return; }
+    if (reset) try {
       const saved = window.localStorage.getItem(key);
       if (saved)
         setState((current) => {
@@ -395,13 +394,8 @@ export function useTripStore(tripId = "tokyo", view = "full") {
     } catch {
       /* demo fallback */
     }
-    authenticatedFetch("/api/expenses/default-payment", { method: "POST" })
-      .catch(() => undefined)
-      .then(() => authenticatedFetch(`/api/trips/${tripId}${view === "full" ? "" : `?view=${view}`}`))
-      .then(async (response) => {
-        if (!response.ok) return null;
-        return response.json();
-      })
+    void ensureExpenseDefaults(user.id);
+    getTripData(tripId, view, user.id, reloadNonce > 0)
       .then((data) => {
         if (!active || !data) return;
         setRemoteTrip({ key: tripId, id: String(data.resolvedTripId || data.trip?.id || tripId) });
@@ -606,7 +600,7 @@ export function useTripStore(tripId = "tokyo", view = "full") {
       .catch(() => undefined)
       .finally(() => { if (active) setHydrated(true); });
     return () => { active = false; };
-  }, [tripId, view, reloadNonce, authReady, authenticated]);
+  }, [tripId, view, reloadNonce, authReady, user?.id]);
 
   useEffect(() => {
     if (!supabaseBrowser || !authenticated) return;
