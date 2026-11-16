@@ -30,13 +30,13 @@ export default function NowPage() {
         const selected = selectCurrentOrSoonTrip<Trip>(candidates);
         setTrip(selected);
         if (selected) {
-          const response = await authenticatedFetch(`/api/trips/${selected.slug || selected.id}`);
+          const response = await authenticatedFetch(`/api/trips/${selected.id}?view=now`);
           if (response.ok) setDetail(await response.json());
         }
       })
       .catch(() => setTrip(undefined))
       .finally(() => setLoading(false));
-  }, [authLoading, user]);
+  }, [authLoading, user?.id]);
   if (authLoading) return <main className="grid min-h-screen place-items-center px-6"><p className="muted">{ko ? "로그인 정보를 확인하는 중이에요." : "Checking your session…"}</p></main>;
   if (loading) return <main className="grid min-h-screen place-items-center px-6"><p className="muted">{ko ? "여행을 불러오는 중이에요." : "Loading your trip…"}</p></main>;
   if (!trip) return <main className="grid min-h-screen place-items-center px-6"><div className="card max-w-md p-8 text-center"><p className="eyebrow mb-3">{ko ? "지금 여행" : "Now"}</p><h1 className="text-2xl font-bold">{ko ? "지금 진행 중인 여행이 없어요." : "No current trip yet."}</h1><p className="mt-2 text-sm muted">{ko ? "7일 이내 시작하는 여행을 추가하면 여기에 보여요." : "Add a trip starting within seven days to see it here."}</p><Link href="/trips/new" className="mt-6 inline-flex rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-bold text-white">{ko ? "여행 추가" : "Add a trip"}</Link></div></main>;

@@ -1,5 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 const tablesByView: Record<string, string[]> = {
+  schedule: ["places", "schedule_items", "weather_days", "reservations"],
+  weather: ["schedule_items", "reservations"], memories: ["schedule_items", "places"],
+  map: ["places"], souvenirs: ["souvenirs"],
   budget: ["trips", "expenses", "travelers", "schedule_items", "places", "budget_items", "exchange_plans"],
   overview: ["trips", "travelers", "places", "expenses", "schedule_items", "budget_items", "reservations"],
   preparation: ["checklist_items"], reservations: ["reservations"],

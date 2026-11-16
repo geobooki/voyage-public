@@ -17,8 +17,38 @@ export async function GET(request: Request, { params }: { params: Promise<{ trip
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ resolvedTripId: tripId, trip: data });
   }
-  const viewTables: Record<string, Record<string, any>> = {
-    overview: {
+  const viewTables: Record<string, () => Record<string, any>> = {
+    now: () => ({
+      checklist: client.from("checklist_items").select("checked").eq("trip_id", tripId),
+      schedule: client.from("schedule_items").select("id,date,time,title,completed").eq("trip_id", tripId).order("date").order("time"),
+      reservations: client.from("reservations").select("*").eq("trip_id", tripId).order("date"),
+    }),
+    archive: () => ({
+      places: client.from("places").select("type").eq("trip_id", tripId),
+      expenses: client.from("expenses").select("amount").eq("trip_id", tripId),
+      review: client.from("reviews").select("rating").eq("trip_id", tripId).maybeSingle(),
+    }),
+    schedule: () => ({
+      places: client.from("places").select("*").eq("trip_id", tripId).order("created_at"),
+      schedule: client.from("schedule_items").select("*").eq("trip_id", tripId).order("date").order("time"),
+      weather: client.from("weather_days").select("*").eq("trip_id", tripId).order("date"),
+      reservations: client.from("reservations").select("*").eq("trip_id", tripId).order("date"),
+    }),
+    weather: () => ({
+      schedule: client.from("schedule_items").select("*").eq("trip_id", tripId).order("date").order("time"),
+      reservations: client.from("reservations").select("*").eq("trip_id", tripId).order("date"),
+    }),
+    memories: () => ({
+      schedule: client.from("schedule_items").select("*").eq("trip_id", tripId).order("date").order("time"),
+      places: client.from("places").select("*").eq("trip_id", tripId).order("created_at"),
+    }),
+    map: () => ({
+      places: client.from("places").select("*").eq("trip_id", tripId).order("created_at"),
+    }),
+    souvenirs: () => ({
+      souvenirs: client.from("souvenirs").select("*").eq("trip_id", tripId).order("created_at"),
+    }),
+    overview: () => ({
       travelers: client.from("travelers").select("*").eq("trip_id", tripId).order("created_at"),
       trip: client.from("trips").select("id,title,slug,city,country,start_date,end_date,status,destination_currency").eq("id", tripId).single(),
       places: client.from("places").select("*").eq("trip_id", tripId).order("created_at"),
@@ -26,14 +56,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ trip
       schedule: client.from("schedule_items").select("*").eq("trip_id", tripId).order("date").order("time"),
       budget: client.from("budget_items").select("*").eq("trip_id", tripId).order("created_at"),
       reservations: client.from("reservations").select("*").eq("trip_id", tripId).order("date"),
-    },
-    preparation: {
+    }),
+    preparation: () => ({
       checklist: client.from("checklist_items").select("*").eq("trip_id", tripId).order("created_at"),
-    },
-    reservations: {
+    }),
+    reservations: () => ({
       reservations: client.from("reservations").select("*").eq("trip_id", tripId).order("date"),
-    },
-    budget: {
+    }),
+    budget: () => ({
       travelers: client.from("travelers").select("*").eq("trip_id", tripId).order("created_at"),
       schedule: client.from("schedule_items").select("*").eq("trip_id", tripId).order("date").order("time"),
       places: client.from("places").select("*").eq("trip_id", tripId).order("created_at"),
@@ -41,26 +71,26 @@ export async function GET(request: Request, { params }: { params: Promise<{ trip
       expenses: client.from("expenses").select("*").eq("trip_id", tripId).order("spent_at", { ascending: false }),
       budget: client.from("budget_items").select("*").eq("trip_id", tripId).order("created_at"),
       exchange: client.from("exchange_plans").select("*").eq("trip_id", tripId).maybeSingle(),
-    },
-    during: {
+    }),
+    during: () => ({
       places: client.from("places").select("*").eq("trip_id", tripId).order("created_at"),
       expenses: client.from("expenses").select("*").eq("trip_id", tripId).order("spent_at", { ascending: false }),
       travelers: client.from("travelers").select("*").eq("trip_id", tripId).order("created_at"),
       schedule: client.from("schedule_items").select("*").eq("trip_id", tripId).order("date").order("time"),
       weather: client.from("weather_days").select("*").eq("trip_id", tripId).order("date"),
       reservations: client.from("reservations").select("*").eq("trip_id", tripId).order("date"),
-    },
-    after: {
+    }),
+    after: () => ({
       places: client.from("places").select("*").eq("trip_id", tripId).order("created_at"),
       expenses: client.from("expenses").select("*").eq("trip_id", tripId).order("spent_at", { ascending: false }),
       budget: client.from("budget_items").select("*").eq("trip_id", tripId).order("created_at"),
       exchange: client.from("exchange_plans").select("*").eq("trip_id", tripId).maybeSingle(),
       travelers: client.from("travelers").select("*").eq("trip_id", tripId).order("created_at"),
       review: client.from("reviews").select("*").eq("trip_id", tripId).maybeSingle(),
-    },
+    }),
   };
   if (view && viewTables[view]) {
-    const results = await Promise.all(Object.entries(viewTables[view]).map(async ([key, query]) => {
+    const results = await Promise.all(Object.entries(viewTables[view]()).map(async ([key, query]) => {
       const result = await query;
       return [key, result] as const;
     }));

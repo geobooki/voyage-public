@@ -6,14 +6,28 @@ export function buildExpenseReport(expenses: Expense[], travelers: Traveler[], r
   const customInitial = calculateSettlements(expenses, travelers, { ...records, payments: [] });
   const settlement = calculateSettlements(expenses, travelers, records);
   const invalid = new Set(settlement.invalidPayments), names = new Map(travelers.map((person) => [person.id, person.name]));
-  const payments = records.payments.map((payment) => ({ ...payment, from: names.get(payment.fromId) || "미지정 여행자", to: names.get(payment.toId) || "미지정 여행자", expense: expenses.find((expense) => expense.id === payment.expenseId)?.name || (payment.expenseId ? "삭제된 지출" : "지출 미연결"), valid: !invalid.has(payment.id) }));
+  const expenseById = new Map<string, Expense>();
+  expenses.forEach((expense) => { if (!expenseById.has(expense.id)) expenseById.set(expense.id, expense); });
+  const payments = records.payments.map((payment) => ({ ...payment, from: names.get(payment.fromId) || "미지정 여행자", to: names.get(payment.toId) || "미지정 여행자", expense: expenseById.get(payment.expenseId || "")?.name || (payment.expenseId ? "삭제된 지출" : "지출 미연결"), valid: !invalid.has(payment.id) }));
   const perExpense = expenseSettlements(expenses, travelers, records);
+  const entriesByCurrency = new Map<string, Expense[]>();
+  expenses.forEach((expense) => { const key = expense.currency.trim().toUpperCase() || "KRW"; const bucket = entriesByCurrency.get(key) || []; bucket.push(expense); entriesByCurrency.set(key, bucket); });
+  const paymentsByCurrency = new Map<string, typeof payments>();
+  payments.forEach((payment) => { if (!payment.valid) return; const key = payment.currency.toUpperCase(); const bucket = paymentsByCurrency.get(key) || []; bucket.push(payment); paymentsByCurrency.set(key, bucket); });
+  const finalGroups = new Map(settlement.groups.map((group) => [group.currency, group]));
+  const initialGroups = new Map(customInitial.groups.map((group) => [group.currency, group]));
   const currencies = [...new Set([...expenses.map((expense) => expense.currency.trim().toUpperCase() || "KRW"), ...settlement.groups.map((group) => group.currency)])].sort().map((currency) => {
     const factor = 10 ** currencyDigits(currency), sum = (amounts: number[]) => amounts.filter(Number.isFinite).reduce((total, amount) => total + Math.round(amount * factor), 0) / factor;
-    const entries = expenses.filter((expense) => (expense.currency.trim().toUpperCase() || "KRW") === currency);
-    const recorded = payments.filter((payment) => payment.currency.toUpperCase() === currency && payment.valid);
-    const group = settlement.groups.find((entry) => entry.currency === currency), baseline = customInitial.groups.find((entry) => entry.currency === currency);
-    return { currency, spent: sum(entries.filter((entry) => Number.isFinite(entry.amount)).map((entry) => entry.amount)), count: entries.length, unassigned: sum(entries.filter((entry) => !entry.payerId || !names.has(entry.payerId)).map((entry) => entry.amount)), paidSettlements: sum(recorded.map((payment) => payment.amount)), unassignedSettlements: sum(recorded.filter((payment) => !payment.expenseId).map((payment) => payment.amount)), remaining: sum((group?.transfers || []).map((transfer) => transfer.amount)), transfers: group?.transfers || [], people: travelers.map((person) => ({ ...person, paid: sum(entries.filter((entry) => entry.payerId === person.id).map((entry) => entry.amount)), share: baseline?.balances.find((entry) => entry.id === person.id)?.owed || 0, sent: sum(recorded.filter((payment) => payment.fromId === person.id).map((payment) => payment.amount)), received: sum(recorded.filter((payment) => payment.toId === person.id).map((payment) => payment.amount)), balance: group?.balances.find((entry) => entry.id === person.id)?.balance || 0 })) };
+    const entries = entriesByCurrency.get(currency) || [];
+    const recorded = paymentsByCurrency.get(currency) || [];
+    const group = finalGroups.get(currency), baseline = initialGroups.get(currency);
+    const paid = new Map<string, number>(), sent = new Map<string, number>(), received = new Map<string, number>();
+    const add = (map: Map<string, number>, id: string, amount: number) => { if (Number.isFinite(amount)) map.set(id, (map.get(id) || 0) + Math.round(amount * factor)); };
+    entries.forEach((entry) => { if (entry.payerId) add(paid, entry.payerId, entry.amount); });
+    recorded.forEach((payment) => { add(sent, payment.fromId, payment.amount); add(received, payment.toId, payment.amount); });
+    const finalBalances = new Map((group?.balances || []).map((balance) => [balance.id, balance]));
+    const initialBalances = new Map((baseline?.balances || []).map((balance) => [balance.id, balance]));
+    return { currency, spent: sum(entries.filter((entry) => Number.isFinite(entry.amount)).map((entry) => entry.amount)), count: entries.length, unassigned: sum(entries.filter((entry) => !entry.payerId || !names.has(entry.payerId)).map((entry) => entry.amount)), paidSettlements: sum(recorded.map((payment) => payment.amount)), unassignedSettlements: sum(recorded.filter((payment) => !payment.expenseId).map((payment) => payment.amount)), remaining: sum((group?.transfers || []).map((transfer) => transfer.amount)), transfers: group?.transfers || [], people: travelers.map((person) => ({ ...person, paid: (paid.get(person.id) || 0) / factor, share: initialBalances.get(person.id)?.owed || 0, sent: (sent.get(person.id) || 0) / factor, received: (received.get(person.id) || 0) / factor, balance: finalBalances.get(person.id)?.balance || 0 })) };
   });
   return { recordsConfirmed, currencies, payments, excluded: settlement.excluded.map(({ expense, reason }) => ({ id: expense.id, name: expense.name || expense.category, reason })), invalidPayments: settlement.invalidPayments, expenses: perExpense.map((item) => ({ ...item.expense, payer: names.get(item.expense.payerId || "") || "미지정", participants: (item.expense.participantIds || []).map((id) => names.get(id) || "미지정 여행자"), settlementPaid: item.payments.filter((payment) => !invalid.has(payment.id) && payment.currency.toUpperCase() === item.expense.currency.toUpperCase()).reduce((sum, payment) => sum + payment.amount, 0), remaining: item.transfers.reduce((sum, transfer) => sum + transfer.amount, 0), status: !recordsConfirmed ? "정산기록 미확인" : !item.valid ? "정보 확인 필요" : item.complete ? "정산완료" : item.partial ? "부분정산" : "미정산" })) };
 }

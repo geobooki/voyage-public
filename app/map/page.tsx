@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import { useEffect, useState } from "react";
 import { TOKYO_TRIP_ID } from "@/lib/trip-id";
 
@@ -98,7 +99,7 @@ export default function MapPage() {
         const local = JSON.parse(
           window.localStorage.getItem("voyage:trips") || "[]",
         );
-        const response = await fetch("/api/trips");
+        const response = await authenticatedFetch("/api/trips");
         const result = response.ok ? await response.json() : null;
         const remote =
           result?.trips?.map(
@@ -128,7 +129,7 @@ export default function MapPage() {
         const enriched = await Promise.all(
           [...byId.values()].map(async (trip) => {
             try {
-              const detailResponse = await fetch(`/api/trips/${trip.id}`);
+              const detailResponse = await authenticatedFetch(`/api/trips/${trip.id}?view=archive`);
               if (detailResponse.ok)
                 return { ...trip, ...summaryFrom(await detailResponse.json()) };
               const saved = JSON.parse(
